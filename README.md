@@ -20,8 +20,21 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 |---|---|
 | 0 — Analyse & architecture | ✅ Livrée ; recommandations D-01 à D-08 acceptées à titre provisoire le 25/09/2026 ([décisions](docs/00-decisions-ouvertes.md)) |
 | 1 — Socle | ✅ Livrée (voir ci-dessous) |
-| 2 — Diagnostic | ✅ Livrée sur la branche `phase-2-diagnostic` (voir ci-dessous) ; référentiel GUDE-360 v1 **à valider en atelier** (D-04) |
-| 3 — Documents | À venir : dépôt sécurisé, dossier de conformité, obligations et échéances, levée du plafond déclaratif par les preuves |
+| 2 — Diagnostic | ✅ Livrée (voir ci-dessous) ; référentiel GUDE-360 v1 **à valider en atelier** (D-04) |
+| 3 — Documents & conformité | ✅ Livrée sur la branche `phase-3-documents` (voir ci-dessous) ; règles réglementaires CNPS / fiscales / états financiers **à vérifier** avant activation (RM-08) |
+| 4 — IA | À venir |
+
+### Contenu de la phase 3
+
+- **Dépôt sécurisé** : contrôle par signature binaire (et non par extension), refus des macros, PDF actifs ou chiffrés, archives suspectes et fichiers corrompus ; **antivirus en mémoire avant tout stockage** (ClamAV en production, échec fermé) ; stockage objet S3 (MinIO en local, chiffrement côté serveur en production) ; téléchargement par URL signée personnelle de 5 minutes, liée à l'utilisateur et à l'organisation, tracé dans le journal.
+- **Chaîne de traitement asynchrone** (Celery) : extraction du texte, doublons, lisibilité, validité, période attendue ; elle ne remplace jamais une décision humaine. Un document déposé n'est **jamais conforme d'office** : vérification par le conseiller (conforme, sous réserve, non conforme, incohérent) avec un motif en langage simple pour la PME.
+- **Dossier de conformité** par PME (≈ 55 types de documents en 9 catégories, durées de validité et de fraîcheur) et **taux de conformité** (sous réserve = ½).
+- **Registre réglementaire** : chaque obligation légale s'appuie sur une règle sourcée et datée ; une obligation liée à une règle non vérifiée **ne peut pas être activée** (RM-08). Obligations CNPS mensuelles/trimestrielles, déclarations fiscales et états financiers livrées **inactives**, en attente de vérification.
+- **Échéances** générées de façon idempotente (horizon 120 jours, fréquence selon l'effectif), statuts temporels, **relances** à J-30, J-15, J-7, J0, J+7, J+15, J+30 (une seule fois chacune), escalade des obligations critiques, dispense motivée ; planificateur quotidien (Celery beat, 02 h) et commande `run_compliance`.
+- **Moteur d'alertes** paramétrable (12 règles : document expiré ou manquant, échéance proche ou dépassée, anomalie de dépôt, baisse de score, risque élevé, stagnation…), dédoublonnage, résolution automatique ; **notifications** in-app et e-mail avec préférences (événements obligatoires non désactivables).
+- **Les preuves relèvent le score** : un justificatif vérifié lève le plafond déclaratif (RM-01) ; le **score courant** est recalculé à chaque décision, les snapshots figés restent reproductibles (preuves « à date »).
+- **Interfaces** : file « Documents à vérifier » avec aperçu, onglets Documents et Alertes de la fiche PME, page Alertes, cloche de notifications, administration « Conformité et obligations » ; côté PME, « Mes documents » (dépôt par fichier ou photo depuis le téléphone), prochaines échéances et retours du conseiller.
+- **Qualité** : 221 tests backend, 12 tests unitaires frontend, 9 tests E2E (dont dépôt, refus antivirus, vérification et administration de la conformité).
 
 ### Contenu de la phase 2
 
@@ -49,11 +62,13 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 
 ## Démarrage en local
 
-Prérequis : Docker, Python 3.12+ (testé en 3.14), Node 24. Les ports sont décalés pour cohabiter avec d'autres projets : PostgreSQL **5442**, Redis **6390**, API **8010**, frontend **3010**, Mailpit **8035**.
+Prérequis : Docker, Python 3.12+ (testé en 3.14), Node 24. Les ports sont décalés pour cohabiter avec d'autres projets : PostgreSQL **5442**, Redis **6390**, API **8010**, frontend **3010**, Mailpit **8035**, MinIO **9010** (console **9011**).
 
 ```bash
-# 1. Infrastructure (PostgreSQL + pgvector, Redis, Mailpit)
+# 1. Infrastructure (PostgreSQL + pgvector, Redis, MinIO, Mailpit)
 docker compose -f infra/docker-compose.yml up -d
+# Antivirus ClamAV (facultatif en local ; sinon PME360_ANTIVIRUS=eicar, détecteur de test) :
+# docker compose -f infra/docker-compose.yml --profile antivirus up -d   puis PME360_ANTIVIRUS=clamd
 
 # 2. Backend
 cd backend
@@ -77,7 +92,7 @@ cd ../frontend && npm install && npm run dev      # http://localhost:3010
 | `aya.dirigeante@demo.test` | Dirigeante de Boutik Plus (PME) | onglet « Espace PME » ; code reçu dans Mailpit (http://localhost:8035) |
 | `superadmin@demo.test` | Administrateur plateforme | mot de passe + code MFA |
 
-**Tests** : `cd backend && .venv/Scripts/python -m pytest` · `cd frontend && npm test && npm run test:e2e` (E2E : infrastructure, API et seed lancés au préalable ; le test de revue Akwaba suppose une base fraîchement « seedée »).
+**Tests** : `cd backend && .venv/Scripts/python -m pytest` · `cd frontend && npm test && npm run test:e2e` (E2E : infrastructure, API et seed lancés au préalable ; les tests de revue Akwaba et de dépôt/vérification supposent une base fraîchement « seedée », sinon ils sont ignorés).
 
 **Documentation de l'API** : http://localhost:8010/api/v1/docs (OpenAPI). Après toute modification de l'API : `npm run api:types` dans `frontend/`.
 

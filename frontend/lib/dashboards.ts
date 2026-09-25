@@ -19,10 +19,12 @@ export interface AdvisorDashboard {
     diagnostics_to_validate: number;
     diagnostics_in_progress: number;
     pmes_urgent: number;
-    documents_to_verify: Pending;
-    alerts_open: Pending;
+    documents_to_verify: number;
+    alerts_open: number;
+    alerts_critical: number;
+    deadlines_this_week: number;
+    deadlines_overdue: number;
     actions_overdue: Pending;
-    deadlines_this_week: Pending;
   };
   by_lifecycle: Breakdown[];
   recent_pmes: {
@@ -35,7 +37,7 @@ export interface AdvisorDashboard {
     priority: string | null;
   }[];
   work_queue: {
-    items: { kind: string; diagnostic_id: string; pme_id: string; pme_name: string; since: string | null; type: string }[];
+    items: { kind: string; id: string; pme_id: string; pme_name: string; label: string; severity?: string; since: string | null }[];
     available_in_phase: number;
   };
   inactivity_days: number;
@@ -57,7 +59,7 @@ export interface PortfolioDashboard {
     low_confidence_share: number | null;
     pmes_at_risk: number;
     pmes_urgent: number;
-    average_compliance: Pending;
+    average_compliance: { value: number | null; pmes: number };
   };
   by_maturity: Breakdown[];
   by_priority: Breakdown[];
@@ -89,9 +91,9 @@ export interface PmeDashboard {
   } | null;
   open_diagnostic: { id: string; type: string; status: string; reference_date: string } | null;
   next_actions: { items: unknown[]; available_in_phase: number };
-  compliance: Pending;
-  feedback: { items: unknown[]; available_in_phase: number };
-  deadlines: { items: unknown[]; available_in_phase: number };
+  compliance: ComplianceRate;
+  feedback: { id: string; title: string; status: string; reason: string; decided_at: string }[];
+  deadlines: { id: string; label: string; period: string; due_date: string; status: string; document_type: string }[];
 }
 
 export interface ProgressRow {
@@ -101,4 +103,11 @@ export interface ProgressRow {
   months: number;
   from: number | null;
   to: number | null;
+}
+
+export interface ComplianceRate {
+  rate: number | null;
+  eligible: number;
+  points: number;
+  counts: Record<string, number>;
 }

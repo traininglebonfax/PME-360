@@ -28,7 +28,7 @@ def test_advisor_dashboard_counts_only_own_portfolio(org, make_user, make_pme, c
     data = client_for(advisor, org).get("/api/v1/dashboards/advisor").json()
     assert data["kpis"]["pmes_followed"] == 2
     assert data["kpis"]["pmes_inactive"] == 1
-    assert data["kpis"]["documents_to_verify"] == {"value": None, "available_in_phase": 3}
+    assert data["kpis"]["documents_to_verify"] == 0 and data["kpis"]["actions_overdue"]["available_in_phase"] == 5
 
 
 def test_portfolio_dashboard_requires_permission(org, make_user, make_pme, client_for):
@@ -65,13 +65,21 @@ def test_seed_demo_is_idempotent_and_fictitious():
         assert all(p.rccm_number.startswith("DEMO-") for p in pmes)
         assert pmes.get(legal_name="Boutik Plus Distribution SARL").lifecycle_status == "ACCOMPAGNEMENT_ACTIF"
         # Profils de démonstration du Document 3, § 7.
-        boutik = ScoreSnapshot.objects.get(pme__legal_name="Boutik Plus Distribution SARL")
+        boutik = ScoreSnapshot.objects.get(pme__legal_name="Boutik Plus Distribution SARL", is_frozen=True)
         assert boutik.quadrant == "PERFORMANTE_FRAGILE"  # CA élevé, gouvernance informelle (RM-02)
         delices = list(
-            ScoreSnapshot.objects.filter(pme__legal_name="Délices du Bandama SAS").order_by("reference_date")
+            ScoreSnapshot.objects.filter(pme__legal_name="Délices du Bandama SAS", is_frozen=True).order_by(
+                "reference_date"
+            )
         )
         assert len(delices) == 3 and delices[0].global_score < delices[1].global_score < delices[2].global_score
-        assert ScoreSnapshot.objects.get(pme__legal_name="Bâti Lagune BTP SARL").intervention_priority == "P1"
+        # Score courant : les preuves vérifiées de la phase 3 lèvent les plafonds déclaratifs.
+        live = ScoreSnapshot.objects.get(pme__legal_name="Délices du Bandama SAS", is_frozen=False)
+        assert live.global_score >= delices[2].global_score
+        assert (
+            ScoreSnapshot.objects.get(pme__legal_name="Bâti Lagune BTP SARL", is_frozen=True).intervention_priority
+            == "P1"
+        )
         assert Diagnostic.objects.filter(status="EN_REVUE").count() == 1
     assert all(u.email.endswith("@demo.test") for u in User.objects.all())
 

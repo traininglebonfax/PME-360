@@ -4,6 +4,71 @@
  */
 
 export interface paths {
+    "/api/v1/alert-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["alert_rules_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alert-rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["alert_rules_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Alertes des PME du périmètre (équipes GUDE-PME). */
+        get: operations["alerts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/{alert_id}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["alerts_transition_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit-logs": {
         parameters: {
             query?: never;
@@ -222,6 +287,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/compliance/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Exécute immédiatement le planificateur quotidien pour l'organisation (administration, démonstration). */
+        post: operations["compliance_run_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboards/advisor": {
         parameters: {
             query?: never;
@@ -265,6 +347,39 @@ export interface paths {
         };
         /** @description Vue d'ensemble programme / direction (Document 9, § 4.1) et analyses de portefeuille (§ 4.2). */
         get: operations["dashboards_portfolio_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deadlines/{deadline_id}/waive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["deadlines_waive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deadlines/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Échéances du périmètre (tableau de bord conseiller) : en retard et à venir. */
+        get: operations["deadlines_upcoming_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -451,6 +566,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/document-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["document_types_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{document_id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["documents_verify_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{document_id}/versions/{version_no}/download-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description URL signée de 5 minutes, délivrée après contrôle d'accès (Document 2, § 8.2). */
+        get: operations["documents_versions_download_url_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/framework-versions": {
         parameters: {
             query?: never;
@@ -547,6 +727,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["me_notification_preferences_list"];
+        put: operations["me_notification_preferences_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/memberships/{membership_id}/revoke": {
         parameters: {
             query?: never;
@@ -557,6 +753,87 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["memberships_revoke_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Notifications de l'utilisateur dans l'organisation active. */
+        get: operations["notifications_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["notifications_read_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notifications_unread_count_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/obligation-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["obligation_templates_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/obligation-templates/{template_id}/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["obligation_templates_activation_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -703,6 +980,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pmes/{pme_id}/compliance-folder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Dossier numérique de conformité (Document 8, § 3) et taux de conformité documentaire (§ 6). */
+        get: operations["pmes_compliance_folder_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pmes/{pme_id}/deadlines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pmes_deadlines_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pmes/{pme_id}/diagnostics": {
         parameters: {
             query?: never;
@@ -713,6 +1023,24 @@ export interface paths {
         get: operations["pmes_diagnostics_list"];
         put?: never;
         post: operations["pmes_diagnostics_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pmes/{pme_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Dépôt (multipart) et liste des documents d'une PME. */
+        get: operations["pmes_documents_list"];
+        put?: never;
+        /** @description Dépôt (multipart) et liste des documents d'une PME. */
+        post: operations["pmes_documents_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -855,6 +1183,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/regulatory-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["regulatory_rules_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/regulatory-rules/{rule_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["regulatory_rules_status_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/regulatory-rules/{rule_id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["regulatory_rules_verify_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/roles": {
         parameters: {
             query?: never;
@@ -955,12 +1331,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description File de vérification du conseiller : documents du périmètre en attente, les plus anciens d'abord. */
+        get: operations["verifications_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         AcceptResult: {
             accepted: number;
+        };
+        ActivationRequest: {
+            active: boolean;
         };
         /**
          * @description * `USER` - Utilisateur
@@ -974,6 +1370,61 @@ export interface components {
             id: string;
             full_name: string;
         };
+        Alert: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly pme: components["schemas"]["PmeRef"];
+            readonly rule: string;
+            readonly kind: string;
+            readonly severity: components["schemas"]["SeverityEnum"];
+            readonly title: string;
+            readonly message: string;
+            readonly details: unknown;
+            readonly target_type: string;
+            readonly target_id: string;
+            readonly status: components["schemas"]["AlertStatusEnum"];
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly resolved_at: string | null;
+            readonly resolved_by_name: string;
+            readonly resolution_note: string;
+        };
+        AlertRule: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            /** @description Type d'alerte évalué par le moteur. */
+            readonly kind: string;
+            readonly name: string;
+            readonly description: string;
+            severity: components["schemas"]["SeverityEnum"];
+            /** @description Seuils de la règle (jours, points, pourcentages…). */
+            params?: unknown;
+            readonly recipients: string[];
+            is_active?: boolean;
+            readonly available_in_phase: number | null;
+        };
+        /**
+         * @description * `OUVERTE` - Ouverte
+         *     * `PRISE_EN_COMPTE` - Prise en compte
+         *     * `RESOLUE` - Résolue
+         *     * `IGNOREE` - Ignorée
+         * @enum {string}
+         */
+        AlertStatusEnum: "OUVERTE" | "PRISE_EN_COMPTE" | "RESOLUE" | "IGNOREE";
+        AlertTransitionRequest: {
+            status: components["schemas"]["AlertTransitionStatusEnum"];
+            /** @default  */
+            note: string;
+        };
+        /**
+         * @description * `PRISE_EN_COMPTE` - PRISE_EN_COMPTE
+         *     * `RESOLUE` - RESOLUE
+         *     * `IGNOREE` - IGNOREE
+         * @enum {string}
+         */
+        AlertTransitionStatusEnum: "PRISE_EN_COMPTE" | "RESOLUE" | "IGNOREE";
         AnswerBatchRequest: {
             answers: components["schemas"]["AnswerItemRequest"][];
         };
@@ -1046,6 +1497,12 @@ export interface components {
             request_id?: string;
             hash: string;
         };
+        /**
+         * @description * `SAIN` - Sain
+         *     * `INFECTE` - Infecté
+         * @enum {string}
+         */
+        AvStatusEnum: "SAIN" | "INFECTE";
         /** @enum {unknown} */
         BlankEnum: "";
         ChainVerification: {
@@ -1075,6 +1532,22 @@ export interface components {
             /** Format: date */
             start_date?: string | null;
         };
+        ComplianceFolder: {
+            rate: components["schemas"]["Rate"];
+            categories: components["schemas"]["FolderCategory"][];
+        };
+        /**
+         * @description * `NON_EVALUE` - Non évalué
+         *     * `CONFORME` - Conforme
+         *     * `CONFORME_SOUS_RESERVE` - Conforme sous réserve
+         *     * `NON_CONFORME` - Non conforme
+         *     * `INCOHERENT` - Incohérent
+         * @enum {string}
+         */
+        ConformityStatusEnum: "NON_EVALUE" | "CONFORME" | "CONFORME_SOUS_RESERVE" | "NON_CONFORME" | "INCOHERENT";
+        Count: {
+            unread: number;
+        };
         Criterion: {
             readonly code: string;
             readonly name: string;
@@ -1092,6 +1565,71 @@ export interface components {
             readonly sector_module: string;
             readonly metrics: components["schemas"]["MetricDefinition"][];
         };
+        /**
+         * @description * `A_JOUR` - À jour
+         *     * `PERIODE_ANTERIEURE` - Période antérieure
+         *     * `PERIODE_INCORRECTE` - Période incorrecte
+         *     * `INDETERMINE` - Indéterminée
+         * @enum {string}
+         */
+        CurrencyStatusEnum: "A_JOUR" | "PERIODE_ANTERIEURE" | "PERIODE_INCORRECTE" | "INDETERMINE";
+        Deadline: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly pme: components["schemas"]["PmeRef"];
+            readonly obligation: string;
+            readonly obligation_code: string;
+            readonly nature: string;
+            readonly is_critical: boolean;
+            readonly document_type: string;
+            readonly document_type_name: string;
+            readonly period_label: string;
+            /** Format: date */
+            readonly period_start: string;
+            /** Format: date */
+            readonly period_end: string;
+            /** Format: date */
+            readonly due_date: string;
+            readonly days_to_due: number;
+            readonly status: components["schemas"]["DeadlineStatusEnum"];
+            /** Format: date-time */
+            readonly closed_at: string | null;
+        };
+        DeadlineRef: {
+            /** Format: uuid */
+            id: string;
+            period_label: string;
+            /** Format: date */
+            period_start: string;
+            /** Format: date */
+            period_end: string;
+            /** Format: date */
+            due_date: string;
+        };
+        /**
+         * @description * `A_FOURNIR` - À fournir
+         *     * `EN_ATTENTE` - En attente
+         *     * `RECU` - Reçu
+         *     * `EN_ANALYSE` - En analyse
+         *     * `VERIF_HUMAINE_REQUISE` - Vérification humaine requise
+         *     * `CONFORME` - Conforme
+         *     * `CONFORME_SOUS_RESERVE` - Conforme sous réserve
+         *     * `NON_CONFORME` - Non conforme
+         *     * `EXPIRE` - Document expiré
+         *     * `INCOHERENT` - Document incohérent
+         *     * `EN_RETARD` - En retard
+         *     * `DISPENSE` - Dispensée
+         * @enum {string}
+         */
+        DeadlineStatusEnum: "A_FOURNIR" | "EN_ATTENTE" | "RECU" | "EN_ANALYSE" | "VERIF_HUMAINE_REQUISE" | "CONFORME" | "CONFORME_SOUS_RESERVE" | "NON_CONFORME" | "EXPIRE" | "INCOHERENT" | "EN_RETARD" | "DISPENSE";
+        /**
+         * @description * `CONFORME` - Conforme
+         *     * `CONFORME_SOUS_RESERVE` - Conforme sous réserve
+         *     * `NON_CONFORME` - Non conforme
+         *     * `INCOHERENT` - Incohérent
+         * @enum {string}
+         */
+        DecisionEnum: "CONFORME" | "CONFORME_SOUS_RESERVE" | "NON_CONFORME" | "INCOHERENT";
         Diagnostic: {
             /** Format: uuid */
             readonly id: string;
@@ -1142,6 +1680,127 @@ export interface components {
             readonly sector_module_share: string;
             readonly criteria: components["schemas"]["Criterion"][];
         };
+        Document: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly pme: components["schemas"]["PmeRef"];
+            readonly document_type: components["schemas"]["DocumentType"];
+            readonly title: string;
+            readonly status: string;
+            readonly deadline: components["schemas"]["DeadlineRef"] | null;
+            /** Format: date */
+            readonly period_start: string | null;
+            /** Format: date */
+            readonly period_end: string | null;
+            /** Format: date */
+            readonly issued_at: string | null;
+            /** Format: date */
+            readonly expires_at: string | null;
+            readonly integrity_status: components["schemas"]["IntegrityStatusEnum"];
+            readonly validity_status: components["schemas"]["ValidityStatusEnum"];
+            readonly currency_status: components["schemas"]["CurrencyStatusEnum"];
+            readonly verification_status: components["schemas"]["VerificationStatusEnum"];
+            readonly conformity_status: components["schemas"]["ConformityStatusEnum"];
+            /** @description Motif en langage simple, visible par la PME. */
+            readonly decision_reason: string;
+            readonly verified_by_name: string;
+            /** Format: date-time */
+            readonly verified_at: string | null;
+            readonly uploaded_by_name: string;
+            readonly uploaded_via: components["schemas"]["UploadedViaEnum"];
+            readonly current_version_no: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        DocumentCheck: {
+            readonly check_code: string;
+            readonly result: components["schemas"]["ResultEnum"];
+            readonly message: string;
+            readonly details: unknown;
+        };
+        DocumentDetail: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly pme: components["schemas"]["PmeRef"];
+            readonly document_type: components["schemas"]["DocumentType"];
+            readonly title: string;
+            readonly status: string;
+            readonly deadline: components["schemas"]["DeadlineRef"] | null;
+            /** Format: date */
+            readonly period_start: string | null;
+            /** Format: date */
+            readonly period_end: string | null;
+            /** Format: date */
+            readonly issued_at: string | null;
+            /** Format: date */
+            readonly expires_at: string | null;
+            readonly integrity_status: components["schemas"]["IntegrityStatusEnum"];
+            readonly validity_status: components["schemas"]["ValidityStatusEnum"];
+            readonly currency_status: components["schemas"]["CurrencyStatusEnum"];
+            readonly verification_status: components["schemas"]["VerificationStatusEnum"];
+            readonly conformity_status: components["schemas"]["ConformityStatusEnum"];
+            /** @description Motif en langage simple, visible par la PME. */
+            readonly decision_reason: string;
+            readonly verified_by_name: string;
+            /** Format: date-time */
+            readonly verified_at: string | null;
+            readonly uploaded_by_name: string;
+            readonly uploaded_via: components["schemas"]["UploadedViaEnum"];
+            readonly current_version_no: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly versions: components["schemas"]["DocumentVersion"][];
+        };
+        DocumentType: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly name: string;
+            readonly category: string;
+            readonly category_name: string;
+            readonly description: string;
+            /** @description Comment l'obtenir / le préparer (langage simple). */
+            readonly guidance: string;
+            readonly period_kind: components["schemas"]["PeriodKindEnum"];
+            /** @description Durée de validité depuis la délivrance. */
+            readonly validity_days: number | null;
+            /** @description « À jour » si daté de moins de N jours. */
+            readonly freshness_days: number | null;
+            /** @description Données personnelles : jamais envoyé à une IA externe. */
+            readonly sensitive: boolean;
+        };
+        DocumentVersion: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly version_no: number;
+            readonly original_filename: string;
+            readonly extension: string;
+            readonly mime_detected: string;
+            readonly size_bytes: number;
+            readonly sha256: string;
+            readonly av_status: components["schemas"]["AvStatusEnum"];
+            readonly av_engine: string;
+            readonly av_signature: string;
+            readonly text_status: components["schemas"]["TextStatusEnum"];
+            readonly page_count: number | null;
+            /** Format: uuid */
+            readonly duplicate_of: string | null;
+            /** Format: date-time */
+            readonly processed_at: string | null;
+            readonly uploaded_by_name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly checks: components["schemas"]["DocumentCheck"][];
+            readonly downloadable: boolean;
+        };
+        DownloadUrl: {
+            url: string;
+            expires_in: number;
+        };
         Duplicate: {
             /** Format: uuid */
             id: string;
@@ -1169,6 +1828,18 @@ export interface components {
             readonly exit_reason: string;
         };
         /**
+         * @description * `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY
+         *     * `DOCUMENT_DECISION` - DOCUMENT_DECISION
+         *     * `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY
+         *     * `DEADLINE_REMINDER` - DEADLINE_REMINDER
+         *     * `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY
+         *     * `DEADLINE_OVERDUE` - DEADLINE_OVERDUE
+         *     * `DEADLINE_ESCALATION` - DEADLINE_ESCALATION
+         *     * `ALERT_RAISED` - ALERT_RAISED
+         * @enum {string}
+         */
+        EventCodeEnum: "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED";
+        /**
          * @description * `NONE` - Aucune
          *     * `RECOMMENDED` - Recommandée
          *     * `REQUIRED` - Obligatoire
@@ -1182,6 +1853,21 @@ export interface components {
          * @enum {string}
          */
         ExitReasonEnum: "DIPLOMEE" | "ABANDON" | "REORIENTATION";
+        FolderCategory: {
+            code: string;
+            name: string;
+            items: components["schemas"]["FolderItem"][];
+        };
+        FolderItem: {
+            document_type: {
+                [key: string]: unknown;
+            };
+            required: boolean;
+            criteria: string[];
+            obligation: string | null;
+            state: string;
+            documents: components["schemas"]["Document"][];
+        };
         FrameworkVersion: {
             /** Format: uuid */
             readonly id: string;
@@ -1221,6 +1907,15 @@ export interface components {
          */
         FrameworkVersionStatusEnum: "DRAFT" | "PUBLISHED" | "RETIRED";
         /**
+         * @description * `PONCTUELLE` - Ponctuelle
+         *     * `MENSUELLE` - Mensuelle
+         *     * `TRIMESTRIELLE` - Trimestrielle
+         *     * `SEMESTRIELLE` - Semestrielle
+         *     * `ANNUELLE` - Annuelle
+         * @enum {string}
+         */
+        FrequencyEnum: "PONCTUELLE" | "MENSUELLE" | "TRIMESTRIELLE" | "SEMESTRIELLE" | "ANNUELLE";
+        /**
          * @description * `F` - Femme
          *     * `H` - Homme
          * @enum {string}
@@ -1233,8 +1928,17 @@ export interface components {
             snapshot: components["schemas"]["SnapshotDetail"] | null;
             baseline: components["schemas"]["SnapshotSummary"] | null;
             history: components["schemas"]["SnapshotSummary"][];
+            /** @description Score courant : preuves vérifiées depuis la validation. */
+            live: components["schemas"]["SnapshotDetail"] | null;
             open_diagnostic: unknown;
         };
+        /**
+         * @description * `EN_SCAN` - Analyse de sécurité en cours
+         *     * `SAIN` - Sain
+         *     * `REJETE_SECURITE` - Rejeté (sécurité)
+         * @enum {string}
+         */
+        IntegrityStatusEnum: "EN_SCAN" | "SAIN" | "REJETE_SECURITE";
         InviteRequest: {
             /** Format: email */
             email: string;
@@ -1356,6 +2060,49 @@ export interface components {
             id: string;
             name: string;
         };
+        /**
+         * @description * `REGLEMENTAIRE` - Réglementaire
+         *     * `PROGRAMME` - Programme (transmission à GUDE-PME)
+         *     * `BONNE_PRATIQUE` - Bonne pratique
+         * @enum {string}
+         */
+        NatureEnum: "REGLEMENTAIRE" | "PROGRAMME" | "BONNE_PRATIQUE";
+        Notification: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly event_code: string;
+            readonly title: string;
+            readonly body: string;
+            readonly link: string;
+            readonly severity: string;
+            /** Format: date-time */
+            readonly read_at: string | null;
+            /** Format: date-time */
+            readonly emailed_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        ObligationTemplate: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly name: string;
+            readonly description: string;
+            readonly nature: components["schemas"]["NatureEnum"];
+            readonly document_type: string;
+            readonly document_type_name: string;
+            readonly regulatory_rule: string;
+            readonly regulatory_status: string;
+            readonly frequency: components["schemas"]["FrequencyEnum"];
+            readonly frequency_rule: unknown;
+            readonly due_days_after_period_end: number;
+            /** @description JSON Logic sur le profil de la PME. */
+            readonly applicability: unknown;
+            readonly reminder_offsets: number[];
+            readonly is_critical: boolean;
+            readonly is_active: boolean;
+            readonly pmes: number;
+        };
         Option: {
             value: string;
             label: string;
@@ -1442,6 +2189,12 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        PatchedAlertRuleRequest: {
+            severity?: components["schemas"]["SeverityEnum"];
+            /** @description Seuils de la règle (jours, points, pourcentages…). */
+            params?: unknown;
+            is_active?: boolean;
+        };
         PatchedOrganizationUpdateRequest: {
             name?: string;
             branding?: unknown;
@@ -1506,6 +2259,16 @@ export interface components {
             funder?: string;
             objectives?: unknown;
         };
+        /**
+         * @description * `AUCUNE` - Aucune
+         *     * `MOIS` - Mois
+         *     * `TRIMESTRE` - Trimestre
+         *     * `SEMESTRE` - Semestre
+         *     * `ANNEE` - Année
+         *     * `EXERCICE` - Exercice comptable
+         * @enum {string}
+         */
+        PeriodKindEnum: "AUCUNE" | "MOIS" | "TRIMESTRE" | "SEMESTRE" | "ANNEE" | "EXERCICE";
         Person: {
             /** Format: uuid */
             readonly id: string;
@@ -1672,6 +2435,11 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        PmeRef: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
         /**
          * @description * `gude` - gude
          *     * `pme` - pme
@@ -1680,6 +2448,18 @@ export interface components {
          * @enum {string}
          */
         PortalEnum: "gude" | "pme" | "platform" | "none";
+        Preference: {
+            event_code: components["schemas"]["EventCodeEnum"];
+            readonly label: string;
+            in_app: boolean;
+            email: boolean;
+            readonly mandatory: boolean;
+        };
+        PreferenceRequest: {
+            event_code: components["schemas"]["EventCodeEnum"];
+            in_app: boolean;
+            email: boolean;
+        };
         Programme: {
             /** Format: uuid */
             readonly id: string;
@@ -1753,6 +2533,21 @@ export interface components {
             description: string;
             questions: components["schemas"]["QuestionnaireQuestion"][];
         };
+        Rate: {
+            /** Format: double */
+            rate: number | null;
+            eligible: number;
+            /** Format: double */
+            points: number;
+            counts: {
+                [key: string]: number;
+            };
+        };
+        ReadRequest: {
+            ids?: string[];
+            /** @default false */
+            all: boolean;
+        };
         ReasonRequest: {
             reason: string;
         };
@@ -1769,6 +2564,45 @@ export interface components {
             code: string;
             name: string;
         };
+        RegulatoryRule: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly title: string;
+            /** @description Ce qui a été identifié (et ce qui reste à confirmer). */
+            readonly content: string;
+            readonly authority: string;
+            readonly sources: {
+                [key: string]: string;
+            }[];
+            /** @description Texte et article précis. */
+            readonly source_reference: string;
+            readonly status: components["schemas"]["RegulatoryRuleStatusEnum"];
+            /** Format: date */
+            readonly verified_at: string | null;
+            readonly verified_by_name: string;
+            readonly verification_note: string;
+            /** Format: date */
+            readonly review_due_at: string | null;
+            readonly obligations: string[];
+        };
+        /**
+         * @description * `A_VERIFIER` - À vérifier
+         *     * `PRE_VERIFIE` - Pré-vérifiée (source identifiée)
+         *     * `VERIFIE` - Vérifiée
+         *     * `OBSOLETE` - Obsolète
+         *     * `HORS_PERIMETRE` - Hors périmètre
+         * @enum {string}
+         */
+        RegulatoryRuleStatusEnum: "A_VERIFIER" | "PRE_VERIFIE" | "VERIFIE" | "OBSOLETE" | "HORS_PERIMETRE";
+        /**
+         * @description * `OK` - OK
+         *     * `ALERTE` - Alerte
+         *     * `ECHEC` - Échec
+         *     * `NON_DETERMINE` - Non déterminé
+         * @enum {string}
+         */
+        ResultEnum: "OK" | "ALERTE" | "ECHEC" | "NON_DETERMINE";
         ReviewCriterion: {
             code: string;
             name: string;
@@ -1828,6 +2662,25 @@ export interface components {
          * @enum {string}
          */
         RoleInPmeEnum: "CONSEILLER_PRINCIPAL" | "EXPERT";
+        RuleStatusRequest: {
+            status: components["schemas"]["RuleStatusStatusEnum"];
+            /** @default  */
+            note: string;
+        };
+        /**
+         * @description * `A_VERIFIER` - À vérifier
+         *     * `PRE_VERIFIE` - Pré-vérifiée (source identifiée)
+         *     * `OBSOLETE` - Obsolète
+         *     * `HORS_PERIMETRE` - Hors périmètre
+         * @enum {string}
+         */
+        RuleStatusStatusEnum: "A_VERIFIER" | "PRE_VERIFIE" | "OBSOLETE" | "HORS_PERIMETRE";
+        RunResult: {
+            pmes: number;
+            obligations: number;
+            deadlines_created: number;
+            reminders: number;
+        };
         /**
          * @description * `ORG` - Toute l'organisation
          *     * `PROGRAMME` - Un programme
@@ -1836,6 +2689,14 @@ export interface components {
          * @enum {string}
          */
         ScopeEnum: "ORG" | "PROGRAMME" | "PORTEFEUILLE" | "PME";
+        /**
+         * @description * `INFO` - Information
+         *     * `MOYENNE` - Moyenne
+         *     * `ELEVEE` - Élevée
+         *     * `CRITIQUE` - Critique
+         * @enum {string}
+         */
+        SeverityEnum: "INFO" | "MOYENNE" | "ELEVEE" | "CRITIQUE";
         /**
          * @description * `NON_DETERMINEE` - Non déterminée
          *     * `MICRO` - Micro-entreprise
@@ -1931,6 +2792,14 @@ export interface components {
             /** Format: uuid */
             organization_id: string;
         };
+        /**
+         * @description * `EN_ATTENTE` - En attente
+         *     * `TEXTE_NATIF` - Texte natif extrait
+         *     * `OCR_REQUIS` - Lecture optique requise (phase 4)
+         *     * `ERREUR` - Erreur de lecture
+         * @enum {string}
+         */
+        TextStatusEnum: "EN_ATTENTE" | "TEXTE_NATIF" | "OCR_REQUIS" | "ERREUR";
         TimelineEntry: {
             id: number;
             /** Format: date-time */
@@ -1957,12 +2826,76 @@ export interface components {
          * @enum {string}
          */
         UnitEnum: "PERCENT" | "RATIO" | "DAYS" | "YEARS" | "AMOUNT";
+        UploadRequest: {
+            /** Format: binary */
+            file: string;
+            document_type?: string;
+            /** Format: uuid */
+            document_id?: string | null;
+            /** Format: uuid */
+            deadline_id?: string | null;
+            /** @default  */
+            title: string;
+            /** Format: date */
+            period_start?: string | null;
+            /** Format: date */
+            period_end?: string | null;
+            /** Format: date */
+            issued_at?: string | null;
+            /** Format: date */
+            expires_at?: string | null;
+        };
+        /**
+         * @description * `PORTAIL_PME` - Portail PME
+         *     * `CONSEILLER` - Conseiller
+         * @enum {string}
+         */
+        UploadedViaEnum: "PORTAIL_PME" | "CONSEILLER";
         UserSummary: {
             /** Format: uuid */
             readonly id: string;
             full_name: string;
             /** Format: email */
             email: string;
+        };
+        /**
+         * @description * `VALIDE` - Valide
+         *     * `EXPIRE` - Expiré
+         *     * `INDETERMINE` - Indéterminée
+         * @enum {string}
+         */
+        ValidityStatusEnum: "VALIDE" | "EXPIRE" | "INDETERMINE";
+        /**
+         * @description * `NON_VERIFIE` - Non vérifié
+         *     * `ANALYSE_IA` - Analysé par l'IA
+         *     * `VERIF_HUMAINE_REQUISE` - Vérification humaine requise
+         *     * `VERIFIE_HUMAIN` - Vérifié
+         *     * `REJETE` - Rejeté
+         * @enum {string}
+         */
+        VerificationStatusEnum: "NON_VERIFIE" | "ANALYSE_IA" | "VERIF_HUMAINE_REQUISE" | "VERIFIE_HUMAIN" | "REJETE";
+        VerifyRequest: {
+            decision: components["schemas"]["DecisionEnum"];
+            /** @default  */
+            reason: string;
+            /** Format: date */
+            period_start?: string | null;
+            /** Format: date */
+            period_end?: string | null;
+            /** Format: date */
+            issued_at?: string | null;
+            /** Format: date */
+            expires_at?: string | null;
+        };
+        VerifyRuleRequest: {
+            source_reference: string;
+            /** Format: date */
+            verified_at: string;
+            /** @default  */
+            note: string;
+        };
+        WaiveRequest: {
+            reason: string;
         };
     };
     responses: never;
@@ -1973,6 +2906,98 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    alert_rules_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertRule"][];
+                };
+            };
+        };
+    };
+    alert_rules_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAlertRuleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertRule"];
+                };
+            };
+        };
+    };
+    alerts_list: {
+        parameters: {
+            query?: {
+                min_severity?: "CRITIQUE" | "ELEVEE" | "INFO" | "MOYENNE";
+                pme?: string;
+                status?: "all" | "open";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Alert"][];
+                };
+            };
+        };
+    };
+    alerts_transition_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertTransitionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Alert"];
+                };
+            };
+        };
+    };
     audit_logs_list: {
         parameters: {
             query?: {
@@ -2254,6 +3279,25 @@ export interface operations {
             };
         };
     };
+    compliance_run_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunResult"];
+                };
+            };
+        };
+    };
     dashboards_advisor_retrieve: {
         parameters: {
             query?: never;
@@ -2315,6 +3359,52 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    deadlines_waive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deadline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaiveRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deadline"];
+                };
+            };
+        };
+    };
+    deadlines_upcoming_list: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deadline"][];
                 };
             };
         };
@@ -2569,6 +3659,93 @@ export interface operations {
             };
         };
     };
+    document_types_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentType"][];
+                };
+            };
+        };
+    };
+    documents_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetail"];
+                };
+            };
+        };
+    };
+    documents_verify_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Document"];
+                };
+            };
+        };
+    };
+    documents_versions_download_url_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                version_no: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadUrl"];
+                };
+            };
+        };
+    };
     framework_versions_list: {
         parameters: {
             query?: never;
@@ -2693,6 +3870,48 @@ export interface operations {
             };
         };
     };
+    me_notification_preferences_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preference"][];
+                };
+            };
+        };
+    };
+    me_notification_preferences_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferenceRequest"][];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preference"][];
+                };
+            };
+        };
+    };
     memberships_revoke_create: {
         parameters: {
             query?: never;
@@ -2710,6 +3929,113 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Membership"];
+                };
+            };
+        };
+    };
+    notifications_list: {
+        parameters: {
+            query?: {
+                unread?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"][];
+                };
+            };
+        };
+    };
+    notifications_read_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Count"];
+                };
+            };
+        };
+    };
+    notifications_unread_count_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Count"];
+                };
+            };
+        };
+    };
+    obligation_templates_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObligationTemplate"][];
+                };
+            };
+        };
+    };
+    obligation_templates_activation_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivationRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObligationTemplate"];
                 };
             };
         };
@@ -2999,6 +4325,50 @@ export interface operations {
             };
         };
     };
+    pmes_compliance_folder_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComplianceFolder"];
+                };
+            };
+        };
+    };
+    pmes_deadlines_list: {
+        parameters: {
+            query?: {
+                scope?: "all" | "open";
+            };
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deadline"][];
+                };
+            };
+        };
+    };
     pmes_diagnostics_list: {
         parameters: {
             query?: never;
@@ -3041,6 +4411,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+        };
+    };
+    pmes_documents_list: {
+        parameters: {
+            query?: {
+                status?: string;
+                type?: string;
+            };
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Document"][];
+                };
+            };
+        };
+    };
+    pmes_documents_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["UploadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetail"];
                 };
             };
         };
@@ -3361,6 +4780,75 @@ export interface operations {
             };
         };
     };
+    regulatory_rules_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegulatoryRule"][];
+                };
+            };
+        };
+    };
+    regulatory_rules_status_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleStatusRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegulatoryRule"];
+                };
+            };
+        };
+    };
+    regulatory_rules_verify_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyRuleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegulatoryRule"];
+                };
+            };
+        };
+    };
     roles_list: {
         parameters: {
             query?: never;
@@ -3482,6 +4970,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Membership"];
+                };
+            };
+        };
+    };
+    verifications_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Document"][];
                 };
             };
         };

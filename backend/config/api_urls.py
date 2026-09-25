@@ -11,9 +11,13 @@ from rest_framework.response import Response
 from rest_framework.routers import SimpleRouter
 
 from pme360.accounts import views as accounts
+from pme360.alerts import views as alerts
 from pme360.audit import views as audit
+from pme360.compliance import views as compliance
 from pme360.dashboards import views as dashboards
 from pme360.diagnostic import views as diagnostic
+from pme360.documents import views as documents
+from pme360.notifications import views as notifications
 from pme360.organizations import views as organizations
 from pme360.pmes import views as pmes
 from pme360.scoring import views as scoring
@@ -89,6 +93,33 @@ urlpatterns = [
     path("pmes/<uuid:pme_id>/health-check", scoring.HealthCheckView.as_view()),
     path("snapshots/<uuid:snapshot_id>", scoring.SnapshotDetailView.as_view()),
     path("snapshots/<uuid:snapshot_id>/compare/<uuid:other_id>", scoring.SnapshotCompareView.as_view()),
+    # Documents et dossier de conformité
+    path("document-types", documents.DocumentTypeListView.as_view()),
+    path("pmes/<uuid:pme_id>/documents", documents.PmeDocumentsView.as_view()),
+    path("documents/<uuid:document_id>", documents.DocumentDetailView.as_view()),
+    path("documents/<uuid:document_id>/verify", documents.DocumentVerifyView.as_view()),
+    path("documents/<uuid:document_id>/versions/<int:version_no>/download-url", documents.DownloadUrlView.as_view()),
+    path("files/<str:token>", documents.FileDownloadView.as_view()),
+    path("verifications", documents.VerificationQueueView.as_view()),
+    path("pmes/<uuid:pme_id>/compliance-folder", compliance.ComplianceFolderView.as_view()),
+    path("pmes/<uuid:pme_id>/deadlines", compliance.PmeDeadlinesView.as_view()),
+    path("deadlines/upcoming", compliance.UpcomingDeadlinesView.as_view()),
+    path("deadlines/<uuid:deadline_id>/waive", compliance.DeadlineWaiveView.as_view()),
+    path("regulatory-rules", compliance.RegulatoryRuleListView.as_view()),
+    path("regulatory-rules/<uuid:rule_id>/verify", compliance.RegulatoryRuleVerifyView.as_view()),
+    path("regulatory-rules/<uuid:rule_id>/status", compliance.RegulatoryRuleStatusView.as_view()),
+    path("obligation-templates", compliance.ObligationTemplateListView.as_view()),
+    path("obligation-templates/<uuid:template_id>/activation", compliance.ObligationTemplateActivationView.as_view()),
+    path("compliance/run", compliance.ComplianceRunView.as_view()),
+    # Alertes et notifications
+    path("alerts", alerts.AlertListView.as_view()),
+    path("alerts/<uuid:alert_id>/transition", alerts.AlertTransitionView.as_view()),
+    path("alert-rules", alerts.AlertRuleListView.as_view()),
+    path("alert-rules/<uuid:rule_id>", alerts.AlertRuleDetailView.as_view()),
+    path("notifications", notifications.NotificationListView.as_view()),
+    path("notifications/unread-count", notifications.NotificationCountView.as_view()),
+    path("notifications/read", notifications.NotificationReadView.as_view()),
+    path("me/notification-preferences", notifications.NotificationPreferencesView.as_view()),
     # Audit
     path("audit-logs", audit.AuditLogListView.as_view()),
     path("audit-logs/verify", audit.AuditVerifyView.as_view()),

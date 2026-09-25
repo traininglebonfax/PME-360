@@ -150,7 +150,29 @@ def build_profile(diagnostic: Diagnostic, answers: dict[str, Answer], questions:
     return profile
 
 
-def build_input(diagnostic: Diagnostic, version: FrameworkVersion | None = None, context: dict | None = None):
+_criteria_documents_cache: dict[str, dict[str, list[str]]] = {}
+
+
+def criteria_documents(version: FrameworkVersion) -> dict[str, list[str]]:
+    """Critère → types de documents qui le prouvent (``criterion.evidence_document_types``)."""
+    key = str(version.pk)
+    if version.status == FrameworkVersion.Status.DRAFT or key not in _criteria_documents_cache:
+        _criteria_documents_cache[key] = {
+            code: list(types)
+            for code, types in Criterion.objects.filter(framework_version=version).values_list(
+                "code", "evidence_document_types"
+            )
+            if types
+        }
+    return _criteria_documents_cache[key]
+
+
+def build_input(
+    diagnostic: Diagnostic,
+    version: FrameworkVersion | None = None,
+    context: dict | None = None,
+    evidence_as_of: date | None = None,
+):
     """Entrées du moteur pour ``diagnostic`` évalué avec ``version`` (par défaut, la sienne).
 
     Les réponses et revues sont rapprochées par CODE de question et de critère : un diagnostic peut ainsi être
@@ -183,6 +205,9 @@ def build_input(diagnostic: Diagnostic, version: FrameworkVersion | None = None,
             source="DECLARATIF_CORROBORE" if sources == {"DECLARATIF_CORROBORE"} else sorted(sources)[0],
             answered_on=max(timezone.localtime(a.answered_at).date() for _, a in items),
         )
+    from pme360.documents.evidence import evidence_for, verified_documents
+
+    evidence = evidence_for(criteria_documents(version), verified_documents(diagnostic.pme, evidence_as_of))
     reviews = {
         a.criterion.code: engine.Review(status=a.status, level_final=a.level_final, corroborated=a.corroborated)
         for a in CriterionAssessment.objects.filter(diagnostic=diagnostic).select_related("criterion")
@@ -193,7 +218,7 @@ def build_input(diagnostic: Diagnostic, version: FrameworkVersion | None = None,
         declared=declared,
         inputs=inputs,
         reviews=reviews,
-        evidence={},
+        evidence=evidence,
         context=context if context is not None else priority_context(diagnostic),
     )
     return spec, data
@@ -208,10 +233,15 @@ def priority_context(diagnostic: Diagnostic) -> dict:
     )
     last = previous.first()
     baseline = previous.filter(kind=ScoreSnapshot.Kind.BASELINE).order_by("reference_date").first()
+    from pme360.alerts.models import Alert
+
+    open_alerts = Alert.objects.filter(pme=diagnostic.pme, status__in=Alert.OPEN)
     context = {
         "previous_imo": _float(last.imo) if last else None,
         "baseline_global": None,
         "months_since_baseline": None,
+        "open_critical_alerts": open_alerts.filter(severity="CRITIQUE").count(),
+        "open_high_alerts": open_alerts.filter(severity__in=["ELEVEE", "CRITIQUE"]).count(),
     }
     if baseline:
         context["baseline_global"] = _float(baseline.global_score)
@@ -223,8 +253,11 @@ def _float(value) -> float | None:
     return None if value is None else float(value)
 
 
-def compute(diagnostic: Diagnostic, version: FrameworkVersion | None = None) -> dict:
-    spec, data = build_input(diagnostic, version)
+def compute(
+    diagnostic: Diagnostic, version: FrameworkVersion | None = None, evidence_as_of: date | None = None
+) -> dict:
+    evidence_as_of = evidence_as_of or timezone.localdate()
+    spec, data = build_input(diagnostic, version, evidence_as_of=evidence_as_of)
     result = engine.compute(spec, data)
     # Écarts historiques pour les règles de priorité, calculés sur le résultat courant.
     context = data.context
@@ -236,6 +269,7 @@ def compute(diagnostic: Diagnostic, version: FrameworkVersion | None = None) -> 
     if extra:
         data.context = {**context, **extra}
         result = engine.compute(spec, data)
+    result["evidence_as_of"] = evidence_as_of.isoformat()
     return result
 
 
@@ -254,7 +288,7 @@ def snapshot_kind(diagnostic: Diagnostic) -> str:
 
 def freeze(diagnostic: Diagnostic) -> ScoreSnapshot:
     """Calcule et fige le snapshot d'un diagnostic validé (RM-04 : immuable, lié à la version du référentiel)."""
-    result = compute(diagnostic)
+    result = compute(diagnostic, evidence_as_of=timezone.localdate())
     snapshot = ScoreSnapshot.objects.create(
         pme=diagnostic.pme,
         diagnostic=diagnostic,
@@ -357,7 +391,13 @@ def compare(before: ScoreSnapshot, after: ScoreSnapshot) -> dict:
     before_result = before.result
     reprojected = False
     if before.framework_version_id != after.framework_version_id and before.diagnostic_id:
-        spec, data = build_input(before.diagnostic, after.framework_version, context={})
+        as_of = before.result.get("evidence_as_of")
+        spec, data = build_input(
+            before.diagnostic,
+            after.framework_version,
+            context={},
+            evidence_as_of=date.fromisoformat(as_of) if as_of else before.reference_date,
+        )
         before_result = engine.compute(spec, data)
         reprojected = True
     explanation = engine.explain_change(before_result, after.result)
@@ -365,3 +405,39 @@ def compare(before: ScoreSnapshot, after: ScoreSnapshot) -> dict:
     if reprojected:
         explanation["before"]["original_global_score"] = before.result["global_score"]
     return explanation
+
+
+def latest_validated(pme) -> Diagnostic | None:
+    return Diagnostic.objects.filter(pme=pme, status=Diagnostic.Status.VALIDE).order_by("-reference_date").first()
+
+
+def refresh_live(pme) -> ScoreSnapshot | None:
+    """Score courant (Document 7, § 6) : dernier diagnostic validé + preuves vérifiées à ce jour. Non figé."""
+    ScoreSnapshot.objects.filter(pme=pme, kind=ScoreSnapshot.Kind.LIVE).delete()
+    diagnostic = latest_validated(pme)
+    if diagnostic is None:
+        return None
+    result = compute(diagnostic)
+    result["source_diagnostic"] = str(diagnostic.pk)
+    return ScoreSnapshot.objects.create(
+        pme=pme,
+        diagnostic=None,
+        framework_version=diagnostic.framework_version,
+        kind=ScoreSnapshot.Kind.LIVE,
+        reference_date=timezone.localdate(),
+        computed_at=timezone.now(),
+        engine_version=result["engine_version"],
+        global_score=_decimal(result["global_score"]),
+        imo=_decimal(result["imo"]),
+        ipe=_decimal(result["ipe"]),
+        risk_index=_decimal(result["risk_index"]),
+        digital_index=_decimal(result["digital"]["index"]),
+        confidence=_decimal(result["confidence"], "0.001"),
+        maturity_level=result["maturity"]["level"],
+        maturity_level_uncapped=result["maturity"]["level_uncapped"],
+        gates_failed=result["maturity"]["gates_failed"],
+        intervention_priority=result["priority"]["priority"],
+        quadrant=result["quadrant"],
+        is_frozen=False,
+        result=result,
+    )

@@ -255,9 +255,15 @@ def evaluate_criterion(criterion: CriterionSpec, data: DiagnosticInput, settings
     if evidence and evidence.verified:
         source, answered_on = evidence.source, evidence.dated
     result["level_uncapped"] = level
-    if criterion.evidence_policy == "REQUIRED" and not proven and level > criterion.declarative_cap_level:
-        level = criterion.declarative_cap_level  # RM-01 : pas de conformité sans preuve vérifiée
-        result["capped"] = True
+    if criterion.evidence_policy == "REQUIRED" and not proven:
+        # RM-01 : pas de conformité sans preuve vérifiée. Une preuve vérifiée de niveau inférieur au niveau
+        # déclaré relève le plafond jusqu'au niveau qu'elle démontre.
+        limit = criterion.declarative_cap_level
+        if evidence and evidence.verified and evidence.level is not None:
+            limit = max(limit, evidence.level)
+        if level > limit:
+            level = limit
+            result["capped"] = True
     result.update(
         status=STATUS_EVALUATED,
         level=level,

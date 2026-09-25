@@ -12,6 +12,7 @@ from django.utils import timezone
 from pme360.accounts.access import build_access
 from pme360.accounts.models import Role, User, UserMembership
 from pme360.audit import services as audit
+from pme360.compliance.defaults import install as install_compliance
 from pme360.core.tenancy import system_context, tenant_context
 from pme360.diagnostic import services as diagnostic_services
 from pme360.diagnostic.models import Answer, Diagnostic, Question
@@ -44,12 +45,63 @@ class Command(BaseCommand):
             with tenant_context(organization.id):
                 install_defaults(organization)
                 install_gude360(organization)
+                install_compliance(organization)
                 programme = self._programme(organization) if slug == "gude-pme-demo" else None
                 pmes = self._pmes(slug, users, programme)
                 self._memberships(slug, users, programme, pmes)
                 self._pme_setup(slug, organization, users, programme, pmes)
                 self._diagnostics(slug, organization, users, pmes)
+                self._documents(slug, organization, users, pmes)
         self._report()
+
+    def _documents(self, slug: str, organization: Organization, users: dict, pmes: dict[str, Pme]) -> None:
+        """Obligations et échéances, documents fictifs déposés et vérifiés, alertes (phase 3)."""
+        import io
+        from datetime import timedelta
+
+        from pypdf import PdfWriter
+
+        from pme360.compliance import services as compliance
+        from pme360.documents import services as documents
+        from pme360.documents.models import Document, DocumentType
+        from seeds import demo_documents
+
+        def fictitious_pdf() -> bytes:
+            writer = PdfWriter()
+            writer.add_blank_page(width=595, height=842)
+            writer.add_metadata({"/Title": "DOCUMENT DE DÉMONSTRATION — FICTIF"})
+            buffer = io.BytesIO()
+            writer.write(buffer)
+            return buffer.getvalue()
+
+        today = timezone.localdate()
+        for spec in demo.PMES:
+            pme = pmes.get(spec["key"])
+            if spec["org"] != slug or pme is None:
+                continue
+            pme.refresh_from_db()
+            items = [d for d in demo_documents.DOCUMENTS if d[0] == spec["key"]]
+            if items and not Document.objects.filter(pme=pme).exists():
+                advisor = users[spec["advisor"]] if spec.get("advisor") else None
+                leader_email = next((u[0] for u in demo.USERS if u[3] == "DIRIGEANT_PME" and u[5] == spec["key"]), None)
+                for _, type_code, decision, reason, expires_in in items:
+                    uploader = users[leader_email] if decision is None and leader_email else advisor
+                    access = build_access(uploader, organization.id)
+                    result = documents.upload(
+                        access,
+                        pme,
+                        filename=f"{type_code.lower()}-demo.pdf",
+                        content=fictitious_pdf(),
+                        document_type=DocumentType.objects.get(code=type_code),
+                        title=f"{DocumentType.objects.get(code=type_code).name} (démonstration)",
+                        issued_at=today - timedelta(days=60),
+                        expires_at=today + timedelta(days=expires_in) if expires_in else None,
+                    )
+                    if decision:
+                        documents.verify(
+                            build_access(advisor, organization.id), result.document, decision=decision, reason=reason
+                        )
+            compliance.run_for_pme(pme, today)
 
     # --- Étapes -------------------------------------------------------------------------------------------------
 

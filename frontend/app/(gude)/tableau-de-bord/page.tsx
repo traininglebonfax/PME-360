@@ -5,13 +5,22 @@ import Link from "next/link";
 
 import { BarList } from "@/components/BarList";
 import { LifecycleBadge } from "@/components/LifecycleBadge";
-import { Alert, Badge, ButtonLink, Card, EmptyState, Kpi, LoadingBlock, PageHeader, PendingKpi } from "@/components/ui";
+import { Alert, Badge, ButtonLink, Card, EmptyState, Kpi, LoadingBlock, PageHeader } from "@/components/ui";
 import { api, errorMessage, unwrap } from "@/lib/api";
 import type { AdvisorDashboard, PortfolioDashboard, ProgressRow } from "@/lib/dashboards";
 import { formatRelative } from "@/lib/format";
 import { LIFECYCLE_LABELS, SIZE_LABELS } from "@/lib/labels";
 import { DIAGNOSTIC_TYPE_LABELS, formatPercent, formatScore, PRIORITY_TONES } from "@/lib/scoring";
 import { hasPermission, useMe } from "@/lib/session";
+
+type QueueItem = AdvisorDashboard["work_queue"]["items"][number];
+
+const QUEUE_KINDS: Record<string, { label: string; tone: "danger" | "warning" | "info" | "neutral"; href: (item: QueueItem) => string }> = {
+  ALERTE: { label: "Alerte", tone: "danger", href: (item) => `/pme/${item.pme_id}?onglet=alertes` },
+  DOCUMENT_A_VERIFIER: { label: "Document", tone: "warning", href: (item) => `/verifications/${item.id}` },
+  DIAGNOSTIC_A_VALIDER: { label: "Diagnostic", tone: "info", href: (item) => `/diagnostics/${item.id}/revue` },
+  ECHEANCE_EN_RETARD: { label: "Retard", tone: "neutral", href: (item) => `/pme/${item.pme_id}?onglet=documents` },
+};
 
 function signed(value: number): string {
   return `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(1).replace(".", ",")}`;
@@ -48,8 +57,12 @@ export default function DashboardPage() {
         <Kpi label="Diagnostics à valider" value={data.kpis.diagnostics_to_validate} hint={`${data.kpis.diagnostics_in_progress} en collecte`} />
         <Kpi label="Intervention urgente" value={data.kpis.pmes_urgent} hint="Priorité P1" />
         <Kpi label="Inactives" value={data.kpis.pmes_inactive} hint={`Sans activité depuis ${data.inactivity_days} j`} />
-        <PendingKpi label="Documents à vérifier" phase={data.kpis.documents_to_verify.available_in_phase} />
-        <PendingKpi label="Alertes ouvertes" phase={data.kpis.alerts_open.available_in_phase} />
+        <Kpi label="Documents à vérifier" value={data.kpis.documents_to_verify} />
+        <Kpi
+          label="Alertes ouvertes"
+          value={data.kpis.alerts_open}
+          hint={`${data.kpis.alerts_critical} élevée(s) ou critique(s) · ${data.kpis.deadlines_overdue} échéance(s) en retard`}
+        />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -80,24 +93,28 @@ export default function DashboardPage() {
         </Card>
         <Card title="Ma file de travail">
           {queue.length === 0 ? (
-            <p className="text-sm text-muted">Aucun diagnostic en attente de revue.</p>
+            <p className="text-sm text-muted">Rien en attente : aucune alerte grave, aucun document ni diagnostic à traiter.</p>
           ) : (
             <ul className="space-y-2">
-              {queue.map((item) => (
-                <li key={item.diagnostic_id}>
-                  <Link href={`/diagnostics/${item.diagnostic_id}/revue`} className="block rounded-lg border border-line px-3 py-2 hover:bg-gray-50">
-                    <p className="text-sm font-medium">{item.pme_name}</p>
-                    <p className="text-xs text-muted">
-                      {DIAGNOSTIC_TYPE_LABELS[item.type]} à valider · soumis {formatRelative(item.since)}
-                    </p>
-                  </Link>
-                </li>
-              ))}
+              {queue.slice(0, 12).map((item) => {
+                const kind = QUEUE_KINDS[item.kind];
+                return (
+                  <li key={`${item.kind}-${item.id}`}>
+                    <Link href={kind.href(item)} className="block rounded-lg border border-line px-3 py-2 hover:bg-gray-50">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium">{item.pme_name}</p>
+                        <Badge tone={kind.tone}>{kind.label}</Badge>
+                      </div>
+                      <p className="truncate text-xs text-muted">
+                        {item.kind === "DIAGNOSTIC_A_VALIDER" ? DIAGNOSTIC_TYPE_LABELS[item.label] : item.label} · {formatRelative(item.since)}
+                      </p>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
-          <p className="mt-3 text-xs text-muted">
-            Documents à vérifier, actions en retard et alertes rejoindront cette file à partir de la phase {data.work_queue.available_in_phase}.
-          </p>
+          <p className="mt-3 text-xs text-muted">Les actions en retard rejoindront cette file en phase {data.work_queue.available_in_phase}.</p>
           <div className="mt-4">
             <BarList items={data.by_lifecycle} labels={LIFECYCLE_LABELS} />
           </div>
@@ -124,7 +141,11 @@ function Portfolio({ data }: { data: PortfolioDashboard }) {
         <Kpi label="Progression moyenne" value={k.average_progress === null ? "—" : `${signed(k.average_progress)} pts`} hint="Depuis le diagnostic initial" />
         <Kpi label="PME à risque" value={k.pmes_at_risk} hint="Exposition au risque ≥ 50" />
         <Kpi label="Intervention urgente" value={k.pmes_urgent} hint="Priorité P1" />
-        <PendingKpi label="Conformité moyenne" phase={k.average_compliance.available_in_phase} />
+        <Kpi
+          label="Conformité moyenne"
+          value={k.average_compliance.value === null ? "—" : formatPercent(k.average_compliance.value)}
+          hint={`${k.average_compliance.pmes} PME avec des éléments exigibles`}
+        />
       </div>
       {k.low_confidence_share !== null && k.low_confidence_share > 0 && (
         <p className="mt-2 text-xs text-muted">

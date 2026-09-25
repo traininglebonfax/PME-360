@@ -131,6 +131,21 @@ export function DiagnosticTab({ pmeId }: { pmeId: string }) {
         </EmptyState>
       ) : (
         <>
+          {data.live && (
+            <Card title="Score courant (preuves vérifiées)">
+              <div className="flex flex-wrap items-center gap-6">
+                <p className="text-3xl font-semibold">
+                  {formatScore(data.live.global_score)}
+                  <span className="text-base font-normal text-muted">/100</span>
+                </p>
+                <p className="text-sm text-muted">
+                  Recalculé le {formatDate(data.live.reference_date)} avec les documents vérifiés depuis la validation (snapshot figé :{" "}
+                  {formatScore(latest!.global_score)}). Confiance {formatPercent(data.live.confidence)}.
+                  {data.live.maturity_level ? ` Niveau N${data.live.maturity_level} · ${data.live.maturity_label}.` : ""}
+                </p>
+              </div>
+            </Card>
+          )}
           <Card
             title={`PME Health Check · ${SNAPSHOT_KIND_LABELS[latest!.kind]} du ${formatDate(latest!.reference_date)}`}
             action={<span className="text-xs text-muted">Référentiel v{latest!.framework_version} · moteur {latest!.engine_version}</span>}

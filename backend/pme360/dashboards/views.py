@@ -16,13 +16,17 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from pme360.alerts.models import Alert
+from pme360.compliance import services as compliance
+from pme360.compliance.models import Deadline
 from pme360.core.permissions import get_access
 from pme360.diagnostic.models import Diagnostic
+from pme360.documents.models import Document
 from pme360.organizations.models import Organization
 from pme360.pmes.models import Pme, PmeAssignment
 from pme360.scoring.models import ScoreSnapshot
 
-PENDING = {"documents_to_verify": 3, "alerts_open": 3, "actions_overdue": 5, "deadlines_this_week": 3}
+PENDING = {"actions_overdue": 5}
 WEAKNESS_THRESHOLD = 50  # « problème » = dimension sous 50/100 (paramètre d'affichage, Document 9, § 4.2)
 STAGNATION_POINTS = 2  # < +2 points en 6 mois (Document 6, § 6)
 MIN_CELL = 5  # cellules masquées si n < 5 (Document 9, § 4.2)
@@ -65,6 +69,11 @@ def baselines(pmes) -> dict:
 
 def _f(value) -> float | None:
     return None if value is None else float(value)
+
+
+def average_compliance(pmes) -> dict:
+    rates = [r for r in (compliance.compliance_rate(p)["rate"] for p in pmes) if r is not None]
+    return {"value": round(mean(rates), 3) if rates else None, "pmes": len(rates)}
 
 
 def score_summary(snapshot: ScoreSnapshot | None, baseline: ScoreSnapshot | None) -> dict | None:
@@ -114,6 +123,20 @@ class AdvisorDashboardView(APIView):
             row["global_score"] = _f(snapshot.global_score) if snapshot else None
             row["priority"] = snapshot.intervention_priority if snapshot else None
         diagnostics = Diagnostic.objects.filter(pme__in=pmes)
+        today = timezone.localdate()
+        documents_to_verify = list(
+            Document.objects.filter(pme__in=pmes, verification_status=Document.Verification.VERIF_HUMAINE_REQUISE)
+            .order_by("updated_at")
+            .values("id", "pme_id", "pme__legal_name", "title", "updated_at")
+        )
+        open_alerts = Alert.objects.filter(pme__in=pmes, status__in=Alert.OPEN)
+        overdue = list(
+            Deadline.objects.filter(pme__in=pmes, status=Deadline.Status.EN_RETARD)
+            .order_by("due_date")
+            .values("id", "pme_id", "pme__legal_name", "period_label", "due_date", "pme_obligation__template__name")[
+                :20
+            ]
+        )
         to_validate = list(
             diagnostics.filter(status=Diagnostic.Status.EN_REVUE)
             .select_related("pme")
@@ -129,23 +152,76 @@ class AdvisorDashboardView(APIView):
                     "diagnostics_to_validate": len(to_validate),
                     "diagnostics_in_progress": diagnostics.filter(status=Diagnostic.Status.EN_COLLECTE).count(),
                     "pmes_urgent": sum(1 for s in latest.values() if s.intervention_priority == "P1"),
+                    "documents_to_verify": len(documents_to_verify),
+                    "alerts_open": open_alerts.count(),
+                    "alerts_critical": open_alerts.filter(severity__in=["ELEVEE", "CRITIQUE"]).count(),
+                    "deadlines_this_week": Deadline.objects.filter(
+                        pme__in=pmes,
+                        status__in=Deadline.OPEN,
+                        due_date__gte=today,
+                        due_date__lte=today + timedelta(days=7),
+                    ).count(),
+                    "deadlines_overdue": Deadline.objects.filter(
+                        pme__in=pmes, status=Deadline.Status.EN_RETARD
+                    ).count(),
                     **_placeholders(),
                 },
                 "by_lifecycle": _breakdown(pmes, "lifecycle_status"),
                 "recent_pmes": recent,
                 "work_queue": {
+                    # Tri par urgence (Document 9, § 3) : alertes graves, documents, diagnostics, retards.
                     "items": [
-                        {
-                            "kind": "DIAGNOSTIC_A_VALIDER",
-                            "diagnostic_id": d["id"],
-                            "pme_id": d["pme_id"],
-                            "pme_name": d["pme__legal_name"],
-                            "since": d["submitted_at"],
-                            "type": d["type"],
-                        }
-                        for d in to_validate
+                        *[
+                            {
+                                "kind": "ALERTE",
+                                "id": a.pk,
+                                "pme_id": a.pme_id,
+                                "pme_name": a.pme.legal_name,
+                                "label": a.title,
+                                "severity": a.severity,
+                                "since": a.created_at,
+                            }
+                            for a in open_alerts.filter(
+                                severity__in=["ELEVEE", "CRITIQUE"], status=Alert.Status.OUVERTE
+                            )
+                            .select_related("pme")
+                            .order_by("created_at")[:20]
+                        ],
+                        *[
+                            {
+                                "kind": "DOCUMENT_A_VERIFIER",
+                                "id": d["id"],
+                                "pme_id": d["pme_id"],
+                                "pme_name": d["pme__legal_name"],
+                                "label": d["title"],
+                                "since": d["updated_at"],
+                            }
+                            for d in documents_to_verify
+                        ],
+                        *[
+                            {
+                                "kind": "DIAGNOSTIC_A_VALIDER",
+                                "id": d["id"],
+                                "pme_id": d["pme_id"],
+                                "pme_name": d["pme__legal_name"],
+                                "label": d["type"],
+                                "since": d["submitted_at"],
+                            }
+                            for d in to_validate
+                        ],
+                        *[
+                            {
+                                "kind": "ECHEANCE_EN_RETARD",
+                                "id": d["id"],
+                                "pme_id": d["pme_id"],
+                                "pme_name": d["pme__legal_name"],
+                                "label": f"{d['pme_obligation__template__name']} ({d['period_label']})",
+                                "since": d["due_date"],
+                            }
+                            for d in overdue
+                        ],
                     ],
-                    "available_in_phase": 3,  # documents, alertes et actions rejoignent la file ensuite
+                    "available_in_phase": 5,  # les actions en retard rejoignent la file en phase 5
                 },
                 "inactivity_days": inactivity_days,
             }
@@ -231,7 +307,7 @@ class PortfolioDashboardView(APIView):
                     else None,
                     "pmes_at_risk": sum(1 for s in scored if s.risk_index is not None and s.risk_index >= 50),
                     "pmes_urgent": sum(1 for s in scored if s.intervention_priority == "P1"),
-                    "average_compliance": {"value": None, "available_in_phase": 3},
+                    "average_compliance": average_compliance(pmes),
                 },
                 "by_lifecycle": _breakdown(pmes, "lifecycle_status"),
                 "by_sector": _breakdown(pmes, "sector__code", "sector__name"),
@@ -280,7 +356,10 @@ class PmeDashboardView(APIView):
             .select_related("user")
             .first()
         )
+        live = ScoreSnapshot.objects.filter(pme=pme, kind=ScoreSnapshot.Kind.LIVE).first()
         snapshot = latest_snapshots(Pme.objects.filter(pk=pme.pk)).get(pme.pk)
+        if live and snapshot and live.result.get("source_diagnostic") == str(snapshot.diagnostic_id):
+            snapshot = live  # score courant : tient compte des preuves vérifiées depuis la validation
         baseline = baselines(Pme.objects.filter(pk=pme.pk)).get(pme.pk)
         open_diagnostic = (
             Diagnostic.objects.filter(pme=pme)
@@ -309,8 +388,29 @@ class PmeDashboardView(APIView):
                 "score": score_summary(snapshot, baseline),
                 "open_diagnostic": open_diagnostic,
                 "next_actions": {"items": [], "available_in_phase": 5},
-                "compliance": {"value": None, "available_in_phase": 3},
-                "feedback": {"items": [], "available_in_phase": 3},
-                "deadlines": {"items": [], "available_in_phase": 3},
+                "compliance": compliance.compliance_rate(pme),
+                "feedback": [
+                    {
+                        "id": d.pk,
+                        "title": d.title,
+                        "status": d.status_display,
+                        "reason": d.decision_reason,
+                        "decided_at": d.verified_at,
+                    }
+                    for d in Document.objects.filter(pme=pme, verified_at__isnull=False).order_by("-verified_at")[:5]
+                ],
+                "deadlines": [
+                    {
+                        "id": d.pk,
+                        "label": d.pme_obligation.template.document_type.name,
+                        "period": d.period_label,
+                        "due_date": d.due_date,
+                        "status": d.status,
+                        "document_type": d.pme_obligation.template.document_type.code,
+                    }
+                    for d in Deadline.objects.filter(pme=pme, status__in=Deadline.OPEN)
+                    .select_related("pme_obligation__template__document_type")
+                    .order_by("due_date")[:10]
+                ],
             }
         )
