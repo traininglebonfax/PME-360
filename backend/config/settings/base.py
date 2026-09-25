@@ -139,7 +139,7 @@ LOGIN_MAX_FAILURES = 5
 LOGIN_LOCK_MINUTES = 15
 OTP_TTL_MINUTES = 10
 OTP_MAX_ATTEMPTS = 5
-OTP_MAX_PER_HOUR = 5
+OTP_MAX_PER_HOUR = int(env("PME360_OTP_MAX_PER_HOUR", "5"))
 AUTH_PENDING_TTL_SECONDS = 600
 
 # Chiffrement applicatif des champs sensibles (clés Fernet, la première chiffre, toutes déchiffrent).

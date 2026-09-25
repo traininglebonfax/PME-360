@@ -5,7 +5,8 @@ import { latestLoginCode, loginStaff } from "./helpers";
 test("Health Check, évolution expliquée et indicateurs d'une PME suivie (Délices du Bandama)", async ({ page }) => {
   await loginStaff(page, "konan.conseiller@demo.test");
   await page.getByRole("link", { name: "PME", exact: true }).click();
-  await page.getByRole("link", { name: "Délices du Bandama SAS" }).click();
+  await expect(page).toHaveURL(/\/pme$/);
+  await page.getByRole("table").getByRole("link", { name: "Délices du Bandama SAS" }).click();
   await page.getByRole("tab", { name: "Diagnostic & scores" }).click();
 
   await expect(page.getByText(/PME Health Check/)).toBeVisible();
@@ -18,6 +19,7 @@ test("Health Check, évolution expliquée et indicateurs d'une PME suivie (Déli
 
 test("un conseiller revoit et valide un diagnostic soumis (Akwaba)", async ({ page }) => {
   await loginStaff(page, "awa.conseillere@demo.test");
+  await expect(page.getByText("Diagnostics à valider")).toBeVisible(); // tableau de bord chargé avant de lire la file
   const pending = page.getByRole("link", { name: /Conseil & Formation Akwaba SARLU/ }).filter({ hasText: "à valider" });
   test.skip((await pending.count()) === 0, "Diagnostic de démonstration déjà validé : relancer seed_demo sur une base neuve.");
   await pending.first().click();
