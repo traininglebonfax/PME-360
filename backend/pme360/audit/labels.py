@@ -1,0 +1,30 @@
+"""Libellés lisibles des actions journalisées (timeline de la fiche PME, journal d'audit)."""
+
+ACTION_LABELS = {
+    "auth.login": "Connexion",
+    "auth.logout": "Déconnexion",
+    "auth.login_failed": "Échec de connexion",
+    "auth.mfa_enabled": "Double authentification activée",
+    "auth.password_set": "Mot de passe défini",
+    "auth.organization_switched": "Changement d'organisation",
+    "organization.created": "Organisation créée",
+    "organization.updated": "Paramètres de l'organisation modifiés",
+    "programme.created": "Programme créé",
+    "programme.updated": "Programme modifié",
+    "cohort.created": "Cohorte créée",
+    "user.invited": "Utilisateur invité",
+    "user.membership_revoked": "Accès retiré",
+    "pme.created": "PME créée",
+    "pme.updated": "Fiche PME modifiée",
+    "pme.lifecycle_changed": "Statut de la PME modifié",
+    "pme.enrolled": "PME inscrite dans une cohorte",
+    "pme.person_added": "Dirigeant ou contact ajouté",
+    "pme.person_updated": "Dirigeant ou contact modifié",
+    "pme.person_removed": "Dirigeant ou contact retiré",
+    "pme.assigned": "Conseiller ou expert assigné",
+    "pme.unassigned": "Fin de suivi par un conseiller ou expert",
+}
+
+
+def label_for(action: str) -> str:
+    return ACTION_LABELS.get(action, action)
