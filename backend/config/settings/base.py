@@ -8,6 +8,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from celery.schedules import crontab
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
@@ -60,6 +62,10 @@ INSTALLED_APPS = [
     "pme360.pmes",
     "pme360.diagnostic",
     "pme360.scoring",
+    "pme360.documents",
+    "pme360.compliance",
+    "pme360.alerts",
+    "pme360.notifications",
     "pme360.dashboards",
 ]
 
@@ -147,6 +153,26 @@ FIELD_ENCRYPTION_KEYS = env_list("PME360_FIELD_ENCRYPTION_KEYS")
 
 FRONTEND_URL = env("PME360_FRONTEND_URL", "http://localhost:3010")
 
+# Documents (Document 2, § 8.2 ; Document 8, § 7)
+PME360_MAX_UPLOAD_BYTES = int(env("PME360_MAX_UPLOAD_MB", "25")) * 1024 * 1024
+PME360_MAX_UNCOMPRESSED_BYTES = 250 * 1024 * 1024
+PME360_DOWNLOAD_URL_TTL = 300  # URL signée : 5 minutes
+PME360_STORAGE_BACKEND = env("PME360_STORAGE_BACKEND", "local")  # local | s3
+PME360_LOCAL_STORAGE_ROOT = env("PME360_LOCAL_STORAGE_ROOT", str(BASE_DIR / "var" / "documents"))
+PME360_S3_ENDPOINT = env("PME360_S3_ENDPOINT", "")
+PME360_S3_BUCKET = env("PME360_S3_BUCKET", "pme360-documents")
+PME360_S3_ACCESS_KEY = env("PME360_S3_ACCESS_KEY", "")
+PME360_S3_SECRET_KEY = env("PME360_S3_SECRET_KEY", "")
+PME360_S3_REGION = env("PME360_S3_REGION", "us-east-1")
+PME360_S3_SSE = env("PME360_S3_SSE", "")  # « AES256 » en production (chiffrement côté serveur)
+PME360_S3_CREATE_BUCKET = env_bool("PME360_S3_CREATE_BUCKET", True)
+PME360_ANTIVIRUS = env("PME360_ANTIVIRUS", "eicar")  # clamd (production) | eicar (développement uniquement)
+PME360_CLAMD_HOST = env("PME360_CLAMD_HOST", "localhost")
+PME360_CLAMD_PORT = int(env("PME360_CLAMD_PORT", "3310"))
+
+# Échéances (Document 8, § 4)
+PME360_DEADLINE_HORIZON_DAYS = 120
+
 LANGUAGE_CODE = "fr"
 TIME_ZONE = "Africa/Abidjan"
 USE_I18N = True
@@ -210,6 +236,7 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_TIME_LIMIT = 300
 CELERY_BEAT_SCHEDULE = {
     "dispatch-outbox": {"task": "pme360.core.tasks.dispatch_outbox", "schedule": 10.0},
+    "compliance-daily": {"task": "pme360.compliance.tasks.run_daily", "schedule": crontab(hour=2, minute=0)},
 }
 
 LOGGING = {

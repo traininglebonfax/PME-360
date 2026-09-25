@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { BrandMark } from "@/components/Brand";
+import { NotificationBell } from "@/components/NotificationBell";
 import { cx, LoadingBlock } from "@/components/ui";
 import { api, unwrap } from "@/lib/api";
 import { initials } from "@/lib/format";
@@ -20,7 +21,10 @@ interface NavItem {
 const GUDE_NAV: NavItem[] = [
   { href: "/tableau-de-bord", label: "Tableau de bord", permission: "pme.view" },
   { href: "/pme", label: "PME", permission: "pme.view" },
+  { href: "/verifications", label: "Documents à vérifier", permission: "document.verify" },
+  { href: "/alertes", label: "Alertes", permission: "pme.view" },
   { href: "/referentiel", label: "Référentiel", permission: "pme.view" },
+  { href: "/conformite", label: "Conformité et obligations", permission: "org.configure" },
   { href: "/programmes", label: "Programmes", permission: "programme.manage" },
   { href: "/utilisateurs", label: "Utilisateurs", permission: "org.manage_users" },
   { href: "/journal", label: "Journal d'audit", permission: "audit.view" },
@@ -84,10 +88,11 @@ export function GudeShell({ children }: { children: ReactNode }) {
       >
         <div className="flex items-center gap-2.5 px-5 py-5">
           <BrandMark className="h-8 w-8" />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-semibold">{productName}</p>
             <OrganizationSwitcher me={me} />
           </div>
+          <NotificationBell preferencesHref="/notifications" />
         </div>
         <nav className="flex-1 space-y-1 px-3" aria-label="Navigation principale">
           {nav.map((item) => {

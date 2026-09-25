@@ -5,7 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useGuard } from "@/components/AppShell";
 import { BrandMark } from "@/components/Brand";
 import { LifecycleBadge } from "@/components/LifecycleBadge";
+import Link from "next/link";
+
+import { NotificationBell } from "@/components/NotificationBell";
 import { Alert, ButtonLink, Card, LoadingBlock } from "@/components/ui";
+import { DOCUMENT_STATUS } from "@/lib/documents";
 import { formatDate } from "@/lib/format";
 import { formatPercent, formatScore } from "@/lib/scoring";
 import { api, errorMessage, unwrap } from "@/lib/api";
@@ -37,9 +41,12 @@ export default function PmeSpacePage() {
             <BrandMark className="h-8 w-8" />
             <span className="font-semibold">Mon espace</span>
           </div>
-          <button onClick={logout} className="text-sm text-muted hover:text-ink">
-            Se déconnecter
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell tone="light" preferencesHref="/espace/notifications" />
+            <button onClick={logout} className="text-sm text-muted hover:text-ink">
+              Se déconnecter
+            </button>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-6">
@@ -96,8 +103,46 @@ export default function PmeSpacePage() {
               )}
             </Card>
 
-            <Card title="Mes prochaines échéances">
-              <p className="text-sm text-muted">Aucune échéance pour le moment.</p>
+            <Card title="Ce qui a été validé ou refusé">
+              {dashboard.data.feedback.length === 0 ? (
+                <p className="text-sm text-muted">Aucun retour pour le moment.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {dashboard.data.feedback.map((item) => {
+                    const ok = item.status === "CONFORME" || item.status === "CONFORME_SOUS_RESERVE";
+                    return (
+                      <li key={item.id} className="text-sm">
+                        <p className={ok ? "text-brand-800" : "text-red-800"}>
+                          {ok ? "✔" : "✖"} {item.title} : {DOCUMENT_STATUS[item.status]?.label.toLowerCase() ?? item.status}
+                        </p>
+                        {item.reason && <p className="pl-5 text-muted">→ « {item.reason} »</p>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </Card>
+
+            <Card title="Mes prochaines échéances" action={<Link href="/espace/documents" className="text-sm text-brand-700 hover:underline">Mes documents</Link>}>
+              {dashboard.data.deadlines.length === 0 ? (
+                <p className="text-sm text-muted">Aucune échéance pour le moment.</p>
+              ) : (
+                <ul className="divide-y divide-line">
+                  {dashboard.data.deadlines.slice(0, 5).map((deadline) => (
+                    <li key={deadline.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                      <span>
+                        {deadline.label} <span className="text-muted">· {deadline.period}</span>
+                      </span>
+                      <span className={deadline.status === "EN_RETARD" ? "font-medium text-red-700" : "text-muted"}>
+                        {deadline.status === "EN_RETARD" ? "en retard" : `avant le ${formatDate(deadline.due_date)}`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {dashboard.data.compliance.rate !== null && (
+                <p className="mt-3 text-xs text-muted">Dossier complet à {formatPercent(dashboard.data.compliance.rate)}.</p>
+              )}
             </Card>
           </>
         ) : (

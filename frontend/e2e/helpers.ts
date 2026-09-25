@@ -62,3 +62,38 @@ export async function latestLoginCode(email: string, after: Date): Promise<strin
   }
   throw new Error(`Aucun code reçu pour ${email}`);
 }
+
+/** Connexion d'un utilisateur PME par code e-mail (lu dans Mailpit). */
+export async function loginPme(page: Page, email: string) {
+  await page.goto("/connexion");
+  await page.getByRole("tab", { name: "Espace PME" }).click();
+  await page.getByLabel("Adresse e-mail").fill(email);
+  const sentAfter = new Date(Date.now() - 1000);
+  await page.getByRole("button", { name: "Recevoir mon code" }).click();
+  await page.getByLabel("Code reçu par e-mail").fill(await latestLoginCode(email, sentAfter));
+  await page.getByRole("button", { name: "Me connecter" }).click();
+  await expect(page).toHaveURL(/\/espace$/);
+}
+
+/** PDF minimal valide (lisible par pypdf), fictif. */
+export function demoPdf(text: string): Buffer {
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+  ];
+  const stream = `BT /F1 14 Tf 72 760 Td (${text}) Tj ET`;
+  objects.push(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  let body = "%PDF-1.4\n";
+  const offsets: number[] = [];
+  objects.forEach((object, index) => {
+    offsets.push(body.length);
+    body += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xref = body.length;
+  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  body += offsets.map((offset) => `${offset.toString().padStart(10, "0")} 00000 n \n`).join("");
+  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(body, "latin1");
+}

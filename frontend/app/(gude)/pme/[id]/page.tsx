@@ -6,6 +6,8 @@ import { useParams, useSearchParams } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { LifecycleBadge } from "@/components/LifecycleBadge";
+import { AlertList } from "@/components/alerts/AlertList";
+import { DocumentsTab } from "@/components/documents/DocumentsTab";
 import { DiagnosticTab } from "@/components/scoring/DiagnosticTab";
 import { Alert, Badge, Button, Card, cx, EmptyState, Kpi, LoadingBlock, PendingKpi, SelectInput, TextInput } from "@/components/ui";
 import { formatPercent, formatScore, PRIORITY_LABELS } from "@/lib/scoring";
@@ -24,7 +26,8 @@ const TABS = [
   { key: "suivi", label: "Suivi" },
   { key: "historique", label: "Historique" },
   { key: "diagnostic", label: "Diagnostic & scores" },
-  { key: "documents", label: "Documents", phase: 3 },
+  { key: "documents", label: "Documents" },
+  { key: "alertes", label: "Alertes" },
   { key: "plan", label: "Plan & actions", phase: 5 },
 ] as const;
 
@@ -94,9 +97,10 @@ export default function PmeDetailPage() {
       {tab === "suivi" && <FollowUp pme={data} />}
       {tab === "historique" && <Timeline pmeId={data.id} />}
       {tab === "diagnostic" && <DiagnosticTab pmeId={data.id} />}
-      {(tab === "documents" || tab === "plan") && (
+      {tab === "documents" && <DocumentsTab pmeId={data.id} />}
+      {tab === "alertes" && <AlertList pmeId={data.id} scope="all" />}
+      {tab === "plan" && (
         <EmptyState title="Module en cours de construction">
-          {tab === "documents" && "Le dossier numérique de conformité et les échéances arrivent en phase 3."}
           {tab === "plan" && "Le plan d'accompagnement 90 jours et les actions arrivent en phase 5."}
         </EmptyState>
       )}
@@ -110,7 +114,12 @@ function Synthesis({ pme }: { pme: Pme }) {
     queryKey: ["health", pme.id],
     queryFn: () => unwrap(api.GET("/api/v1/pmes/{pme_id}/health-check", { params: { path: { pme_id: pme.id } } })),
   });
-  const snapshot = health.data?.snapshot;
+  const folder = useQuery({
+    queryKey: ["folder", pme.id],
+    queryFn: () => unwrap(api.GET("/api/v1/pmes/{pme_id}/compliance-folder", { params: { path: { pme_id: pme.id } } })),
+  });
+  const snapshot = health.data?.live ?? health.data?.snapshot;
+  const rate = folder.data?.rate;
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="grid grid-cols-2 gap-3 lg:col-span-2">
@@ -124,7 +133,11 @@ function Synthesis({ pme }: { pme: Pme }) {
           value={snapshot?.maturity_level ? `N${snapshot.maturity_level} · ${snapshot.maturity_label}` : "—"}
           hint={snapshot ? PRIORITY_LABELS[snapshot.intervention_priority] : undefined}
         />
-        <PendingKpi label="Conformité documentaire" phase={3} />
+        <Kpi
+          label="Conformité documentaire"
+          value={rate?.rate === null || rate?.rate === undefined ? "—" : formatPercent(rate.rate)}
+          hint={rate ? `${rate.eligible} élément(s) exigible(s)` : undefined}
+        />
         <PendingKpi label="Actions du plan" phase={5} />
       </div>
       <Card title="En bref">

@@ -8,6 +8,7 @@ from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from pme360.accounts.models import Role, User, UserMembership
+from pme360.compliance.defaults import install as install_compliance
 from pme360.core.middleware import SESSION_ORG_KEY
 from pme360.core.tenancy import system_context, tenant_context
 from pme360.organizations.models import Cohort, Organization, Programme
@@ -34,6 +35,7 @@ def make_org(db):
             )
         with tenant_context(organization.id):
             install_defaults(organization)
+            install_compliance(organization)
         return organization
 
     return factory

@@ -50,6 +50,7 @@ def create_organization(
     """Crée un tenant, installe ses nomenclatures par défaut et invite son premier administrateur."""
     from pme360.accounts.access import AccessContext
     from pme360.accounts.services import invite_user
+    from pme360.compliance.defaults import install as install_compliance
     from pme360.diagnostic.referential import install_gude360
     from pme360.pmes.defaults import install_defaults
 
@@ -68,6 +69,7 @@ def create_organization(
     with tenant_context(organization.id):
         install_defaults(organization)
         install_gude360(organization)
+        install_compliance(organization)
         bootstrap_access = AccessContext(
             user=created_by, organization_id=organization.id, permissions=frozenset({"org.manage_users"})
         )

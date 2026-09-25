@@ -6,6 +6,187 @@
         "description": "API de la plateforme PME360 (instance GUDE-PME 360). Erreurs au format RFC 9457."
     },
     "paths": {
+        "/api/v1/alert-rules": {
+            "get": {
+                "operationId": "alert_rules_list",
+                "tags": [
+                    "alert-rules"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AlertRule"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/alert-rules/{rule_id}": {
+            "patch": {
+                "operationId": "alert_rules_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "rule_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "alert-rules"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAlertRuleRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AlertRule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/alerts": {
+            "get": {
+                "operationId": "alerts_list",
+                "description": "Alertes des PME du périmètre (équipes GUDE-PME).",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "min_severity",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "CRITIQUE",
+                                "ELEVEE",
+                                "INFO",
+                                "MOYENNE"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "pme",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "open"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Alert"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/alerts/{alert_id}/transition": {
+            "post": {
+                "operationId": "alerts_transition_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "alert_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AlertTransitionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Alert"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/audit-logs": {
             "get": {
                 "operationId": "audit_logs_list",
@@ -442,6 +623,32 @@
                 }
             }
         },
+        "/api/v1/compliance/run": {
+            "post": {
+                "operationId": "compliance_run_create",
+                "description": "Exécute immédiatement le planificateur quotidien pour l'organisation (administration, démonstration).",
+                "tags": [
+                    "compliance"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RunResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/dashboards/advisor": {
             "get": {
                 "operationId": "dashboards_advisor_retrieve",
@@ -526,6 +733,90 @@
                                 "schema": {
                                     "type": "object",
                                     "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/deadlines/{deadline_id}/waive": {
+            "post": {
+                "operationId": "deadlines_waive_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "deadline_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "deadlines"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WaiveRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Deadline"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/deadlines/upcoming": {
+            "get": {
+                "operationId": "deadlines_upcoming_list",
+                "description": "Échéances du périmètre (tableau de bord conseiller) : en retard et à venir.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "days",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "deadlines"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Deadline"
+                                    }
                                 }
                             }
                         },
@@ -981,6 +1272,161 @@
                 }
             }
         },
+        "/api/v1/document-types": {
+            "get": {
+                "operationId": "document_types_list",
+                "tags": [
+                    "document-types"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DocumentType"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/documents/{document_id}": {
+            "get": {
+                "operationId": "documents_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "document_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/documents/{document_id}/verify": {
+            "post": {
+                "operationId": "documents_verify_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "document_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VerifyRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Document"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/documents/{document_id}/versions/{version_no}/download-url": {
+            "get": {
+                "operationId": "documents_versions_download_url_retrieve",
+                "description": "URL signée de 5 minutes, délivrée après contrôle d'accès (Document 2, § 8.2).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "document_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "version_no",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DownloadUrl"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/framework-versions": {
             "get": {
                 "operationId": "framework_versions_list",
@@ -1178,6 +1624,73 @@
                 }
             }
         },
+        "/api/v1/me/notification-preferences": {
+            "get": {
+                "operationId": "me_notification_preferences_list",
+                "tags": [
+                    "me"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Preference"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "me_notification_preferences_update",
+                "tags": [
+                    "me"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/PreferenceRequest"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Preference"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/memberships/{membership_id}/revoke": {
             "post": {
                 "operationId": "memberships_revoke_create",
@@ -1206,6 +1719,177 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Membership"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications": {
+            "get": {
+                "operationId": "notifications_list",
+                "description": "Notifications de l'utilisateur dans l'organisation active.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "unread",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Notification"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/read": {
+            "post": {
+                "operationId": "notifications_read_create",
+                "tags": [
+                    "notifications"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReadRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Count"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/unread-count": {
+            "get": {
+                "operationId": "notifications_unread_count_retrieve",
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Count"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/obligation-templates": {
+            "get": {
+                "operationId": "obligation_templates_list",
+                "tags": [
+                    "obligation-templates"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ObligationTemplate"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/obligation-templates/{template_id}/activation": {
+            "post": {
+                "operationId": "obligation_templates_activation_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "template_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "obligation-templates"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActivationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObligationTemplate"
                                 }
                             }
                         },
@@ -1741,6 +2425,93 @@
                 }
             }
         },
+        "/api/v1/pmes/{pme_id}/compliance-folder": {
+            "get": {
+                "operationId": "pmes_compliance_folder_retrieve",
+                "description": "Dossier numérique de conformité (Document 8, § 3) et taux de conformité documentaire (§ 6).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ComplianceFolder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/pmes/{pme_id}/deadlines": {
+            "get": {
+                "operationId": "pmes_deadlines_list",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "scope",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "open"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Deadline"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/pmes/{pme_id}/diagnostics": {
             "get": {
                 "operationId": "pmes_diagnostics_list",
@@ -1816,6 +2587,105 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Diagnostic"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/pmes/{pme_id}/documents": {
+            "get": {
+                "operationId": "pmes_documents_list",
+                "description": "Dépôt (multipart) et liste des documents d'une PME.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Document"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "pmes_documents_create",
+                "description": "Dépôt (multipart) et liste des documents d'une PME.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentDetail"
                                 }
                             }
                         },
@@ -2411,6 +3281,126 @@
                 }
             }
         },
+        "/api/v1/regulatory-rules": {
+            "get": {
+                "operationId": "regulatory_rules_list",
+                "tags": [
+                    "regulatory-rules"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RegulatoryRule"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/regulatory-rules/{rule_id}/status": {
+            "post": {
+                "operationId": "regulatory_rules_status_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "rule_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "regulatory-rules"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RuleStatusRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RegulatoryRule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/regulatory-rules/{rule_id}/verify": {
+            "post": {
+                "operationId": "regulatory_rules_verify_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "rule_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "regulatory-rules"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VerifyRuleRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RegulatoryRule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/roles": {
             "get": {
                 "operationId": "roles_list",
@@ -2615,6 +3605,35 @@
                     }
                 }
             }
+        },
+        "/api/v1/verifications": {
+            "get": {
+                "operationId": "verifications_list",
+                "description": "File de vérification du conseiller : documents du périmètre en attente, les plus anciens d'abord.",
+                "tags": [
+                    "verifications"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Document"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2628,6 +3647,17 @@
                 },
                 "required": [
                     "accepted"
+                ]
+            },
+            "ActivationRequest": {
+                "type": "object",
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "active"
                 ]
             },
             "ActorTypeEnum": {
@@ -2654,6 +3684,196 @@
                     "full_name",
                     "id"
                 ]
+            },
+            "Alert": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PmeRef"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "rule": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "kind": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "severity": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/SeverityEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "details": {
+                        "readOnly": true
+                    },
+                    "target_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "target_id": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AlertStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "resolved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "resolved_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "resolution_note": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "details",
+                    "id",
+                    "kind",
+                    "message",
+                    "pme",
+                    "resolution_note",
+                    "resolved_at",
+                    "resolved_by_name",
+                    "rule",
+                    "severity",
+                    "status",
+                    "target_id",
+                    "target_type",
+                    "title"
+                ]
+            },
+            "AlertRule": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "kind": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Type d'alerte évalué par le moteur."
+                    },
+                    "name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "severity": {
+                        "$ref": "#/components/schemas/SeverityEnum"
+                    },
+                    "params": {
+                        "description": "Seuils de la règle (jours, points, pourcentages…)."
+                    },
+                    "recipients": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "available_in_phase": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "available_in_phase",
+                    "code",
+                    "description",
+                    "id",
+                    "kind",
+                    "name",
+                    "recipients",
+                    "severity"
+                ]
+            },
+            "AlertStatusEnum": {
+                "enum": [
+                    "OUVERTE",
+                    "PRISE_EN_COMPTE",
+                    "RESOLUE",
+                    "IGNOREE"
+                ],
+                "type": "string",
+                "description": "* `OUVERTE` - Ouverte\n* `PRISE_EN_COMPTE` - Prise en compte\n* `RESOLUE` - Résolue\n* `IGNOREE` - Ignorée"
+            },
+            "AlertTransitionRequest": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/AlertTransitionStatusEnum"
+                    },
+                    "note": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "status"
+                ]
+            },
+            "AlertTransitionStatusEnum": {
+                "enum": [
+                    "PRISE_EN_COMPTE",
+                    "RESOLUE",
+                    "IGNOREE"
+                ],
+                "type": "string",
+                "description": "* `PRISE_EN_COMPTE` - PRISE_EN_COMPTE\n* `RESOLUE` - RESOLUE\n* `IGNOREE` - IGNOREE"
             },
             "AnswerBatchRequest": {
                 "type": "object",
@@ -2921,6 +4141,14 @@
                     "label"
                 ]
             },
+            "AvStatusEnum": {
+                "enum": [
+                    "SAIN",
+                    "INFECTE"
+                ],
+                "type": "string",
+                "description": "* `SAIN` - Sain\n* `INFECTE` - Infecté"
+            },
             "BlankEnum": {
                 "enum": [
                     ""
@@ -3026,6 +4254,46 @@
                     "name"
                 ]
             },
+            "ComplianceFolder": {
+                "type": "object",
+                "properties": {
+                    "rate": {
+                        "$ref": "#/components/schemas/Rate"
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FolderCategory"
+                        }
+                    }
+                },
+                "required": [
+                    "categories",
+                    "rate"
+                ]
+            },
+            "ConformityStatusEnum": {
+                "enum": [
+                    "NON_EVALUE",
+                    "CONFORME",
+                    "CONFORME_SOUS_RESERVE",
+                    "NON_CONFORME",
+                    "INCOHERENT"
+                ],
+                "type": "string",
+                "description": "* `NON_EVALUE` - Non évalué\n* `CONFORME` - Conforme\n* `CONFORME_SOUS_RESERVE` - Conforme sous réserve\n* `NON_CONFORME` - Non conforme\n* `INCOHERENT` - Incohérent"
+            },
+            "Count": {
+                "type": "object",
+                "properties": {
+                    "unread": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "unread"
+                ]
+            },
             "Criterion": {
                 "type": "object",
                 "properties": {
@@ -3113,6 +4381,171 @@
                     "sector_module",
                     "weight"
                 ]
+            },
+            "CurrencyStatusEnum": {
+                "enum": [
+                    "A_JOUR",
+                    "PERIODE_ANTERIEURE",
+                    "PERIODE_INCORRECTE",
+                    "INDETERMINE"
+                ],
+                "type": "string",
+                "description": "* `A_JOUR` - À jour\n* `PERIODE_ANTERIEURE` - Période antérieure\n* `PERIODE_INCORRECTE` - Période incorrecte\n* `INDETERMINE` - Indéterminée"
+            },
+            "Deadline": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PmeRef"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "obligation": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "obligation_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "nature": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_critical": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "document_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "document_type_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "period_label": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "period_start": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true
+                    },
+                    "period_end": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true
+                    },
+                    "days_to_due": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DeadlineStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "closed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "closed_at",
+                    "days_to_due",
+                    "document_type",
+                    "document_type_name",
+                    "due_date",
+                    "id",
+                    "is_critical",
+                    "nature",
+                    "obligation",
+                    "obligation_code",
+                    "period_end",
+                    "period_label",
+                    "period_start",
+                    "pme",
+                    "status"
+                ]
+            },
+            "DeadlineRef": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "period_label": {
+                        "type": "string"
+                    },
+                    "period_start": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "period_end": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                },
+                "required": [
+                    "due_date",
+                    "id",
+                    "period_end",
+                    "period_label",
+                    "period_start"
+                ]
+            },
+            "DeadlineStatusEnum": {
+                "enum": [
+                    "A_FOURNIR",
+                    "EN_ATTENTE",
+                    "RECU",
+                    "EN_ANALYSE",
+                    "VERIF_HUMAINE_REQUISE",
+                    "CONFORME",
+                    "CONFORME_SOUS_RESERVE",
+                    "NON_CONFORME",
+                    "EXPIRE",
+                    "INCOHERENT",
+                    "EN_RETARD",
+                    "DISPENSE"
+                ],
+                "type": "string",
+                "description": "* `A_FOURNIR` - À fournir\n* `EN_ATTENTE` - En attente\n* `RECU` - Reçu\n* `EN_ANALYSE` - En analyse\n* `VERIF_HUMAINE_REQUISE` - Vérification humaine requise\n* `CONFORME` - Conforme\n* `CONFORME_SOUS_RESERVE` - Conforme sous réserve\n* `NON_CONFORME` - Non conforme\n* `EXPIRE` - Document expiré\n* `INCOHERENT` - Document incohérent\n* `EN_RETARD` - En retard\n* `DISPENSE` - Dispensée"
+            },
+            "DecisionEnum": {
+                "enum": [
+                    "CONFORME",
+                    "CONFORME_SOUS_RESERVE",
+                    "NON_CONFORME",
+                    "INCOHERENT"
+                ],
+                "type": "string",
+                "description": "* `CONFORME` - Conforme\n* `CONFORME_SOUS_RESERVE` - Conforme sous réserve\n* `NON_CONFORME` - Non conforme\n* `INCOHERENT` - Incohérent"
             },
             "Diagnostic": {
                 "type": "object",
@@ -3282,6 +4715,593 @@
                     "weight"
                 ]
             },
+            "Document": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PmeRef"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "document_type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DocumentType"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "deadline": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DeadlineRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "period_start": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "period_end": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "issued_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "integrity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/IntegrityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "validity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ValidityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "currency_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CurrencyStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "verification_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VerificationStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "conformity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ConformityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "decision_reason": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Motif en langage simple, visible par la PME."
+                    },
+                    "verified_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "uploaded_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "uploaded_via": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UploadedViaEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "current_version_no": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "conformity_status",
+                    "created_at",
+                    "currency_status",
+                    "current_version_no",
+                    "deadline",
+                    "decision_reason",
+                    "document_type",
+                    "expires_at",
+                    "id",
+                    "integrity_status",
+                    "issued_at",
+                    "period_end",
+                    "period_start",
+                    "pme",
+                    "status",
+                    "title",
+                    "updated_at",
+                    "uploaded_by_name",
+                    "uploaded_via",
+                    "validity_status",
+                    "verification_status",
+                    "verified_at",
+                    "verified_by_name"
+                ]
+            },
+            "DocumentCheck": {
+                "type": "object",
+                "properties": {
+                    "check_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "result": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ResultEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "details": {
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "check_code",
+                    "details",
+                    "message",
+                    "result"
+                ]
+            },
+            "DocumentDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PmeRef"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "document_type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DocumentType"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "deadline": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DeadlineRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "period_start": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "period_end": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "issued_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "integrity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/IntegrityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "validity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ValidityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "currency_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CurrencyStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "verification_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VerificationStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "conformity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ConformityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "decision_reason": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Motif en langage simple, visible par la PME."
+                    },
+                    "verified_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "uploaded_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "uploaded_via": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UploadedViaEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "current_version_no": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "versions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentVersion"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "conformity_status",
+                    "created_at",
+                    "currency_status",
+                    "current_version_no",
+                    "deadline",
+                    "decision_reason",
+                    "document_type",
+                    "expires_at",
+                    "id",
+                    "integrity_status",
+                    "issued_at",
+                    "period_end",
+                    "period_start",
+                    "pme",
+                    "status",
+                    "title",
+                    "updated_at",
+                    "uploaded_by_name",
+                    "uploaded_via",
+                    "validity_status",
+                    "verification_status",
+                    "verified_at",
+                    "verified_by_name",
+                    "versions"
+                ]
+            },
+            "DocumentType": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "category": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "category_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "guidance": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Comment l'obtenir / le préparer (langage simple)."
+                    },
+                    "period_kind": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PeriodKindEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "validity_days": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "Durée de validité depuis la délivrance."
+                    },
+                    "freshness_days": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "« À jour » si daté de moins de N jours."
+                    },
+                    "sensitive": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Données personnelles : jamais envoyé à une IA externe."
+                    }
+                },
+                "required": [
+                    "category",
+                    "category_name",
+                    "code",
+                    "description",
+                    "freshness_days",
+                    "guidance",
+                    "id",
+                    "name",
+                    "period_kind",
+                    "sensitive",
+                    "validity_days"
+                ]
+            },
+            "DocumentVersion": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "version_no": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "original_filename": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "extension": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "mime_detected": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "size_bytes": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "sha256": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "av_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AvStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "av_engine": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "av_signature": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "text_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TextStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "page_count": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "duplicate_of": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "processed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "uploaded_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "checks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentCheck"
+                        },
+                        "readOnly": true
+                    },
+                    "downloadable": {
+                        "type": "boolean",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "av_engine",
+                    "av_signature",
+                    "av_status",
+                    "checks",
+                    "created_at",
+                    "downloadable",
+                    "duplicate_of",
+                    "extension",
+                    "id",
+                    "mime_detected",
+                    "original_filename",
+                    "page_count",
+                    "processed_at",
+                    "sha256",
+                    "size_bytes",
+                    "text_status",
+                    "uploaded_by_name",
+                    "version_no"
+                ]
+            },
+            "DownloadUrl": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "expires_in": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "expires_in",
+                    "url"
+                ]
+            },
             "Duplicate": {
                 "type": "object",
                 "properties": {
@@ -3377,6 +5397,20 @@
                     "id"
                 ]
             },
+            "EventCodeEnum": {
+                "enum": [
+                    "DOCUMENT_TO_VERIFY",
+                    "DOCUMENT_DECISION",
+                    "DOCUMENT_REJECTED_SECURITY",
+                    "DEADLINE_REMINDER",
+                    "DEADLINE_DUE_TODAY",
+                    "DEADLINE_OVERDUE",
+                    "DEADLINE_ESCALATION",
+                    "ALERT_RAISED"
+                ],
+                "type": "string",
+                "description": "* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED"
+            },
             "EvidencePolicyEnum": {
                 "enum": [
                     "NONE",
@@ -3394,6 +5428,67 @@
                 ],
                 "type": "string",
                 "description": "* `DIPLOMEE` - Diplômée\n* `ABANDON` - Abandon\n* `REORIENTATION` - Réorientation"
+            },
+            "FolderCategory": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FolderItem"
+                        }
+                    }
+                },
+                "required": [
+                    "code",
+                    "items",
+                    "name"
+                ]
+            },
+            "FolderItem": {
+                "type": "object",
+                "properties": {
+                    "document_type": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "required": {
+                        "type": "boolean"
+                    },
+                    "criteria": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "obligation": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "documents": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Document"
+                        }
+                    }
+                },
+                "required": [
+                    "criteria",
+                    "document_type",
+                    "documents",
+                    "obligation",
+                    "required",
+                    "state"
+                ]
             },
             "FrameworkVersion": {
                 "type": "object",
@@ -3544,6 +5639,17 @@
                 "type": "string",
                 "description": "* `DRAFT` - Brouillon\n* `PUBLISHED` - Publiée\n* `RETIRED` - Retirée"
             },
+            "FrequencyEnum": {
+                "enum": [
+                    "PONCTUELLE",
+                    "MENSUELLE",
+                    "TRIMESTRIELLE",
+                    "SEMESTRIELLE",
+                    "ANNUELLE"
+                ],
+                "type": "string",
+                "description": "* `PONCTUELLE` - Ponctuelle\n* `MENSUELLE` - Mensuelle\n* `TRIMESTRIELLE` - Trimestrielle\n* `SEMESTRIELLE` - Semestrielle\n* `ANNUELLE` - Annuelle"
+            },
             "GenderEnum": {
                 "enum": [
                     "F",
@@ -3588,6 +5694,15 @@
                             "$ref": "#/components/schemas/SnapshotSummary"
                         }
                     },
+                    "live": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/SnapshotDetail"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Score courant : preuves vérifiées depuis la validation."
+                    },
                     "open_diagnostic": {
                         "nullable": true
                     }
@@ -3595,9 +5710,19 @@
                 "required": [
                     "baseline",
                     "history",
+                    "live",
                     "open_diagnostic",
                     "snapshot"
                 ]
+            },
+            "IntegrityStatusEnum": {
+                "enum": [
+                    "EN_SCAN",
+                    "SAIN",
+                    "REJETE_SECURITE"
+                ],
+                "type": "string",
+                "description": "* `EN_SCAN` - Analyse de sécurité en cours\n* `SAIN` - Sain\n* `REJETE_SECURITE` - Rejeté (sécurité)"
             },
             "InviteRequest": {
                 "type": "object",
@@ -3973,6 +6098,178 @@
                     "name"
                 ]
             },
+            "NatureEnum": {
+                "enum": [
+                    "REGLEMENTAIRE",
+                    "PROGRAMME",
+                    "BONNE_PRATIQUE"
+                ],
+                "type": "string",
+                "description": "* `REGLEMENTAIRE` - Réglementaire\n* `PROGRAMME` - Programme (transmission à GUDE-PME)\n* `BONNE_PRATIQUE` - Bonne pratique"
+            },
+            "Notification": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "event_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "body": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "link": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "severity": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "read_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "emailed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "body",
+                    "created_at",
+                    "emailed_at",
+                    "event_code",
+                    "id",
+                    "link",
+                    "read_at",
+                    "severity",
+                    "title"
+                ]
+            },
+            "ObligationTemplate": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "nature": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/NatureEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "document_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "document_type_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "regulatory_rule": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "regulatory_status": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "frequency": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/FrequencyEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "frequency_rule": {
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "due_days_after_period_end": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "applicability": {
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "JSON Logic sur le profil de la PME."
+                    },
+                    "reminder_offsets": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "readOnly": true
+                    },
+                    "is_critical": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "pmes": {
+                        "type": "integer",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "applicability",
+                    "code",
+                    "description",
+                    "document_type",
+                    "document_type_name",
+                    "due_days_after_period_end",
+                    "frequency",
+                    "frequency_rule",
+                    "id",
+                    "is_active",
+                    "is_critical",
+                    "name",
+                    "nature",
+                    "pmes",
+                    "regulatory_rule",
+                    "regulatory_status",
+                    "reminder_offsets"
+                ]
+            },
             "Option": {
                 "type": "object",
                 "properties": {
@@ -4218,6 +6515,20 @@
                     "email"
                 ]
             },
+            "PatchedAlertRuleRequest": {
+                "type": "object",
+                "properties": {
+                    "severity": {
+                        "$ref": "#/components/schemas/SeverityEnum"
+                    },
+                    "params": {
+                        "description": "Seuils de la règle (jours, points, pourcentages…)."
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "PatchedOrganizationUpdateRequest": {
                 "type": "object",
                 "properties": {
@@ -4419,6 +6730,18 @@
                     },
                     "objectives": {}
                 }
+            },
+            "PeriodKindEnum": {
+                "enum": [
+                    "AUCUNE",
+                    "MOIS",
+                    "TRIMESTRE",
+                    "SEMESTRE",
+                    "ANNEE",
+                    "EXERCICE"
+                ],
+                "type": "string",
+                "description": "* `AUCUNE` - Aucune\n* `MOIS` - Mois\n* `TRIMESTRE` - Trimestre\n* `SEMESTRE` - Semestre\n* `ANNEE` - Année\n* `EXERCICE` - Exercice comptable"
             },
             "Person": {
                 "type": "object",
@@ -5089,6 +7412,22 @@
                     "trade_name"
                 ]
             },
+            "PmeRef": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ]
+            },
             "PortalEnum": {
                 "enum": [
                     "gude",
@@ -5098,6 +7437,54 @@
                 ],
                 "type": "string",
                 "description": "* `gude` - gude\n* `pme` - pme\n* `platform` - platform\n* `none` - none"
+            },
+            "Preference": {
+                "type": "object",
+                "properties": {
+                    "event_code": {
+                        "$ref": "#/components/schemas/EventCodeEnum"
+                    },
+                    "label": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "in_app": {
+                        "type": "boolean"
+                    },
+                    "email": {
+                        "type": "boolean"
+                    },
+                    "mandatory": {
+                        "type": "boolean",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "email",
+                    "event_code",
+                    "in_app",
+                    "label",
+                    "mandatory"
+                ]
+            },
+            "PreferenceRequest": {
+                "type": "object",
+                "properties": {
+                    "event_code": {
+                        "$ref": "#/components/schemas/EventCodeEnum"
+                    },
+                    "in_app": {
+                        "type": "boolean"
+                    },
+                    "email": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "email",
+                    "event_code",
+                    "in_app"
+                ]
             },
             "Programme": {
                 "type": "object",
@@ -5342,6 +7729,51 @@
                     "title"
                 ]
             },
+            "Rate": {
+                "type": "object",
+                "properties": {
+                    "rate": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "eligible": {
+                        "type": "integer"
+                    },
+                    "points": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "counts": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "required": [
+                    "counts",
+                    "eligible",
+                    "points",
+                    "rate"
+                ]
+            },
+            "ReadRequest": {
+                "type": "object",
+                "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    "all": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
             "ReasonRequest": {
                 "type": "object",
                 "properties": {
@@ -5383,6 +7815,119 @@
                     "id",
                     "name"
                 ]
+            },
+            "RegulatoryRule": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "content": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Ce qui a été identifié (et ce qui reste à confirmer)."
+                    },
+                    "authority": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "sources": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "readOnly": true
+                    },
+                    "source_reference": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Texte et article précis."
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RegulatoryRuleStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "verified_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "verified_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "verification_note": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "review_due_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "obligations": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "authority",
+                    "code",
+                    "content",
+                    "id",
+                    "obligations",
+                    "review_due_at",
+                    "source_reference",
+                    "sources",
+                    "status",
+                    "title",
+                    "verification_note",
+                    "verified_at",
+                    "verified_by_name"
+                ]
+            },
+            "RegulatoryRuleStatusEnum": {
+                "enum": [
+                    "A_VERIFIER",
+                    "PRE_VERIFIE",
+                    "VERIFIE",
+                    "OBSOLETE",
+                    "HORS_PERIMETRE"
+                ],
+                "type": "string",
+                "description": "* `A_VERIFIER` - À vérifier\n* `PRE_VERIFIE` - Pré-vérifiée (source identifiée)\n* `VERIFIE` - Vérifiée\n* `OBSOLETE` - Obsolète\n* `HORS_PERIMETRE` - Hors périmètre"
+            },
+            "ResultEnum": {
+                "enum": [
+                    "OK",
+                    "ALERTE",
+                    "ECHEC",
+                    "NON_DETERMINE"
+                ],
+                "type": "string",
+                "description": "* `OK` - OK\n* `ALERTE` - Alerte\n* `ECHEC` - Échec\n* `NON_DETERMINE` - Non déterminé"
             },
             "ReviewCriterion": {
                 "type": "object",
@@ -5572,6 +8117,55 @@
                 "type": "string",
                 "description": "* `CONSEILLER_PRINCIPAL` - Conseiller principal\n* `EXPERT` - Expert"
             },
+            "RuleStatusRequest": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/RuleStatusStatusEnum"
+                    },
+                    "note": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "status"
+                ]
+            },
+            "RuleStatusStatusEnum": {
+                "enum": [
+                    "A_VERIFIER",
+                    "PRE_VERIFIE",
+                    "OBSOLETE",
+                    "HORS_PERIMETRE"
+                ],
+                "type": "string",
+                "description": "* `A_VERIFIER` - À vérifier\n* `PRE_VERIFIE` - Pré-vérifiée (source identifiée)\n* `OBSOLETE` - Obsolète\n* `HORS_PERIMETRE` - Hors périmètre"
+            },
+            "RunResult": {
+                "type": "object",
+                "properties": {
+                    "pmes": {
+                        "type": "integer"
+                    },
+                    "obligations": {
+                        "type": "integer"
+                    },
+                    "deadlines_created": {
+                        "type": "integer"
+                    },
+                    "reminders": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "deadlines_created",
+                    "obligations",
+                    "pmes",
+                    "reminders"
+                ]
+            },
             "ScopeEnum": {
                 "enum": [
                     "ORG",
@@ -5581,6 +8175,16 @@
                 ],
                 "type": "string",
                 "description": "* `ORG` - Toute l'organisation\n* `PROGRAMME` - Un programme\n* `PORTEFEUILLE` - PME assignées\n* `PME` - Sa propre PME"
+            },
+            "SeverityEnum": {
+                "enum": [
+                    "INFO",
+                    "MOYENNE",
+                    "ELEVEE",
+                    "CRITIQUE"
+                ],
+                "type": "string",
+                "description": "* `INFO` - Information\n* `MOYENNE` - Moyenne\n* `ELEVEE` - Élevée\n* `CRITIQUE` - Critique"
             },
             "SizeCategoryEnum": {
                 "enum": [
@@ -5874,6 +8478,16 @@
                     "organization_id"
                 ]
             },
+            "TextStatusEnum": {
+                "enum": [
+                    "EN_ATTENTE",
+                    "TEXTE_NATIF",
+                    "OCR_REQUIS",
+                    "ERREUR"
+                ],
+                "type": "string",
+                "description": "* `EN_ATTENTE` - En attente\n* `TEXTE_NATIF` - Texte natif extrait\n* `OCR_REQUIS` - Lecture optique requise (phase 4)\n* `ERREUR` - Erreur de lecture"
+            },
             "TimelineEntry": {
                 "type": "object",
                 "properties": {
@@ -5949,6 +8563,65 @@
                 "type": "string",
                 "description": "* `PERCENT` - %\n* `RATIO` - ratio\n* `DAYS` - jours\n* `YEARS` - années\n* `AMOUNT` - FCFA"
             },
+            "UploadRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "document_type": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "document_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "deadline_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 250
+                    },
+                    "period_start": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "period_end": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "issued_at": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "file"
+                ]
+            },
+            "UploadedViaEnum": {
+                "enum": [
+                    "PORTAIL_PME",
+                    "CONSEILLER"
+                ],
+                "type": "string",
+                "description": "* `PORTAIL_PME` - Portail PME\n* `CONSEILLER` - Conseiller"
+            },
             "UserSummary": {
                 "type": "object",
                 "properties": {
@@ -5971,6 +8644,98 @@
                     "email",
                     "full_name",
                     "id"
+                ]
+            },
+            "ValidityStatusEnum": {
+                "enum": [
+                    "VALIDE",
+                    "EXPIRE",
+                    "INDETERMINE"
+                ],
+                "type": "string",
+                "description": "* `VALIDE` - Valide\n* `EXPIRE` - Expiré\n* `INDETERMINE` - Indéterminée"
+            },
+            "VerificationStatusEnum": {
+                "enum": [
+                    "NON_VERIFIE",
+                    "ANALYSE_IA",
+                    "VERIF_HUMAINE_REQUISE",
+                    "VERIFIE_HUMAIN",
+                    "REJETE"
+                ],
+                "type": "string",
+                "description": "* `NON_VERIFIE` - Non vérifié\n* `ANALYSE_IA` - Analysé par l'IA\n* `VERIF_HUMAINE_REQUISE` - Vérification humaine requise\n* `VERIFIE_HUMAIN` - Vérifié\n* `REJETE` - Rejeté"
+            },
+            "VerifyRequest": {
+                "type": "object",
+                "properties": {
+                    "decision": {
+                        "$ref": "#/components/schemas/DecisionEnum"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 2000
+                    },
+                    "period_start": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "period_end": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "issued_at": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "decision"
+                ]
+            },
+            "VerifyRuleRequest": {
+                "type": "object",
+                "properties": {
+                    "source_reference": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 250
+                    },
+                    "verified_at": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "note": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "source_reference",
+                    "verified_at"
+                ]
+            },
+            "WaiveRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "reason"
                 ]
             }
         },
