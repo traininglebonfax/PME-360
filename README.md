@@ -20,7 +20,20 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 |---|---|
 | 0 — Analyse & architecture | ✅ Livrée ; recommandations D-01 à D-08 acceptées à titre provisoire le 25/09/2026 ([décisions](docs/00-decisions-ouvertes.md)) |
 | 1 — Socle | ✅ Livrée (voir ci-dessous) |
-| 2 — Diagnostic | À venir : référentiel GUDE-360, questionnaire adaptatif, moteur de scoring |
+| 2 — Diagnostic | ✅ Livrée sur la branche `phase-2-diagnostic` (voir ci-dessous) ; référentiel GUDE-360 v1 **à valider en atelier** (D-04) |
+| 3 — Documents | À venir : dépôt sécurisé, dossier de conformité, obligations et échéances, levée du plafond déclaratif par les preuves |
+
+### Contenu de la phase 2
+
+- **Référentiel GUDE-360 v1.0.0** (Documents 5 et 6) : 3 piliers, 12 dimensions, 94 critères de tronc commun (dont 8 critiques) et 19 critères répartis en 6 modules sectoriels (D07), 13 indicateurs financiers. Tout est **donnée** : poids, grilles d'ancres, bandes, niveaux, portes, règles de priorité (JSON Logic).
+- **Versionnement** : une version publiée est **immuable** (trigger PostgreSQL) ; clonage en brouillon, contrôles de cohérence à la publication (sommes des poids, preuves des critères critiques, formules, bandes), retrait automatique de l'ancienne version.
+- **Questionnaire adaptatif** : questions de profil (effectif, entreprise familiale, stocks, production), applicabilité par critère (secteur, salariés, forme sociale, ancienneté), questions réservées au conseiller, sauvegarde automatique, historique des réponses, diagnostic de suivi pré-rempli.
+- **Moteur de scoring pur et reproductible** : critères (grille 0-4 ou indicateurs), plafond déclaratif sans preuve (RM-01), dimensions (couverture, provisoire, non évaluable, exclusion), score global, IMO / IPE séparés (RM-02), lentilles, exposition au risque, maturité digitale, confiance (source × fraîcheur), niveaux N1-N5 avec **portes et plafonnement expliqué**, quadrant maturité × performance, priorité P1-P4, écarts à plus fort impact.
+- **Revue humaine** (RM-05, RM-06) : valider, modifier (justification obligatoire), non applicable, déclaration corroborée ; acceptation en lot confirmée ; validation → **snapshot figé** (trigger), recalcul identique vérifié par test.
+- **Explication des évolutions** : contributions par dimension et critère, distinction progrès / recul / **gain de preuve**, re-projection du point de départ si le référentiel a changé.
+- **Interfaces** : Health Check, courbe d'évolution, explication des écarts, indicateurs « formule → données → résultat → interprétation → source », écran de revue, référentiel consultable, tableaux de bord (score moyen, progression, PME à risque et urgentes, problèmes les plus fréquents, stagnation), espace PME (questionnaire, score, progression).
+- **Démonstration** : diagnostics fictifs illustrant les profils du Document 3, § 7 (Boutik Plus « performante mais fragile », Délices du Bandama en progression sur 3 snapshots, Bâti Lagune en priorité P1, Akwaba en attente de revue…).
+- **Qualité** : 178 tests backend (moteur couvert à 98 %), 10 tests unitaires frontend ; contrat OpenAPI versionné (`frontend/openapi.json`) vérifié en CI.
 
 ### Contenu de la phase 1
 
@@ -64,7 +77,7 @@ cd ../frontend && npm install && npm run dev      # http://localhost:3010
 | `aya.dirigeante@demo.test` | Dirigeante de Boutik Plus (PME) | onglet « Espace PME » ; code reçu dans Mailpit (http://localhost:8035) |
 | `superadmin@demo.test` | Administrateur plateforme | mot de passe + code MFA |
 
-**Tests** : `cd backend && .venv/Scripts/python -m pytest` · `cd frontend && npm test && npm run test:e2e` (E2E : infrastructure, API et seed lancés au préalable).
+**Tests** : `cd backend && .venv/Scripts/python -m pytest` · `cd frontend && npm test && npm run test:e2e` (E2E : infrastructure, API et seed lancés au préalable ; le test de revue Akwaba suppose une base fraîchement « seedée »).
 
 **Documentation de l'API** : http://localhost:8010/api/v1/docs (OpenAPI). Après toute modification de l'API : `npm run api:types` dans `frontend/`.
 

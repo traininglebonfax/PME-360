@@ -13,8 +13,10 @@ from rest_framework.routers import SimpleRouter
 from pme360.accounts import views as accounts
 from pme360.audit import views as audit
 from pme360.dashboards import views as dashboards
+from pme360.diagnostic import views as diagnostic
 from pme360.organizations import views as organizations
 from pme360.pmes import views as pmes
+from pme360.scoring import views as scoring
 
 
 @extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField()}))
@@ -65,6 +67,28 @@ urlpatterns = [
     path("dashboards/advisor", dashboards.AdvisorDashboardView.as_view()),
     path("dashboards/portfolio", dashboards.PortfolioDashboardView.as_view()),
     path("dashboards/pme/<uuid:pme_id>", dashboards.PmeDashboardView.as_view()),
+    # Référentiel de diagnostic
+    path("framework-versions", diagnostic.FrameworkVersionListView.as_view()),
+    path("framework-versions/<uuid:version_id>", diagnostic.FrameworkVersionDetailView.as_view()),
+    path("framework-versions/<uuid:version_id>/clone", diagnostic.FrameworkVersionCloneView.as_view()),
+    path("framework-versions/<uuid:version_id>/publish", diagnostic.FrameworkVersionPublishView.as_view()),
+    # Diagnostics
+    path("pmes/<uuid:pme_id>/diagnostics", diagnostic.PmeDiagnosticsView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>", diagnostic.DiagnosticDetailView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/questionnaire", diagnostic.QuestionnaireView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/answers", diagnostic.AnswersView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/submit", diagnostic.SubmitView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/reopen", diagnostic.ReopenView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/cancel", diagnostic.CancelView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/review", diagnostic.ReviewView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/review/accept-remaining", diagnostic.AcceptRemainingView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/review/<str:criterion_code>", diagnostic.ReviewCriterionView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/validate", diagnostic.ValidateView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/preview", scoring.DiagnosticPreviewView.as_view()),
+    # Scores
+    path("pmes/<uuid:pme_id>/health-check", scoring.HealthCheckView.as_view()),
+    path("snapshots/<uuid:snapshot_id>", scoring.SnapshotDetailView.as_view()),
+    path("snapshots/<uuid:snapshot_id>/compare/<uuid:other_id>", scoring.SnapshotCompareView.as_view()),
     # Audit
     path("audit-logs", audit.AuditLogListView.as_view()),
     path("audit-logs/verify", audit.AuditVerifyView.as_view()),

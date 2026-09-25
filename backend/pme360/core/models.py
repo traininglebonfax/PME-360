@@ -35,6 +35,16 @@ class TenantManager(models.Manager):
             return queryset.none()
         return queryset.filter(organization_id=org_id)
 
+    def bulk_create(self, objs, *args, **kwargs):
+        """``bulk_create`` n'appelle pas ``save()`` : on y renseigne aussi l'organisation courante."""
+        org_id = current_org_id()
+        for obj in objs:
+            if getattr(obj, "organization_id", None) is None:
+                if org_id is None:
+                    raise ImproperlyConfigured(f"{type(obj).__name__} créé hors contexte de tenant.")
+                obj.organization_id = org_id
+        return super().bulk_create(objs, *args, **kwargs)
+
 
 class TenantModel(TimeStampedModel):
     """Toute table métier : ``organization_id`` obligatoire, filtré par le manager et protégé par la RLS.

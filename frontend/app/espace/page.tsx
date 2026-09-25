@@ -5,7 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useGuard } from "@/components/AppShell";
 import { BrandMark } from "@/components/Brand";
 import { LifecycleBadge } from "@/components/LifecycleBadge";
-import { Alert, Card, LoadingBlock } from "@/components/ui";
+import { Alert, ButtonLink, Card, LoadingBlock } from "@/components/ui";
+import { formatDate } from "@/lib/format";
+import { formatPercent, formatScore } from "@/lib/scoring";
 import { api, errorMessage, unwrap } from "@/lib/api";
 import type { PmeDashboard } from "@/lib/dashboards";
 import { useLogout } from "@/lib/session";
@@ -56,17 +58,26 @@ export default function PmeSpacePage() {
             </div>
 
             <Card title="Où j'en suis ?">
-              <p className="text-sm text-muted">
-                Votre diagnostic 360° n'a pas encore commencé. Votre conseiller vous guidera pour répondre au questionnaire ; votre
-                score et votre niveau de maturité s'afficheront ici.
-              </p>
+              <ScoreSummary data={dashboard.data} />
             </Card>
 
             <Card title="Que dois-je faire maintenant ?">
-              <p className="text-sm text-muted">
-                Rien pour le moment. Vos prochaines actions (3 au maximum), avec le pourquoi, le comment et le document à fournir,
-                apparaîtront ici.
-              </p>
+              {dashboard.data.open_diagnostic?.status === "EN_COLLECTE" ? (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-ink">
+                    Répondez au questionnaire du diagnostic 360°. Vous pouvez le faire en plusieurs fois : vos réponses sont enregistrées
+                    automatiquement.
+                  </p>
+                  <ButtonLink href="/espace/diagnostic">Remplir le questionnaire</ButtonLink>
+                </div>
+              ) : dashboard.data.open_diagnostic?.status === "EN_REVUE" ? (
+                <p className="text-sm text-muted">Merci ! Votre conseiller examine vos réponses. Vos résultats s'afficheront ici après validation.</p>
+              ) : (
+                <p className="text-sm text-muted">
+                  Rien pour le moment. Vos prochaines actions (3 au maximum), avec le pourquoi, le comment et le document à fournir,
+                  apparaîtront ici.
+                </p>
+              )}
             </Card>
 
             <Card title="Mon conseiller GUDE-PME">
@@ -93,6 +104,39 @@ export default function PmeSpacePage() {
           <Alert tone="warning">Aucune entreprise n'est associée à votre compte.</Alert>
         )}
       </main>
+    </div>
+  );
+}
+
+function ScoreSummary({ data }: { data: PmeDashboard }) {
+  const score = data.score;
+  if (!score) {
+    return (
+      <p className="text-sm text-muted">
+        Votre diagnostic 360° n'est pas encore validé. Votre score et votre niveau de maturité s'afficheront ici.
+      </p>
+    );
+  }
+  return (
+    <div>
+      <p className="text-4xl font-semibold text-ink">
+        {formatScore(score.global_score)}
+        <span className="text-base font-normal text-muted">/100</span>
+      </p>
+      <p className="mt-1 text-sm font-medium text-brand-800">
+        Niveau {score.maturity_level} · {score.maturity_label}
+      </p>
+      {score.delta_since_baseline !== null && (
+        <p className="mt-1 text-sm text-ink">
+          {score.delta_since_baseline >= 0 ? "▲ +" : "▼ "}
+          {String(score.delta_since_baseline).replace(".", ",")} points depuis votre premier diagnostic
+          {score.baseline_date ? ` (${formatDate(score.baseline_date)})` : ""}
+        </p>
+      )}
+      <p className="mt-2 text-xs text-muted">
+        Fiabilité de la mesure : {formatPercent(score.confidence)} ({score.confidence_label?.toLowerCase()}). Elle augmentera quand vos
+        justificatifs seront déposés et vérifiés.
+      </p>
     </div>
   );
 }

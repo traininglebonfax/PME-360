@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     "pme360.accounts",
     "pme360.audit",
     "pme360.pmes",
+    "pme360.diagnostic",
+    "pme360.scoring",
     "pme360.dashboards",
 ]
 
@@ -137,7 +139,7 @@ LOGIN_MAX_FAILURES = 5
 LOGIN_LOCK_MINUTES = 15
 OTP_TTL_MINUTES = 10
 OTP_MAX_ATTEMPTS = 5
-OTP_MAX_PER_HOUR = 5
+OTP_MAX_PER_HOUR = int(env("PME360_OTP_MAX_PER_HOUR", "5"))
 AUTH_PENDING_TTL_SECONDS = 600
 
 # Chiffrement applicatif des champs sensibles (clés Fernet, la première chiffre, toutes déchiffrent).
@@ -193,6 +195,13 @@ SPECTACULAR_SETTINGS = {
         "OrganizationStatusEnum": "pme360.organizations.models.Organization.Status",
         "LifecycleStatusEnum": "pme360.pmes.models.Pme.LifecycleStatus",
         "LoginStatusEnum": ["ok", "mfa_required", "mfa_setup_required"],
+        "OrganizationTypeEnum": "pme360.organizations.models.Organization.Type",
+        "DiagnosticStatusEnum": "pme360.diagnostic.models.Diagnostic.Status",
+        "DiagnosticTypeEnum": "pme360.diagnostic.models.Diagnostic.Type",
+        "FrameworkVersionStatusEnum": "pme360.diagnostic.models.FrameworkVersion.Status",
+        "AssessmentStatusEnum": "pme360.diagnostic.models.CriterionAssessment.Status",
+        "QuestionTypeEnum": "pme360.diagnostic.models.Question.Type",
+        "SnapshotKindEnum": "pme360.scoring.models.ScoreSnapshot.Kind",
     },
 }
 
