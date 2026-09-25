@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     "pme360.accounts",
     "pme360.audit",
     "pme360.pmes",
+    "pme360.diagnostic",
+    "pme360.scoring",
     "pme360.dashboards",
 ]
 
@@ -193,6 +195,13 @@ SPECTACULAR_SETTINGS = {
         "OrganizationStatusEnum": "pme360.organizations.models.Organization.Status",
         "LifecycleStatusEnum": "pme360.pmes.models.Pme.LifecycleStatus",
         "LoginStatusEnum": ["ok", "mfa_required", "mfa_setup_required"],
+        "OrganizationTypeEnum": "pme360.organizations.models.Organization.Type",
+        "DiagnosticStatusEnum": "pme360.diagnostic.models.Diagnostic.Status",
+        "DiagnosticTypeEnum": "pme360.diagnostic.models.Diagnostic.Type",
+        "FrameworkVersionStatusEnum": "pme360.diagnostic.models.FrameworkVersion.Status",
+        "AssessmentStatusEnum": "pme360.diagnostic.models.CriterionAssessment.Status",
+        "QuestionTypeEnum": "pme360.diagnostic.models.Question.Type",
+        "SnapshotKindEnum": "pme360.scoring.models.ScoreSnapshot.Kind",
     },
 }
 

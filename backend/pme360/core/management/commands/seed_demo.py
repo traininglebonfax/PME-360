@@ -2,6 +2,8 @@
 
 import base64
 import hashlib
+import zlib
+from datetime import date, datetime, time
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -11,11 +13,14 @@ from pme360.accounts.access import build_access
 from pme360.accounts.models import Role, User, UserMembership
 from pme360.audit import services as audit
 from pme360.core.tenancy import system_context, tenant_context
+from pme360.diagnostic import services as diagnostic_services
+from pme360.diagnostic.models import Answer, Diagnostic, Question
+from pme360.diagnostic.referential import install_gude360
 from pme360.organizations.models import Cohort, Organization, Programme
 from pme360.pmes import services as pme_services
 from pme360.pmes.defaults import install_defaults
 from pme360.pmes.models import LegalForm, Pme, PmeAssignment, Region, Sector
-from seeds import demo
+from seeds import demo, demo_diagnostics
 
 
 def demo_totp_secret(email: str) -> str:
@@ -38,10 +43,12 @@ class Command(BaseCommand):
         for slug, organization in organizations.items():
             with tenant_context(organization.id):
                 install_defaults(organization)
+                install_gude360(organization)
                 programme = self._programme(organization) if slug == "gude-pme-demo" else None
                 pmes = self._pmes(slug, users, programme)
                 self._memberships(slug, users, programme, pmes)
                 self._pme_setup(slug, organization, users, programme, pmes)
+                self._diagnostics(slug, organization, users, pmes)
         self._report()
 
     # --- Étapes -------------------------------------------------------------------------------------------------
@@ -150,6 +157,64 @@ class Command(BaseCommand):
             if target != "PROSPECT" and pme.lifecycle_status == "PROSPECT":
                 for status in demo.LIFECYCLE_PATH[: demo.LIFECYCLE_PATH.index(target) + 1]:
                     pme_services.transition(pme, status, access.user)
+
+    def _diagnostics(self, slug: str, organization: Organization, users: dict, pmes: dict[str, Pme]) -> None:
+        """Diagnostics fictifs : questionnaire, soumission, revue en lot et validation par le conseiller."""
+        admin_email = next(u[0] for u in demo.USERS if u[2] == slug and u[3] == "ADMIN_ORG")
+        for spec in demo.PMES:
+            plans = demo_diagnostics.DIAGNOSTICS.get(spec["key"], [])
+            pme = pmes.get(spec["key"])
+            if spec["org"] != slug or not plans or Diagnostic.objects.filter(pme=pme).exists():
+                continue
+            advisor = users[spec.get("advisor") or admin_email]
+            access = build_access(advisor, organization.id)
+            for plan in plans:
+                pme.refresh_from_db()
+                diagnostic = diagnostic_services.start_diagnostic(
+                    access, pme, plan["type"], date.fromisoformat(plan["date"])
+                )
+                self._answer(diagnostic, plan, advisor)
+                if plan["status"] in ("EN_REVUE", "VALIDE"):
+                    diagnostic_services.submit(diagnostic, access)
+                if plan["status"] == "VALIDE":
+                    diagnostic_services.accept_remaining(diagnostic, access)
+                    diagnostic_services.validate(diagnostic, access)
+
+    @staticmethod
+    def _answer(diagnostic: Diagnostic, plan: dict, advisor: User) -> None:
+        by_advisor = plan["source"] == "CONSEILLER"
+        when = timezone.make_aware(datetime.combine(diagnostic.reference_date, time(10)))
+        only = plan.get("only_dimensions")
+        questions = Question.objects.filter(framework_version=diagnostic.framework_version).select_related(
+            "criterion__dimension"
+        )
+        for question in questions:
+            value = None
+            if question.code in plan["profile"]:
+                value = plan["profile"][question.code]
+            elif question.code == "PRO-EFF":
+                value = diagnostic.pme.headcount
+            elif question.feeds.startswith("input."):
+                value = plan["financials"].get(question.feeds.split(".", 1)[1])
+            elif question.criterion_id:
+                dimension = question.criterion.dimension.code
+                if (only and dimension not in only) or dimension not in plan["base"]:
+                    continue
+                offset = (-1, 0, 0, 1)[zlib.crc32(question.criterion.code.encode()) % 4]  # variation déterministe
+                level = plan["forced"].get(question.criterion.code, plan["base"][dimension] + offset)
+                value = str(max(0, min(4, level)))
+            if value is None:
+                continue
+            Answer.objects.update_or_create(
+                diagnostic=diagnostic,
+                question=question,
+                defaults={
+                    "value": value,
+                    "answered_at": when,
+                    "answered_by": advisor if by_advisor else None,
+                    "source": Answer.Source.CONSEILLER if by_advisor else Answer.Source.PME,
+                },
+            )
 
     def _report(self) -> None:
         self.stdout.write(self.style.SUCCESS("Données de démonstration chargées (toutes fictives)."))

@@ -8,8 +8,10 @@ from django.utils import timezone
 
 from pme360.accounts.models import User
 from pme360.core.tenancy import system_context, tenant_context
+from pme360.diagnostic.models import Diagnostic
 from pme360.organizations.models import Organization
 from pme360.pmes.models import Pme
+from pme360.scoring.models import ScoreSnapshot
 
 pytestmark = pytest.mark.django_db
 
@@ -47,7 +49,7 @@ def test_pme_dashboard_scoped_to_own_pme(org, make_user, make_pme, client_for):
     client = client_for(make_user(org, "DIRIGEANT_PME", scope_ref_id=pme.id), org)
     data = client.get(f"/api/v1/dashboards/pme/{pme.id}").json()
     assert data["advisor"]["full_name"] == advisor.full_name
-    assert data["score"]["value"] is None
+    assert data["score"] is None and data["open_diagnostic"] is None
     assert client.get(f"/api/v1/dashboards/pme/{other.id}").status_code == 404
 
 
@@ -62,6 +64,15 @@ def test_seed_demo_is_idempotent_and_fictitious():
         assert pmes.count() == 6
         assert all(p.rccm_number.startswith("DEMO-") for p in pmes)
         assert pmes.get(legal_name="Boutik Plus Distribution SARL").lifecycle_status == "ACCOMPAGNEMENT_ACTIF"
+        # Profils de démonstration du Document 3, § 7.
+        boutik = ScoreSnapshot.objects.get(pme__legal_name="Boutik Plus Distribution SARL")
+        assert boutik.quadrant == "PERFORMANTE_FRAGILE"  # CA élevé, gouvernance informelle (RM-02)
+        delices = list(
+            ScoreSnapshot.objects.filter(pme__legal_name="Délices du Bandama SAS").order_by("reference_date")
+        )
+        assert len(delices) == 3 and delices[0].global_score < delices[1].global_score < delices[2].global_score
+        assert ScoreSnapshot.objects.get(pme__legal_name="Bâti Lagune BTP SARL").intervention_priority == "P1"
+        assert Diagnostic.objects.filter(status="EN_REVUE").count() == 1
     assert all(u.email.endswith("@demo.test") for u in User.objects.all())
 
 

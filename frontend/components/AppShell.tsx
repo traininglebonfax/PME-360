@@ -20,6 +20,7 @@ interface NavItem {
 const GUDE_NAV: NavItem[] = [
   { href: "/tableau-de-bord", label: "Tableau de bord", permission: "pme.view" },
   { href: "/pme", label: "PME", permission: "pme.view" },
+  { href: "/referentiel", label: "Référentiel", permission: "pme.view" },
   { href: "/programmes", label: "Programmes", permission: "programme.manage" },
   { href: "/utilisateurs", label: "Utilisateurs", permission: "org.manage_users" },
   { href: "/journal", label: "Journal d'audit", permission: "audit.view" },

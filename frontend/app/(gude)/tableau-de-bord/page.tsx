@@ -5,12 +5,17 @@ import Link from "next/link";
 
 import { BarList } from "@/components/BarList";
 import { LifecycleBadge } from "@/components/LifecycleBadge";
-import { Alert, ButtonLink, Card, EmptyState, Kpi, LoadingBlock, PageHeader, PendingKpi } from "@/components/ui";
+import { Alert, Badge, ButtonLink, Card, EmptyState, Kpi, LoadingBlock, PageHeader, PendingKpi } from "@/components/ui";
 import { api, errorMessage, unwrap } from "@/lib/api";
-import type { AdvisorDashboard, PortfolioDashboard } from "@/lib/dashboards";
+import type { AdvisorDashboard, PortfolioDashboard, ProgressRow } from "@/lib/dashboards";
 import { formatRelative } from "@/lib/format";
 import { LIFECYCLE_LABELS, SIZE_LABELS } from "@/lib/labels";
+import { DIAGNOSTIC_TYPE_LABELS, formatPercent, formatScore, PRIORITY_TONES } from "@/lib/scoring";
 import { hasPermission, useMe } from "@/lib/session";
+
+function signed(value: number): string {
+  return `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(1).replace(".", ",")}`;
+}
 
 export default function DashboardPage() {
   const { data: me } = useMe();
@@ -28,6 +33,7 @@ export default function DashboardPage() {
   if (advisor.isLoading) return <LoadingBlock />;
   if (advisor.error) return <Alert>{errorMessage(advisor.error)}</Alert>;
   const data = advisor.data!;
+  const queue = data.work_queue.items;
 
   return (
     <>
@@ -39,11 +45,11 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="PME suivies" value={data.kpis.pmes_followed} />
+        <Kpi label="Diagnostics à valider" value={data.kpis.diagnostics_to_validate} hint={`${data.kpis.diagnostics_in_progress} en collecte`} />
+        <Kpi label="Intervention urgente" value={data.kpis.pmes_urgent} hint="Priorité P1" />
         <Kpi label="Inactives" value={data.kpis.pmes_inactive} hint={`Sans activité depuis ${data.inactivity_days} j`} />
-        <Kpi label="Intégrées ce mois" value={data.kpis.pmes_onboarded_this_month} />
         <PendingKpi label="Documents à vérifier" phase={data.kpis.documents_to_verify.available_in_phase} />
         <PendingKpi label="Alertes ouvertes" phase={data.kpis.alerts_open.available_in_phase} />
-        <PendingKpi label="Diagnostics à valider" phase={data.kpis.diagnostics_to_validate.available_in_phase} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -62,16 +68,35 @@ export default function DashboardPage() {
                       {pme.sector__name ?? "Secteur non renseigné"} · activité {formatRelative(pme.last_activity_at)}
                     </p>
                   </div>
-                  <LifecycleBadge status={pme.lifecycle_status} />
+                  <div className="flex shrink-0 items-center gap-2">
+                    {pme.global_score !== null && <span className="text-sm font-semibold tabular-nums">{formatScore(pme.global_score)}</span>}
+                    {pme.priority && <Badge tone={PRIORITY_TONES[pme.priority]}>{pme.priority}</Badge>}
+                    <LifecycleBadge status={pme.lifecycle_status} />
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </Card>
         <Card title="Ma file de travail">
-          <p className="text-sm text-muted">
-            Documents à vérifier, actions en retard, alertes et diagnostics à valider seront regroupés ici, triés par urgence,
-            à partir de la phase {data.work_queue.available_in_phase}.
+          {queue.length === 0 ? (
+            <p className="text-sm text-muted">Aucun diagnostic en attente de revue.</p>
+          ) : (
+            <ul className="space-y-2">
+              {queue.map((item) => (
+                <li key={item.diagnostic_id}>
+                  <Link href={`/diagnostics/${item.diagnostic_id}/revue`} className="block rounded-lg border border-line px-3 py-2 hover:bg-gray-50">
+                    <p className="text-sm font-medium">{item.pme_name}</p>
+                    <p className="text-xs text-muted">
+                      {DIAGNOSTIC_TYPE_LABELS[item.type]} à valider · soumis {formatRelative(item.since)}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-3 text-xs text-muted">
+            Documents à vérifier, actions en retard et alertes rejoindront cette file à partir de la phase {data.work_queue.available_in_phase}.
           </p>
           <div className="mt-4">
             <BarList items={data.by_lifecycle} labels={LIFECYCLE_LABELS} />
@@ -79,30 +104,127 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {canPortfolio && portfolio.data && (
-        <>
-          <h2 className="mb-3 mt-10 text-lg font-semibold">Vue d'ensemble du portefeuille</h2>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <Kpi label="PME au total" value={portfolio.data.kpis.pmes_total} />
-            <Kpi label="Nouvelles ce mois" value={portfolio.data.kpis.pmes_new_this_month} />
-            <Kpi label="Accompagnées" value={portfolio.data.kpis.pmes_accompanied} hint="Statut « Accompagnement actif »" />
-            <Kpi label="Sans conseiller" value={portfolio.data.kpis.pmes_without_advisor} />
-            <PendingKpi label="Score moyen" phase={portfolio.data.kpis.average_score.available_in_phase} />
-            <PendingKpi label="Conformité moyenne" phase={portfolio.data.kpis.average_compliance.available_in_phase} />
-          </div>
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            <Card title="Par secteur">
-              <BarList items={portfolio.data.by_sector} />
-            </Card>
-            <Card title="Par région">
-              <BarList items={portfolio.data.by_region} />
-            </Card>
-            <Card title="Par taille">
-              <BarList items={portfolio.data.by_size} labels={SIZE_LABELS} />
-            </Card>
-          </div>
-        </>
-      )}
+      {canPortfolio && portfolio.data && <Portfolio data={portfolio.data} />}
     </>
+  );
+}
+
+function Portfolio({ data }: { data: PortfolioDashboard }) {
+  const k = data.kpis;
+  return (
+    <>
+      <h2 className="mb-3 mt-10 text-lg font-semibold">Vue d'ensemble du portefeuille</h2>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <Kpi label="PME au total" value={k.pmes_total} hint={`${k.pmes_diagnosed} avec un diagnostic validé`} />
+        <Kpi
+          label="Score moyen"
+          value={k.average_score === null ? "—" : formatScore(k.average_score)}
+          hint={k.average_confidence === null ? undefined : `Médiane ${formatScore(k.median_score)} · confiance ${formatPercent(k.average_confidence)}`}
+        />
+        <Kpi label="Progression moyenne" value={k.average_progress === null ? "—" : `${signed(k.average_progress)} pts`} hint="Depuis le diagnostic initial" />
+        <Kpi label="PME à risque" value={k.pmes_at_risk} hint="Exposition au risque ≥ 50" />
+        <Kpi label="Intervention urgente" value={k.pmes_urgent} hint="Priorité P1" />
+        <PendingKpi label="Conformité moyenne" phase={k.average_compliance.available_in_phase} />
+      </div>
+      {k.low_confidence_share !== null && k.low_confidence_share > 0 && (
+        <p className="mt-2 text-xs text-muted">
+          {formatPercent(k.low_confidence_share)} des scores reposent sur une confiance faible (données surtout déclaratives) : à lire comme
+          indicatifs.
+        </p>
+      )}
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <Card title="Problèmes les plus fréquents" className="lg:col-span-2">
+          <p className="mb-3 text-xs text-muted">Part des PME diagnostiquées dont la dimension est sous {data.weakness_threshold}/100.</p>
+          {data.weaknesses.length === 0 ? (
+            <p className="text-sm text-muted">Aucun diagnostic validé.</p>
+          ) : (
+            <ul className="space-y-2.5">
+              {data.weaknesses.map((w) => (
+                <li key={w.code} title={`${w.weak} PME sur ${w.evaluated}`}>
+                  <div className="flex justify-between gap-3 text-sm">
+                    <span className="text-ink">{w.name}</span>
+                    <span className="font-medium tabular-nums">
+                      {formatPercent(w.share)} <span className="text-xs font-normal text-muted">({w.weak}/{w.evaluated})</span>
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2 rounded-full bg-gray-100" aria-hidden="true">
+                    <div className="h-2 rounded-full bg-brand-600" style={{ width: `${Math.max(w.share * 100, w.share ? 2 : 0)}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {data.kpis.pmes_diagnosed < data.min_cell && (
+            <p className="mt-3 text-xs text-muted">
+              Moins de {data.min_cell} PME diagnostiquées : ces proportions sont données à titre indicatif.
+            </p>
+          )}
+        </Card>
+        <div className="space-y-6">
+          <Card title="Niveaux de maturité">
+            <BarList items={data.by_maturity.map((b) => ({ ...b, label: `N${b.key} · ${b.label}` }))} />
+          </Card>
+          <Card title="Priorités d'intervention">
+            <BarList items={data.by_priority} />
+          </Card>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <Card title="PME en intervention urgente">
+          {data.urgent.length === 0 ? (
+            <p className="text-sm text-muted">Aucune.</p>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {data.urgent.map((u) => (
+                <li key={u.pme_id} className="flex justify-between gap-2">
+                  <Link href={`/pme/${u.pme_id}?onglet=diagnostic`} className="text-ink hover:text-brand-700">
+                    {u.pme_name}
+                  </Link>
+                  <span className="text-muted">risque {formatScore(u.risk_index)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+        <Card title="Plus fortes progressions">
+          <ProgressList rows={data.progress.top} empty="Pas encore de diagnostic de suivi." />
+        </Card>
+        <Card title="Stagnation (6 mois, moins de +2 pts)">
+          <ProgressList rows={data.progress.stagnating} empty="Aucune PME en stagnation." />
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <Card title="Par secteur">
+          <BarList items={data.by_sector} />
+        </Card>
+        <Card title="Par région">
+          <BarList items={data.by_region} />
+        </Card>
+        <Card title="Par taille">
+          <BarList items={data.by_size} labels={SIZE_LABELS} />
+        </Card>
+      </div>
+    </>
+  );
+}
+
+function ProgressList({ rows, empty }: { rows: ProgressRow[]; empty: string }) {
+  if (rows.length === 0) return <p className="text-sm text-muted">{empty}</p>;
+  return (
+    <ul className="space-y-2 text-sm">
+      {rows.map((row) => (
+        <li key={row.pme_id} className="flex justify-between gap-2">
+          <Link href={`/pme/${row.pme_id}?onglet=diagnostic`} className="truncate text-ink hover:text-brand-700">
+            {row.pme_name}
+          </Link>
+          <span className="shrink-0 tabular-nums text-muted">
+            {formatScore(row.from)} → {formatScore(row.to)} ({signed(row.delta)})
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }

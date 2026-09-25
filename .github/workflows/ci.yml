@@ -44,7 +44,11 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: ruff check . && ruff format --check .
       - run: python manage.py makemigrations --check --dry-run
+      - name: Contrat OpenAPI à jour (frontend/openapi.json)
+        run: python manage.py spectacular --format openapi-json --file ../frontend/openapi.json && git diff --exit-code ../frontend/openapi.json
       - run: pytest
+      - name: Couverture du moteur de scoring (critère de sortie de la phase 2 : ≥ 90 %)
+        run: pytest tests/test_scoring_engine.py --cov=pme360.scoring.engine --cov=pme360.core.jsonlogic --cov=pme360.core.expressions --cov-fail-under=90
       - name: Audit des dépendances
         run: pip install pip-audit && pip-audit -r requirements.txt
 
@@ -61,6 +65,8 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: Contrat OpenAPI à jour (types générés depuis openapi.json)
+        run: npm run api:types && git diff --exit-code lib/api-schema.d.ts
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

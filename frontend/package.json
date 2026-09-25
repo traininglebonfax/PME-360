@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "api:types": "openapi-typescript http://127.0.0.1:8010/api/v1/schema -o lib/api-schema.d.ts"
+    "api:types": "openapi-typescript openapi.json -o lib/api-schema.d.ts",
+    "api:schema": "cd ../backend && python manage.py spectacular --format openapi-json --file ../frontend/openapi.json"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.103.2",

@@ -2,11 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { LifecycleBadge } from "@/components/LifecycleBadge";
-import { Alert, Badge, Button, Card, cx, EmptyState, LoadingBlock, PendingKpi, SelectInput, TextInput } from "@/components/ui";
+import { DiagnosticTab } from "@/components/scoring/DiagnosticTab";
+import { Alert, Badge, Button, Card, cx, EmptyState, Kpi, LoadingBlock, PendingKpi, SelectInput, TextInput } from "@/components/ui";
+import { formatPercent, formatScore, PRIORITY_LABELS } from "@/lib/scoring";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate, formatDateTime, formatRelative } from "@/lib/format";
 import { EXIT_REASON_LABELS, LIFECYCLE_LABELS, LIFECYCLE_NEXT, PERSON_ROLE_LABELS, ROLE_IN_PME_LABELS, SIZE_LABELS } from "@/lib/labels";
@@ -21,7 +23,7 @@ const TABS = [
   { key: "dirigeants", label: "Dirigeants" },
   { key: "suivi", label: "Suivi" },
   { key: "historique", label: "Historique" },
-  { key: "diagnostic", label: "Diagnostic & scores", phase: 2 },
+  { key: "diagnostic", label: "Diagnostic & scores" },
   { key: "documents", label: "Documents", phase: 3 },
   { key: "plan", label: "Plan & actions", phase: 5 },
 ] as const;
@@ -30,7 +32,8 @@ type TabKey = (typeof TABS)[number]["key"];
 
 export default function PmeDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [tab, setTab] = useState<TabKey>("synthese");
+  const initialTab = useSearchParams().get("onglet");
+  const [tab, setTab] = useState<TabKey>(TABS.some((t) => t.key === initialTab) ? (initialTab as TabKey) : "synthese");
   const pme = useQuery({
     queryKey: ["pme", id],
     queryFn: () => unwrap(api.GET("/api/v1/pmes/{id}", { params: { path: { id } } })),
@@ -90,9 +93,9 @@ export default function PmeDetailPage() {
       {tab === "dirigeants" && <Persons pme={data} />}
       {tab === "suivi" && <FollowUp pme={data} />}
       {tab === "historique" && <Timeline pmeId={data.id} />}
-      {(tab === "diagnostic" || tab === "documents" || tab === "plan") && (
+      {tab === "diagnostic" && <DiagnosticTab pmeId={data.id} />}
+      {(tab === "documents" || tab === "plan") && (
         <EmptyState title="Module en cours de construction">
-          {tab === "diagnostic" && "Le diagnostic 360°, les scores, le niveau de maturité et le Health Check arrivent en phase 2."}
           {tab === "documents" && "Le dossier numérique de conformité et les échéances arrivent en phase 3."}
           {tab === "plan" && "Le plan d'accompagnement 90 jours et les actions arrivent en phase 5."}
         </EmptyState>
@@ -103,11 +106,24 @@ export default function PmeDetailPage() {
 
 function Synthesis({ pme }: { pme: Pme }) {
   const primary = pme.persons.find((p) => p.is_primary_contact);
+  const health = useQuery({
+    queryKey: ["health", pme.id],
+    queryFn: () => unwrap(api.GET("/api/v1/pmes/{pme_id}/health-check", { params: { path: { pme_id: pme.id } } })),
+  });
+  const snapshot = health.data?.snapshot;
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="grid grid-cols-2 gap-3 lg:col-span-2">
-        <PendingKpi label="Score global 360" phase={2} />
-        <PendingKpi label="Niveau de maturité" phase={2} />
+        <Kpi
+          label="Score global 360"
+          value={snapshot ? `${formatScore(snapshot.global_score)}/100` : "—"}
+          hint={snapshot ? `Confiance ${formatPercent(snapshot.confidence)} · ${formatDate(snapshot.reference_date)}` : "Aucun diagnostic validé"}
+        />
+        <Kpi
+          label="Niveau de maturité"
+          value={snapshot?.maturity_level ? `N${snapshot.maturity_level} · ${snapshot.maturity_label}` : "—"}
+          hint={snapshot ? PRIORITY_LABELS[snapshot.intervention_priority] : undefined}
+        />
         <PendingKpi label="Conformité documentaire" phase={3} />
         <PendingKpi label="Actions du plan" phase={5} />
       </div>

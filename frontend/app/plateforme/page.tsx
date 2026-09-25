@@ -10,7 +10,7 @@ import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useLogout } from "@/lib/session";
 
-const TYPES: Record<Schemas["TypeEnum"], string> = {
+const TYPES: Record<Schemas["OrganizationTypeEnum"], string> = {
   AGENCE_PUBLIQUE: "Agence ou programme public",
   BANQUE: "Banque",
   INCUBATEUR: "Incubateur",
@@ -33,7 +33,7 @@ export default function PlatformPage() {
   const [form, setForm] = useState({ name: "", slug: "", type: "AGENCE_PUBLIQUE", admin_email: "", admin_full_name: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const create = useMutation({
-    mutationFn: () => unwrap(api.POST("/api/v1/platform/organizations", { body: { ...form, type: form.type as Schemas["TypeEnum"] } })),
+    mutationFn: () => unwrap(api.POST("/api/v1/platform/organizations", { body: { ...form, type: form.type as Schemas["OrganizationTypeEnum"] } })),
     onSuccess: () => {
       setForm({ name: "", slug: "", type: "AGENCE_PUBLIQUE", admin_email: "", admin_full_name: "" });
       setErrors({});

@@ -1,11 +1,13 @@
-"""Tableaux de bord — squelette de la phase 1 (Document 9).
+"""Tableaux de bord (Document 9) — indicateurs des phases 1 et 2.
 
-Seuls les indicateurs calculables avec les données de la phase 1 sont produits. Les autres blocs sont renvoyés
-avec ``available_in_phase`` pour que l'interface affiche un emplacement explicite plutôt qu'un chiffre inventé
-(principe « aucune valeur codée en dur », Document 9, § 1).
+Les indicateurs qui dépendent des phases suivantes sont renvoyés avec ``available_in_phase`` pour que l'interface
+affiche un emplacement explicite plutôt qu'un chiffre inventé (Document 9, § 1 : « aucune valeur codée en dur »).
+Les agrégats de scores portent sur le DERNIER snapshot figé de chaque PME ; ils affichent aussi la confiance
+moyenne et la part de PME à confiance faible (Document 9, § 1.5).
 """
 
 from datetime import timedelta
+from statistics import mean, median
 
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
@@ -15,16 +17,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from pme360.core.permissions import get_access
+from pme360.diagnostic.models import Diagnostic
 from pme360.organizations.models import Organization
 from pme360.pmes.models import Pme, PmeAssignment
+from pme360.scoring.models import ScoreSnapshot
 
-PENDING = {
-    "documents_to_verify": 3,
-    "alerts_open": 3,
-    "diagnostics_to_validate": 2,
-    "actions_overdue": 5,
-    "deadlines_this_week": 3,
-}
+PENDING = {"documents_to_verify": 3, "alerts_open": 3, "actions_overdue": 5, "deadlines_this_week": 3}
+WEAKNESS_THRESHOLD = 50  # « problème » = dimension sous 50/100 (paramètre d'affichage, Document 9, § 4.2)
+STAGNATION_POINTS = 2  # < +2 points en 6 mois (Document 6, § 6)
+MIN_CELL = 5  # cellules masquées si n < 5 (Document 9, § 4.2)
 
 
 def _inactive_q(days: int) -> Q:
@@ -45,6 +46,51 @@ def _placeholders() -> dict:
     return {key: {"value": None, "available_in_phase": phase} for key, phase in PENDING.items()}
 
 
+def latest_snapshots(pmes) -> dict:
+    """Dernier snapshot figé de chaque PME du périmètre (DISTINCT ON PostgreSQL)."""
+    snapshots = (
+        ScoreSnapshot.objects.filter(pme__in=pmes, is_frozen=True)
+        .order_by("pme_id", "-reference_date", "-computed_at")
+        .distinct("pme_id")
+    )
+    return {s.pme_id: s for s in snapshots}
+
+
+def baselines(pmes) -> dict:
+    return {
+        s.pme_id: s
+        for s in ScoreSnapshot.objects.filter(pme__in=pmes, kind=ScoreSnapshot.Kind.BASELINE, is_frozen=True)
+    }
+
+
+def _f(value) -> float | None:
+    return None if value is None else float(value)
+
+
+def score_summary(snapshot: ScoreSnapshot | None, baseline: ScoreSnapshot | None) -> dict | None:
+    if snapshot is None:
+        return None
+    delta = None
+    if (
+        baseline
+        and baseline.pk != snapshot.pk
+        and snapshot.global_score is not None
+        and baseline.global_score is not None
+    ):
+        delta = round(float(snapshot.global_score - baseline.global_score), 1)
+    return {
+        "global_score": _f(snapshot.global_score),
+        "maturity_level": snapshot.maturity_level,
+        "maturity_label": snapshot.result.get("maturity", {}).get("label"),
+        "confidence": _f(snapshot.confidence),
+        "confidence_label": snapshot.result.get("confidence_label"),
+        "priority": snapshot.intervention_priority,
+        "reference_date": snapshot.reference_date,
+        "delta_since_baseline": delta,
+        "baseline_date": baseline.reference_date if baseline else None,
+    }
+
+
 class AdvisorDashboardView(APIView):
     """« Ma journée » du conseiller : son portefeuille (périmètre) et sa file de travail."""
 
@@ -57,10 +103,22 @@ class AdvisorDashboardView(APIView):
         inactivity_days = organization.setting("inactivity_days")
         pmes = access.pme_queryset(Pme.objects.all())
         month_start = timezone.localdate().replace(day=1)
-        recent = (
+        latest = latest_snapshots(pmes)
+        recent = list(
             pmes.select_related("sector")
             .order_by("-last_activity_at")[:8]
             .values("id", "legal_name", "lifecycle_status", "sector__name", "last_activity_at")
+        )
+        for row in recent:
+            snapshot = latest.get(row["id"])
+            row["global_score"] = _f(snapshot.global_score) if snapshot else None
+            row["priority"] = snapshot.intervention_priority if snapshot else None
+        diagnostics = Diagnostic.objects.filter(pme__in=pmes)
+        to_validate = list(
+            diagnostics.filter(status=Diagnostic.Status.EN_REVUE)
+            .select_related("pme")
+            .order_by("submitted_at")
+            .values("id", "pme_id", "pme__legal_name", "type", "submitted_at")
         )
         return Response(
             {
@@ -68,18 +126,34 @@ class AdvisorDashboardView(APIView):
                     "pmes_followed": pmes.count(),
                     "pmes_inactive": pmes.filter(_inactive_q(inactivity_days)).count(),
                     "pmes_onboarded_this_month": pmes.filter(onboarding_started_at__date__gte=month_start).count(),
+                    "diagnostics_to_validate": len(to_validate),
+                    "diagnostics_in_progress": diagnostics.filter(status=Diagnostic.Status.EN_COLLECTE).count(),
+                    "pmes_urgent": sum(1 for s in latest.values() if s.intervention_priority == "P1"),
                     **_placeholders(),
                 },
                 "by_lifecycle": _breakdown(pmes, "lifecycle_status"),
-                "recent_pmes": list(recent),
-                "work_queue": {"items": [], "available_in_phase": 3},
+                "recent_pmes": recent,
+                "work_queue": {
+                    "items": [
+                        {
+                            "kind": "DIAGNOSTIC_A_VALIDER",
+                            "diagnostic_id": d["id"],
+                            "pme_id": d["pme_id"],
+                            "pme_name": d["pme__legal_name"],
+                            "since": d["submitted_at"],
+                            "type": d["type"],
+                        }
+                        for d in to_validate
+                    ],
+                    "available_in_phase": 3,  # documents, alertes et actions rejoignent la file ensuite
+                },
                 "inactivity_days": inactivity_days,
             }
         )
 
 
 class PortfolioDashboardView(APIView):
-    """Vue d'ensemble programme / direction (Document 9, § 4.1) — indicateurs disponibles en phase 1."""
+    """Vue d'ensemble programme / direction (Document 9, § 4.1) et analyses de portefeuille (§ 4.2)."""
 
     required_permissions = "dashboard.portfolio"
 
@@ -91,6 +165,48 @@ class PortfolioDashboardView(APIView):
         pmes = access.pme_queryset(Pme.objects.all())
         month_start = timezone.localdate().replace(day=1)
         accompanied = pmes.filter(lifecycle_status=Pme.LifecycleStatus.ACCOMPAGNEMENT_ACTIF)
+        latest = latest_snapshots(pmes)
+        starts = baselines(pmes)
+        names = dict(pmes.values_list("id", "legal_name"))
+        scored = [s for s in latest.values() if s.global_score is not None]
+        scores = [float(s.global_score) for s in scored]
+        progress = []
+        for pme_id, snapshot in latest.items():
+            baseline = starts.get(pme_id)
+            if baseline and baseline.pk != snapshot.pk and snapshot.global_score is not None:
+                months = (snapshot.reference_date - baseline.reference_date).days / 30.44
+                progress.append(
+                    {
+                        "pme_id": pme_id,
+                        "pme_name": names.get(pme_id),
+                        "delta": round(float(snapshot.global_score - baseline.global_score), 1),
+                        "months": round(months, 1),
+                        "from": _f(baseline.global_score),
+                        "to": _f(snapshot.global_score),
+                    }
+                )
+        # Problèmes les plus fréquents : part des PME dont la dimension est sous le seuil (dernier snapshot).
+        weaknesses: dict[str, dict] = {}
+        for snapshot in scored:
+            for dimension in snapshot.result.get("dimensions", []):
+                if dimension["score"] is None:
+                    continue
+                entry = weaknesses.setdefault(
+                    dimension["code"],
+                    {"code": dimension["code"], "name": dimension["short_name"], "weak": 0, "evaluated": 0},
+                )
+                entry["evaluated"] += 1
+                entry["weak"] += dimension["score"] < WEAKNESS_THRESHOLD
+        weakness_list = sorted(
+            ({**w, "share": round(w["weak"] / w["evaluated"], 3)} for w in weaknesses.values()),
+            key=lambda w: -w["share"],
+        )
+        confidences = [float(s.confidence) for s in scored]
+        levels = {}
+        for snapshot in scored:
+            label = snapshot.result.get("maturity", {}).get("label") or "Non déterminé"
+            levels.setdefault(snapshot.maturity_level, {"key": snapshot.maturity_level, "label": label, "count": 0})
+            levels[snapshot.maturity_level]["count"] += 1
         return Response(
             {
                 "kpis": {
@@ -105,23 +221,51 @@ class PortfolioDashboardView(APIView):
                             end_date__isnull=True, role_in_pme=PmeAssignment.RoleInPme.CONSEILLER_PRINCIPAL
                         ).values("pme_id")
                     ).count(),
-                    "average_score": {"value": None, "available_in_phase": 2},
-                    "average_progress": {"value": None, "available_in_phase": 2},
+                    "pmes_diagnosed": len(scored),
+                    "average_score": round(mean(scores), 1) if scores else None,
+                    "median_score": round(median(scores), 1) if scores else None,
+                    "average_progress": round(mean(p["delta"] for p in progress), 1) if progress else None,
+                    "average_confidence": round(mean(confidences), 3) if confidences else None,
+                    "low_confidence_share": round(sum(c < 0.5 for c in confidences) / len(confidences), 3)
+                    if confidences
+                    else None,
+                    "pmes_at_risk": sum(1 for s in scored if s.risk_index is not None and s.risk_index >= 50),
+                    "pmes_urgent": sum(1 for s in scored if s.intervention_priority == "P1"),
                     "average_compliance": {"value": None, "available_in_phase": 3},
-                    "pmes_at_risk": {"value": None, "available_in_phase": 2},
-                    "pmes_urgent": {"value": None, "available_in_phase": 2},
                 },
                 "by_lifecycle": _breakdown(pmes, "lifecycle_status"),
                 "by_sector": _breakdown(pmes, "sector__code", "sector__name"),
                 "by_region": _breakdown(pmes, "region__code", "region__name"),
                 "by_size": _breakdown(pmes, "size_category"),
+                "by_maturity": sorted(levels.values(), key=lambda item: item["key"] or 0),
+                "by_priority": [
+                    {"key": p, "label": p, "count": sum(1 for s in scored if s.intervention_priority == p)}
+                    for p in ("P1", "P2", "P3", "P4")
+                ],
+                "weaknesses": weakness_list,
+                "weakness_threshold": WEAKNESS_THRESHOLD,
+                "progress": {
+                    "top": sorted(progress, key=lambda p: -p["delta"])[:5],
+                    "stagnating": [p for p in progress if p["months"] >= 6 and p["delta"] < STAGNATION_POINTS],
+                },
+                "urgent": [
+                    {
+                        "pme_id": s.pme_id,
+                        "pme_name": names.get(s.pme_id),
+                        "global_score": _f(s.global_score),
+                        "risk_index": _f(s.risk_index),
+                    }
+                    for s in scored
+                    if s.intervention_priority == "P1"
+                ],
                 "inactivity_days": inactivity_days,
+                "min_cell": MIN_CELL,
             }
         )
 
 
 class PmeDashboardView(APIView):
-    """Accueil du portail PME (Document 9, § 2) : les 4 questions, avec les données disponibles en phase 1."""
+    """Accueil du portail PME (Document 9, § 2) : où j'en suis, que faire, retours, échéances."""
 
     required_permissions = "pme.view"
 
@@ -134,6 +278,14 @@ class PmeDashboardView(APIView):
                 pme=pme, end_date__isnull=True, role_in_pme=PmeAssignment.RoleInPme.CONSEILLER_PRINCIPAL
             )
             .select_related("user")
+            .first()
+        )
+        snapshot = latest_snapshots(Pme.objects.filter(pk=pme.pk)).get(pme.pk)
+        baseline = baselines(Pme.objects.filter(pk=pme.pk)).get(pme.pk)
+        open_diagnostic = (
+            Diagnostic.objects.filter(pme=pme)
+            .exclude(status__in=[Diagnostic.Status.VALIDE, Diagnostic.Status.ANNULE])
+            .values("id", "type", "status", "reference_date")
             .first()
         )
         return Response(
@@ -154,7 +306,8 @@ class PmeDashboardView(APIView):
                     if principal
                     else None
                 ),
-                "score": {"value": None, "available_in_phase": 2},
+                "score": score_summary(snapshot, baseline),
+                "open_diagnostic": open_diagnostic,
                 "next_actions": {"items": [], "available_in_phase": 5},
                 "compliance": {"value": None, "available_in_phase": 3},
                 "feedback": {"items": [], "available_in_phase": 3},

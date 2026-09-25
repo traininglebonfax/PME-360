@@ -246,7 +246,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Accueil du portail PME (Document 9, § 2) : les 4 questions, avec les données disponibles en phase 1. */
+        /** @description Accueil du portail PME (Document 9, § 2) : où j'en suis, que faire, retours, échéances. */
         get: operations["dashboards_pme_retrieve"];
         put?: never;
         post?: never;
@@ -263,10 +263,252 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Vue d'ensemble programme / direction (Document 9, § 4.1) — indicateurs disponibles en phase 1. */
+        /** @description Vue d'ensemble programme / direction (Document 9, § 4.1) et analyses de portefeuille (§ 4.2). */
         get: operations["dashboards_portfolio_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["diagnostics_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["diagnostics_answers_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["diagnostics_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Résultat provisoire (non enregistré) d'un diagnostic en cours. */
+        get: operations["diagnostics_preview_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/questionnaire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["diagnostics_questionnaire_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["diagnostics_reopen_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Écran de revue : critères par dimension avec réponses, grille, résultat provisoire et revue existante. */
+        get: operations["diagnostics_review_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/review/{criterion_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["diagnostics_review_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/review/accept-remaining": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["diagnostics_review_accept_remaining_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["diagnostics_submit_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["diagnostics_validate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/framework-versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["framework_versions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["framework_versions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["framework_versions_clone_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["framework_versions_publish_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -461,6 +703,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pmes/{pme_id}/diagnostics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pmes_diagnostics_list"];
+        put?: never;
+        post: operations["pmes_diagnostics_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pmes/{pme_id}/health-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description « PME Health Check » (Document 6, § 10) : dernier snapshot figé, référence, historique, diagnostic en cours. */
+        get: operations["pmes_health_check_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pmes/{pme_pk}/persons": {
         parameters: {
             query?: never;
@@ -596,6 +871,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/snapshots/{snapshot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["snapshots_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/snapshots/{snapshot_id}/compare/{other_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Explication de l'écart entre deux snapshots d'une même PME (Document 6, § 8). */
+        get: operations["snapshots_compare_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -651,6 +959,9 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AcceptResult: {
+            accepted: number;
+        };
         /**
          * @description * `USER` - Utilisateur
          *     * `SYSTEM` - Système
@@ -663,6 +974,36 @@ export interface components {
             id: string;
             full_name: string;
         };
+        AnswerBatchRequest: {
+            answers: components["schemas"]["AnswerItemRequest"][];
+        };
+        AnswerBatchResult: {
+            changed: number;
+            progress: components["schemas"]["Progress"];
+        };
+        AnswerItemRequest: {
+            question: string;
+            value: unknown;
+        };
+        Assessment: {
+            readonly criterion: string;
+            readonly status: components["schemas"]["AssessmentStatusEnum"];
+            readonly level_declared: number | null;
+            readonly level_final: number | null;
+            /** @description Déclaratif corroboré (entretien, visite). */
+            readonly corroborated: boolean;
+            readonly comment: string;
+            readonly reviewer_name: string;
+            /** Format: date-time */
+            readonly reviewed_at: string;
+        };
+        /**
+         * @description * `VALIDE` - Validé
+         *     * `MODIFIE` - Modifié
+         *     * `NON_APPLICABLE` - Non applicable
+         * @enum {string}
+         */
+        AssessmentStatusEnum: "VALIDE" | "MODIFIE" | "NON_APPLICABLE";
         AssignedUser: {
             /** Format: uuid */
             id: string;
@@ -712,6 +1053,9 @@ export interface components {
             entries_checked: number;
             first_invalid_id: number | null;
         };
+        CloneRequest: {
+            version: string;
+        };
         CodeRequest: {
             code: string;
         };
@@ -730,6 +1074,73 @@ export interface components {
             name: string;
             /** Format: date */
             start_date?: string | null;
+        };
+        Criterion: {
+            readonly code: string;
+            readonly name: string;
+            readonly lens: components["schemas"]["LensEnum"];
+            /** Format: decimal */
+            readonly weight: string;
+            readonly is_critical: boolean;
+            readonly rubric: string[];
+            readonly declarative_cap_level: number;
+            /** @description Règle JSON Logic sur le profil de la PME. */
+            readonly applicability: unknown;
+            readonly evidence_policy: components["schemas"]["EvidencePolicyEnum"];
+            readonly evidence_document_types: string[];
+            /** @description Code secteur ; vide = tronc commun. */
+            readonly sector_module: string;
+            readonly metrics: components["schemas"]["MetricDefinition"][];
+        };
+        Diagnostic: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly pme: components["schemas"]["NamedRef"];
+            readonly type: components["schemas"]["DiagnosticTypeEnum"];
+            readonly status: components["schemas"]["DiagnosticStatusEnum"];
+            /** Format: date */
+            readonly reference_date: string;
+            readonly framework_version: string;
+            /** Format: date-time */
+            readonly submitted_at: string | null;
+            /** Format: date-time */
+            readonly validated_at: string | null;
+            readonly validated_by_name: string;
+            readonly lead_advisor_name: string;
+            readonly cancel_reason: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly snapshot_id: string | null;
+        };
+        /**
+         * @description * `BROUILLON` - Brouillon
+         *     * `EN_COLLECTE` - En collecte
+         *     * `ANALYSE_IA` - Analyse IA
+         *     * `EN_REVUE` - En revue
+         *     * `VALIDE` - Validé
+         *     * `ANNULE` - Annulé
+         * @enum {string}
+         */
+        DiagnosticStatusEnum: "BROUILLON" | "EN_COLLECTE" | "ANALYSE_IA" | "EN_REVUE" | "VALIDE" | "ANNULE";
+        /**
+         * @description * `INITIAL` - Diagnostic initial
+         *     * `SUIVI` - Diagnostic de suivi
+         *     * `REEVALUATION` - Réévaluation complète
+         *     * `CLOTURE` - Diagnostic de clôture
+         * @enum {string}
+         */
+        DiagnosticTypeEnum: "INITIAL" | "SUIVI" | "REEVALUATION" | "CLOTURE";
+        Dimension: {
+            readonly code: string;
+            readonly name: string;
+            readonly short_name: string;
+            readonly description: string;
+            readonly pillar: string;
+            /** Format: decimal */
+            readonly weight: string;
+            /** Format: decimal */
+            readonly sector_module_share: string;
+            readonly criteria: components["schemas"]["Criterion"][];
         };
         Duplicate: {
             /** Format: uuid */
@@ -758,12 +1169,57 @@ export interface components {
             readonly exit_reason: string;
         };
         /**
+         * @description * `NONE` - Aucune
+         *     * `RECOMMENDED` - Recommandée
+         *     * `REQUIRED` - Obligatoire
+         * @enum {string}
+         */
+        EvidencePolicyEnum: "NONE" | "RECOMMENDED" | "REQUIRED";
+        /**
          * @description * `DIPLOMEE` - Diplômée
          *     * `ABANDON` - Abandon
          *     * `REORIENTATION` - Réorientation
          * @enum {string}
          */
         ExitReasonEnum: "DIPLOMEE" | "ABANDON" | "REORIENTATION";
+        FrameworkVersion: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly framework_code: string;
+            readonly framework_name: string;
+            readonly version: string;
+            readonly status: components["schemas"]["FrameworkVersionStatusEnum"];
+            /** Format: date-time */
+            readonly published_at: string | null;
+            readonly published_by_name: string;
+            readonly notes: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        FrameworkVersionDetail: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly framework_code: string;
+            readonly framework_name: string;
+            readonly version: string;
+            readonly status: components["schemas"]["FrameworkVersionStatusEnum"];
+            /** Format: date-time */
+            readonly published_at: string | null;
+            readonly published_by_name: string;
+            readonly notes: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly pillars: components["schemas"]["Pillar"][];
+            readonly dimensions: components["schemas"]["Dimension"][];
+            readonly settings: unknown;
+        };
+        /**
+         * @description * `DRAFT` - Brouillon
+         *     * `PUBLISHED` - Publiée
+         *     * `RETIRED` - Retirée
+         * @enum {string}
+         */
+        FrameworkVersionStatusEnum: "DRAFT" | "PUBLISHED" | "RETIRED";
         /**
          * @description * `F` - Femme
          *     * `H` - Homme
@@ -772,6 +1228,12 @@ export interface components {
         GenderEnum: "F" | "H";
         Health: {
             status: string;
+        };
+        HealthCheck: {
+            snapshot: components["schemas"]["SnapshotDetail"] | null;
+            baseline: components["schemas"]["SnapshotSummary"] | null;
+            history: components["schemas"]["SnapshotSummary"][];
+            open_diagnostic: unknown;
         };
         InviteRequest: {
             /** Format: email */
@@ -784,6 +1246,14 @@ export interface components {
             /** Format: uuid */
             scope_ref_id?: string | null;
         };
+        /**
+         * @description * `C` - Conformité
+         *     * `O` - Organisation
+         *     * `P` - Performance
+         *     * `R` - Maîtrise des risques
+         * @enum {string}
+         */
+        LensEnum: "C" | "O" | "P" | "R";
         /**
          * @description * `PROSPECT` - Prospect
          *     * `ONBOARDING` - Intégration
@@ -866,16 +1336,37 @@ export interface components {
             valid_to?: string | null;
             is_active?: boolean;
         };
+        MetricDefinition: {
+            readonly code: string;
+            readonly name: string;
+            readonly formula: string;
+            /** @description Formule en clair. */
+            readonly formula_label: string;
+            readonly unit: components["schemas"]["UnitEnum"];
+            readonly bands: unknown;
+            /** Format: decimal */
+            readonly weight: string;
+        };
         MfaSetup: {
             secret: string;
             otpauth_uri: string;
+        };
+        NamedRef: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        Option: {
+            value: string;
+            label: string;
+            level?: number;
         };
         Organization: {
             /** Format: uuid */
             readonly id: string;
             name: string;
             readonly slug: string;
-            readonly type: components["schemas"]["TypeEnum"];
+            readonly type: components["schemas"]["OrganizationTypeEnum"];
             readonly country: string;
             branding?: unknown;
             readonly settings: {
@@ -907,6 +1398,17 @@ export interface components {
          * @enum {string}
          */
         OrganizationStatusEnum: "ACTIVE" | "SUSPENDUE";
+        /**
+         * @description * `AGENCE_PUBLIQUE` - Agence ou programme public
+         *     * `BANQUE` - Banque
+         *     * `INCUBATEUR` - Incubateur
+         *     * `ONG` - ONG
+         *     * `BAILLEUR` - Bailleur
+         *     * `CABINET` - Cabinet
+         *     * `ASSOCIATION` - Association professionnelle
+         * @enum {string}
+         */
+        OrganizationTypeEnum: "AGENCE_PUBLIQUE" | "BANQUE" | "INCUBATEUR" | "ONG" | "BAILLEUR" | "CABINET" | "ASSOCIATION";
         OtpRequestRequest: {
             /** Format: email */
             email: string;
@@ -1042,13 +1544,19 @@ export interface components {
             /** @description Facultatif (statistiques). */
             birth_year?: number | null;
         };
+        Pillar: {
+            readonly code: string;
+            readonly name: string;
+            /** Format: decimal */
+            readonly weight: string;
+        };
         /** @description Vue plateforme : aucune donnée métier, uniquement l'identité du tenant. */
         PlatformOrganization: {
             /** Format: uuid */
             readonly id: string;
             name: string;
             slug: string;
-            type: components["schemas"]["TypeEnum"];
+            type: components["schemas"]["OrganizationTypeEnum"];
             readonly status: components["schemas"]["OrganizationStatusEnum"];
             /** Format: date-time */
             readonly created_at: string;
@@ -1057,7 +1565,7 @@ export interface components {
         PlatformOrganizationRequest: {
             name: string;
             slug: string;
-            type: components["schemas"]["TypeEnum"];
+            type: components["schemas"]["OrganizationTypeEnum"];
             /** Format: email */
             admin_email: string;
             admin_full_name: string;
@@ -1197,6 +1705,57 @@ export interface components {
             funder?: string;
             objectives?: unknown;
         };
+        Progress: {
+            required: number;
+            required_answered: number;
+            answered: number;
+            /** Format: double */
+            completion: number;
+            /** Format: double */
+            submit_threshold: number;
+        };
+        /**
+         * @description * `SINGLE` - Choix unique
+         *     * `BOOLEAN` - Oui / non
+         *     * `NUMBER` - Nombre
+         *     * `AMOUNT` - Montant (FCFA)
+         *     * `PERCENT` - Pourcentage
+         *     * `TEXT` - Texte
+         * @enum {string}
+         */
+        QuestionTypeEnum: "SINGLE" | "BOOLEAN" | "NUMBER" | "AMOUNT" | "PERCENT" | "TEXT";
+        Questionnaire: {
+            diagnostic: components["schemas"]["Diagnostic"];
+            editable: boolean;
+            progress: components["schemas"]["Progress"];
+            steps: components["schemas"]["QuestionnaireStep"][];
+        };
+        QuestionnaireQuestion: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            text: string;
+            help_text: string;
+            why_text: string;
+            type: components["schemas"]["QuestionTypeEnum"];
+            required: boolean;
+            options: components["schemas"]["Option"][];
+            value: unknown;
+            answered: boolean;
+            source: string | null;
+            evidence_hint: string;
+            criterion: string | null;
+            is_critical: boolean;
+        };
+        QuestionnaireStep: {
+            code: string;
+            title: string;
+            description: string;
+            questions: components["schemas"]["QuestionnaireQuestion"][];
+        };
+        ReasonRequest: {
+            reason: string;
+        };
         /**
          * @description * `rccm` - rccm
          *     * `ncc` - ncc
@@ -1209,6 +1768,38 @@ export interface components {
             id: string;
             code: string;
             name: string;
+        };
+        ReviewCriterion: {
+            code: string;
+            name: string;
+            dimension: string;
+            lens: string;
+            is_critical: boolean;
+            evidence_policy: string;
+            rubric: string[];
+            result: unknown;
+            answers: unknown;
+            assessment: components["schemas"]["Assessment"] | null;
+        };
+        ReviewDimension: {
+            code: string;
+            name: string;
+            result: unknown;
+            criteria: components["schemas"]["ReviewCriterion"][];
+        };
+        ReviewPayload: {
+            diagnostic: components["schemas"]["Diagnostic"];
+            preview: unknown;
+            pending: string[];
+            dimensions: components["schemas"]["ReviewDimension"][];
+        };
+        ReviewRequest: {
+            status: components["schemas"]["AssessmentStatusEnum"];
+            level_final?: number | null;
+            /** @default  */
+            comment: string;
+            /** @default false */
+            corroborated: boolean;
         };
         Role: {
             /** Format: uuid */
@@ -1254,6 +1845,88 @@ export interface components {
          * @enum {string}
          */
         SizeCategoryEnum: "NON_DETERMINEE" | "MICRO" | "PETITE" | "MOYENNE" | "HORS_PME";
+        SnapshotDetail: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["SnapshotKindEnum"];
+            /** Format: date */
+            readonly reference_date: string;
+            /** Format: date-time */
+            readonly computed_at: string;
+            readonly framework_version: string;
+            readonly engine_version: string;
+            /** Format: decimal */
+            readonly global_score: string | null;
+            /**
+             * Indice de maturité organisationnelle
+             * Format: decimal
+             */
+            readonly imo: string | null;
+            /**
+             * Indice de performance économique
+             * Format: decimal
+             */
+            readonly ipe: string | null;
+            /** Format: decimal */
+            readonly risk_index: string | null;
+            /** Format: decimal */
+            readonly digital_index: string | null;
+            /** Format: decimal */
+            readonly confidence: string;
+            readonly maturity_level: number | null;
+            readonly maturity_label: string | null;
+            readonly intervention_priority: string;
+            readonly quadrant: string;
+            readonly diagnostic_type: string;
+            readonly result: unknown;
+        };
+        /**
+         * @description * `BASELINE` - Référence (diagnostic initial)
+         *     * `FOLLOW_UP` - Suivi
+         *     * `CLOTURE` - Clôture
+         *     * `LIVE` - Score courant
+         * @enum {string}
+         */
+        SnapshotKindEnum: "BASELINE" | "FOLLOW_UP" | "CLOTURE" | "LIVE";
+        SnapshotSummary: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["SnapshotKindEnum"];
+            /** Format: date */
+            readonly reference_date: string;
+            /** Format: date-time */
+            readonly computed_at: string;
+            readonly framework_version: string;
+            readonly engine_version: string;
+            /** Format: decimal */
+            readonly global_score: string | null;
+            /**
+             * Indice de maturité organisationnelle
+             * Format: decimal
+             */
+            readonly imo: string | null;
+            /**
+             * Indice de performance économique
+             * Format: decimal
+             */
+            readonly ipe: string | null;
+            /** Format: decimal */
+            readonly risk_index: string | null;
+            /** Format: decimal */
+            readonly digital_index: string | null;
+            /** Format: decimal */
+            readonly confidence: string;
+            readonly maturity_level: number | null;
+            readonly maturity_label: string | null;
+            readonly intervention_priority: string;
+            readonly quadrant: string;
+            readonly diagnostic_type: string;
+        };
+        StartDiagnosticRequest: {
+            type: components["schemas"]["DiagnosticTypeEnum"];
+            /** Format: date */
+            reference_date?: string;
+        };
         SwitchOrganizationRequest: {
             /** Format: uuid */
             organization_id: string;
@@ -1276,16 +1949,14 @@ export interface components {
             exit_reason: components["schemas"]["ExitReasonEnum"] | components["schemas"]["BlankEnum"];
         };
         /**
-         * @description * `AGENCE_PUBLIQUE` - Agence ou programme public
-         *     * `BANQUE` - Banque
-         *     * `INCUBATEUR` - Incubateur
-         *     * `ONG` - ONG
-         *     * `BAILLEUR` - Bailleur
-         *     * `CABINET` - Cabinet
-         *     * `ASSOCIATION` - Association professionnelle
+         * @description * `PERCENT` - %
+         *     * `RATIO` - ratio
+         *     * `DAYS` - jours
+         *     * `YEARS` - années
+         *     * `AMOUNT` - FCFA
          * @enum {string}
          */
-        TypeEnum: "AGENCE_PUBLIQUE" | "BANQUE" | "INCUBATEUR" | "ONG" | "BAILLEUR" | "CABINET" | "ASSOCIATION";
+        UnitEnum: "PERCENT" | "RATIO" | "DAYS" | "YEARS" | "AMOUNT";
         UserSummary: {
             /** Format: uuid */
             readonly id: string;
@@ -1648,6 +2319,342 @@ export interface operations {
             };
         };
     };
+    diagnostics_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+        };
+    };
+    diagnostics_answers_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnswerBatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswerBatchResult"];
+                };
+            };
+        };
+    };
+    diagnostics_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+        };
+    };
+    diagnostics_preview_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    diagnostics_questionnaire_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Questionnaire"];
+                };
+            };
+        };
+    };
+    diagnostics_reopen_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+        };
+    };
+    diagnostics_review_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewPayload"];
+                };
+            };
+        };
+    };
+    diagnostics_review_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                criterion_code: string;
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Assessment"];
+                };
+            };
+        };
+    };
+    diagnostics_review_accept_remaining_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcceptResult"];
+                };
+            };
+        };
+    };
+    diagnostics_submit_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+        };
+    };
+    diagnostics_validate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+        };
+    };
+    framework_versions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkVersion"][];
+                };
+            };
+        };
+    };
+    framework_versions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkVersionDetail"];
+                };
+            };
+        };
+    };
+    framework_versions_clone_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloneRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkVersion"];
+                };
+            };
+        };
+    };
+    framework_versions_publish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkVersion"];
+                };
+            };
+        };
+    };
     health_retrieve: {
         parameters: {
             query?: never;
@@ -1992,6 +2999,73 @@ export interface operations {
             };
         };
     };
+    pmes_diagnostics_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diagnostic"][];
+                };
+            };
+        };
+    };
+    pmes_diagnostics_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartDiagnosticRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+        };
+    };
+    pmes_health_check_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthCheck"];
+                };
+            };
+        };
+    };
     pmes_persons_list: {
         parameters: {
             query?: never;
@@ -2302,6 +3376,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Role"][];
+                };
+            };
+        };
+    };
+    snapshots_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotDetail"];
+                };
+            };
+        };
+    };
+    snapshots_compare_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                other_id: string;
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
