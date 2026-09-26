@@ -25,6 +25,12 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 4 — IA | ✅ Livrée (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
 | 5 — Accompagnement | ✅ Livrée (voir ci-dessous) ; catalogue d'offres, règles et modèles de livrables **à valider** par GUDE-PME |
 | 6 — Reporting | ✅ Livrée (voir ci-dessous) ; rapport PDF à relire par GUDE-PME ; analyse d'effet des accompagnements descriptive uniquement (RM-09) |
+| Compléments MVP | ✅ Échanges sur les actions (internes ou partagés), sauvegardes chiffrées avec test de restauration ([runbook](infra/backup/README.md)) |
+
+### Compléments du MVP
+
+- **Échanges sur les actions** : chaque action a un fil de messages ; le conseiller choisit « interne GUDE-PME » (par défaut) ou « partagé avec la PME » ; la PME ne voit que les messages partagés et prévient son conseiller en écrivant. Messages en ajout seul, tracés au journal, notifiés à l'autre partie.
+- **Sauvegardes** (Document 2) : archivage continu des WAL (restauration à un instant donné, RPO 15 min), sauvegarde quotidienne **chiffrée** (AES-256) avec manifeste d'intégrité, sauvegarde de base hebdomadaire, réplication continue des documents et rapports, rétention 30 jours, **test de restauration mensuel automatique** (volumes, dernier maillon d'audit, propriétaire applicatif et RLS forcée vérifiés ; rapport archivé), commande `verify_audit` après restauration. Procédures dans [infra/backup/README.md](infra/backup/README.md).
 
 ### Contenu de la phase 6
 
@@ -98,6 +104,7 @@ Prérequis : Docker, Python 3.12+ (testé en 3.14), Node 24. Les ports sont déc
 ```bash
 # 1. Infrastructure (PostgreSQL + pgvector, Redis, MinIO, Mailpit)
 docker compose -f infra/docker-compose.yml up -d
+# Sauvegardes (planificateur + réplication des documents) : docker compose -f infra/docker-compose.yml --profile backup up -d
 # Antivirus ClamAV (facultatif en local ; sinon PME360_ANTIVIRUS=eicar, détecteur de test) :
 # docker compose -f infra/docker-compose.yml --profile antivirus up -d   puis PME360_ANTIVIRUS=clamd
 

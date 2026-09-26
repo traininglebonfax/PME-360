@@ -1033,3 +1033,68 @@ def set_rule_status(rule: RecommendationRule, access, status: str) -> Recommenda
         raise ValidationError({"status": ["Statut inconnu."]})
     audit.record("plan.rule_status", instance=rule, before={"status": before}, after={"status": rule.status})
     return rule
+
+
+# --- Commentaires (Document 3, § 3.6) ----------------------------------------------------------------------------
+
+MAX_COMMENT = 4000
+
+
+def visible_comments(action: Action, access):
+    """La PME ne voit jamais les commentaires internes de GUDE-PME."""
+    from .models import Comment
+
+    comments = action.comments.select_related("author")
+    if access.is_pme_user:
+        comments = comments.filter(visibility=Comment.Visibility.PARTAGE_PME)
+    return comments
+
+
+def add_comment(action: Action, access, *, body: str, visibility: str):
+    """Commentaire sur une action ; la PME écrit toujours en partagé ; l'autre partie est prévenue."""
+    from .models import Comment
+
+    if not access.has("task.update") and not access.has("plan.edit") and not access.has("plan.accept"):
+        raise PermissionDenied()
+    body = body.strip()
+    if not body:
+        raise ValidationError({"body": ["Le commentaire est vide."]})
+    if len(body) > MAX_COMMENT:
+        raise ValidationError({"body": [f"{MAX_COMMENT} caractères au maximum."]})
+    if access.is_pme_user:
+        if action.pme_id not in access.own_pme_ids:
+            raise PermissionDenied()
+        visibility = Comment.Visibility.PARTAGE_PME
+    elif visibility not in Comment.Visibility.values:
+        raise ValidationError({"visibility": ["Visibilité inconnue."]})
+    if access.is_pme_user and action.plan.status not in (
+        *LIVE_PLAN,
+        ActionPlan.Status.EN_VALIDATION,
+        ActionPlan.Status.CLOS,
+    ):
+        raise PermissionDenied()
+    comment = Comment.objects.create(
+        action=action, pme=action.pme, author=access.user, body=body, visibility=visibility, created_by=access.user
+    )
+    audit.record(
+        "action.commented",
+        instance=comment,
+        pme_id=action.pme_id,
+        after={"action": action.human_ref, "visibility": visibility, "length": len(body)},
+    )
+    if visibility == Comment.Visibility.PARTAGE_PME:
+        if access.is_pme_user:
+            recipients = notifications.recipients(action.pme, ["CONSEILLER"])
+            link = f"/actions/{action.pk}"
+        else:
+            recipients = notifications.pme_users(action.pme)
+            link = f"/espace/plan/{action.pk}"
+        recipients = [u for u in recipients if u.pk != access.user.pk]
+        notifications.notify(
+            recipients,
+            "ACTION_COMMENTED",
+            {"action": action.title, "author": access.user.full_name, "excerpt": body[:160]},
+            link=link,
+            pme=action.pme,
+        )
+    return comment

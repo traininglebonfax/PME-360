@@ -139,6 +139,7 @@ urlpatterns = [
     path("actions/<uuid:action_id>", plans.ActionDetailView.as_view()),
     path("actions/<uuid:action_id>/transition", plans.ActionTransitionView.as_view()),
     path("actions/<uuid:action_id>/dependencies", plans.ActionDependencyView.as_view()),
+    path("actions/<uuid:action_id>/comments", plans.ActionCommentsView.as_view()),
     path("support-offers", plans.SupportOfferListView.as_view()),
     path("deliverable-templates", plans.DeliverableTemplateListView.as_view()),
     path("recommendation-rules", plans.RuleListView.as_view()),

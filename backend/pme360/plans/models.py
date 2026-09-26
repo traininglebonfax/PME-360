@@ -329,6 +329,25 @@ class Deliverable(TenantModel):
         ordering = ["created_at"]
 
 
+class Comment(TenantModel):
+    """Échange sur une action (Document 3, § 3.6) : interne à GUDE-PME ou partagé avec la PME. Jamais modifié."""
+
+    class Visibility(models.TextChoices):
+        INTERNE_GUDE = "INTERNE_GUDE", "Interne GUDE-PME"
+        PARTAGE_PME = "PARTAGE_PME", "Partagé avec la PME"
+
+    action = models.ForeignKey("Action", on_delete=models.CASCADE, related_name="comments")
+    pme = models.ForeignKey("pmes.Pme", on_delete=models.CASCADE, related_name="action_comments")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    body = models.TextField()
+    visibility = models.CharField(max_length=14, choices=Visibility.choices)
+
+    class Meta:
+        db_table = "action_comment"
+        ordering = ["created_at"]
+        indexes = [models.Index(fields=["organization", "action", "created_at"], name="action_comment_idx")]
+
+
 class ActionTransition(TenantModel):
     """Journal des transitions d'une action (Document 3, § 3.7 : workflow_transition_log)."""
 

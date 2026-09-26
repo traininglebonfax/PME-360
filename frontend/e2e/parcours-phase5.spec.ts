@@ -116,3 +116,36 @@ test("l'administrateur teste une règle de recommandation sur le portefeuille", 
   await page.getByRole("tab", { name: "Offres" }).click();
   await expect(page.getByText("Tableau de trésorerie").first()).toBeVisible();
 });
+
+test("conseiller et dirigeante échangent sur une action ; les notes internes restent internes", async ({ page, browser }) => {
+  const stamp = Date.now().toString().slice(-6);
+  await loginStaff(page, "konan.conseiller@demo.test");
+  await page.getByRole("link", { name: "PME", exact: true }).click();
+  await page.getByRole("link", { name: /Boutik Plus/ }).first().click();
+  await page.getByRole("tab", { name: "Plan & actions" }).click();
+  await page.getByRole("link").filter({ hasText: "Complétude du dossier juridique" }).click();
+  const box = page.getByLabel("Votre message");
+  await box.fill(`Note interne ${stamp}`);
+  await page.getByLabel("Interne GUDE-PME").check();
+  await page.getByRole("button", { name: "Envoyer" }).click();
+  await expect(page.getByRole("list", { name: "Échanges" }).getByText(`Note interne ${stamp}`)).toBeVisible();
+  await box.fill(`Merci de relire les statuts ${stamp}`);
+  await page.getByLabel("Partagé avec la PME").check();
+  await page.getByRole("button", { name: "Envoyer" }).click();
+  await expect(page.getByRole("list", { name: "Échanges" }).getByText(`Merci de relire les statuts ${stamp}`)).toBeVisible();
+
+  const pmeContext = await browser.newContext({ locale: "fr-FR" });
+  const pmePage = await pmeContext.newPage();
+  await loginPme(pmePage, "aya.dirigeante@demo.test");
+  await pmePage.goto("/espace/plan");
+  await pmePage.getByRole("link", { name: /Complétude du dossier juridique/ }).click();
+  await expect(pmePage.getByRole("list", { name: "Échanges" }).getByText(`Merci de relire les statuts ${stamp}`)).toBeVisible();
+  await expect(pmePage.getByRole("list", { name: "Échanges" }).getByText(`Note interne ${stamp}`)).toHaveCount(0);
+  await pmePage.getByLabel("Votre message").fill(`Statuts relus ${stamp}`);
+  await pmePage.getByRole("button", { name: "Envoyer" }).click();
+  await expect(pmePage.getByRole("list", { name: "Échanges" }).getByText(`Statuts relus ${stamp}`)).toBeVisible();
+  await pmeContext.close();
+
+  await page.reload();
+  await expect(page.getByRole("list", { name: "Échanges" }).getByText(`Statuts relus ${stamp}`)).toBeVisible();
+});

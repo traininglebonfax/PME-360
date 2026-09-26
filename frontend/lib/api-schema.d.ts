@@ -37,6 +37,24 @@ export interface paths {
         patch: operations["actions_partial_update"];
         trace?: never;
     };
+    "/api/v1/actions/{action_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Échanges sur une action : la PME ne voit que les commentaires partagés. */
+        get: operations["actions_comments_list"];
+        put?: never;
+        /** @description Échanges sur une action : la PME ne voit que les commentaires partagés. */
+        post: operations["actions_comments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/actions/{action_id}/dependencies": {
         parameters: {
             query?: never;
@@ -2446,6 +2464,21 @@ export interface components {
             /** Format: date */
             start_date?: string | null;
         };
+        Comment: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly body: string;
+            readonly visibility: components["schemas"]["VisibilityEnum"];
+            readonly author_name: string;
+            readonly author_is_pme: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        CommentWriteRequest: {
+            body: string;
+            /** @default INTERNE_GUDE */
+            visibility: components["schemas"]["VisibilityEnum"];
+        };
         ComplianceFolder: {
             rate: components["schemas"]["Rate"];
             categories: components["schemas"]["FolderCategory"][];
@@ -2845,10 +2878,11 @@ export interface components {
          *     * `ACTION_DOCUMENT_REQUESTED` - ACTION_DOCUMENT_REQUESTED
          *     * `ACTION_DELIVERABLE_REJECTED` - ACTION_DELIVERABLE_REJECTED
          *     * `ACTION_UNBLOCKED` - ACTION_UNBLOCKED
+         *     * `ACTION_COMMENTED` - ACTION_COMMENTED
          *     * `REPORT_READY` - REPORT_READY
          * @enum {string}
          */
-        EventCodeEnum: "AI_BUDGET_WARNING" | "PREDIAGNOSTIC_READY" | "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED" | "PLAN_TO_ACCEPT" | "PLAN_ACCEPTED" | "ACTION_DOCUMENT_REQUESTED" | "ACTION_DELIVERABLE_REJECTED" | "ACTION_UNBLOCKED" | "REPORT_READY";
+        EventCodeEnum: "AI_BUDGET_WARNING" | "PREDIAGNOSTIC_READY" | "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED" | "PLAN_TO_ACCEPT" | "PLAN_ACCEPTED" | "ACTION_DOCUMENT_REQUESTED" | "ACTION_DELIVERABLE_REJECTED" | "ACTION_UNBLOCKED" | "ACTION_COMMENTED" | "REPORT_READY";
         /**
          * @description * `NONE` - Aucune
          *     * `RECOMMENDED` - Recommandée
@@ -4464,6 +4498,12 @@ export interface components {
             /** @default  */
             note: string;
         };
+        /**
+         * @description * `INTERNE_GUDE` - Interne GUDE-PME
+         *     * `PARTAGE_PME` - Partagé avec la PME
+         * @enum {string}
+         */
+        VisibilityEnum: "INTERNE_GUDE" | "PARTAGE_PME";
         WaiveRequest: {
             reason: string;
         };
@@ -4542,6 +4582,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActionDetail"];
+                };
+            };
+        };
+    };
+    actions_comments_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"][];
+                };
+            };
+        };
+    };
+    actions_comments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
                 };
             };
         };

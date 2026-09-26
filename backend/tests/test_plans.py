@@ -435,3 +435,38 @@ def test_rules_are_readable_in_french(org, make_user, client_for, pme):
     rule = next(r for r in admin.get("/api/v1/recommendation-rules").json() if r["code"] == "R-RHO-001")
     assert rule["condition_text"].startswith("Organigramme") and " OU " in rule["condition_text"]
     assert "{{" not in rule["rationale_readable"] and rule["editable_visually"]
+
+
+def test_action_comments_internal_and_shared(api, pme_api, pme, diagnosed, org, other_org, make_user, client_for):
+    from pme360.notifications.models import Notification
+    from pme360.plans.models import Comment
+
+    plan = _live_plan(api, pme_api, pme)
+    action_id = plan["actions"][0]["id"]
+    url = f"/api/v1/actions/{action_id}/comments"
+    internal = api.post(url, {"body": "Dirigeante difficile à joindre.", "visibility": "INTERNE_GUDE"}, format="json")
+    assert internal.status_code == 201 and internal.json()["visibility"] == "INTERNE_GUDE"
+    shared = api.post(url, {"body": "Pensez à signer la procédure.", "visibility": "PARTAGE_PME"}, format="json")
+    assert shared.status_code == 201
+    # La PME ne voit que les échanges partagés, et écrit toujours en partagé.
+    assert [c["body"] for c in pme_api.get(url).json()] == ["Pensez à signer la procédure."]
+    answer = pme_api.post(url, {"body": "C'est fait, merci.", "visibility": "INTERNE_GUDE"}, format="json").json()
+    assert answer["visibility"] == "PARTAGE_PME" and answer["author_is_pme"]
+    assert [c["body"] for c in api.get(url).json()] == [
+        "Dirigeante difficile à joindre.",
+        "Pensez à signer la procédure.",
+        "C'est fait, merci.",
+    ]
+    assert api.post(url, {"body": "   "}, format="json").status_code == 400
+    with tenant_context(org.id):
+        # Notifications : la PME pour le message partagé, le conseiller pour la réponse ; rien pour l'interne.
+        events = list(Notification.objects.filter(event_code="ACTION_COMMENTED").values_list("user__email", flat=True))
+        assert len(events) == 2
+        from django.db import InternalError, ProgrammingError, transaction
+
+        with pytest.raises((InternalError, ProgrammingError)), transaction.atomic():
+            Comment.objects.filter(pk=internal.json()["id"]).update(body="modifié")
+    stranger = client_for(make_user(other_org, "ADMIN_ORG"), other_org)
+    assert stranger.get(url).status_code == 404
+    auditor = client_for(make_user(org, "AUDITEUR"), org)
+    assert auditor.post(url, {"body": "x", "visibility": "PARTAGE_PME"}, format="json").status_code == 403

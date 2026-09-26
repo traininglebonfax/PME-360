@@ -19,6 +19,8 @@ from .serializers import (
     ActionSerializer,
     ActionTransitionRequestSerializer,
     ActionUpdateSerializer,
+    CommentSerializer,
+    CommentWriteSerializer,
     DeliverableTemplateSerializer,
     DependencyRequestSerializer,
     ManualRecommendationSerializer,
@@ -304,6 +306,30 @@ class ActionTransitionView(APIView):
             action, get_access(request), serializer.validated_data["to"], serializer.validated_data["reason"]
         )
         return Response(ActionDetailSerializer(_action(request, action_id), context=_context(request)).data)
+
+
+class ActionCommentsView(APIView):
+    """Échanges sur une action : la PME ne voit que les commentaires partagés."""
+
+    required_permissions = "pme.view"
+
+    @extend_schema(responses=CommentSerializer(many=True))
+    def get(self, request, action_id):
+        action = _action(request, action_id)
+        return Response(CommentSerializer(services.visible_comments(action, get_access(request)), many=True).data)
+
+    @extend_schema(request=CommentWriteSerializer, responses={201: CommentSerializer})
+    def post(self, request, action_id):
+        action = _action(request, action_id)
+        serializer = CommentWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        comment = services.add_comment(
+            action,
+            get_access(request),
+            body=serializer.validated_data["body"],
+            visibility=serializer.validated_data["visibility"],
+        )
+        return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
 
 class ActionDependencyView(APIView):

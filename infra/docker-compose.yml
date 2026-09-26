@@ -15,9 +15,13 @@ services:
       PME360_DB_PASSWORD: ${POSTGRES_PASSWORD:-pme360-dev-only}
     ports:
       - "${PME360_PG_PORT:-5442}:5432"
+    # Archivage continu des WAL vers le volume de sauvegarde (restauration à un instant donné, RPO 15 min).
+    entrypoint: ["bash", "/scripts/postgres-entrypoint.sh"]
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./backup:/scripts:ro
+      - pgbackups:/backups
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -49,6 +53,36 @@ services:
     profiles: ["antivirus"]
     ports:
       - "${PME360_CLAMD_PORT:-3310}:3310"
+
+  backup:
+    # Sauvegardes : quotidienne chiffrée, base hebdomadaire, test de restauration mensuel (infra/backup/README.md).
+    # docker compose --profile backup up -d
+    image: pgvector/pgvector:pg16
+    profiles: ["backup"]
+    entrypoint: ["bash", "/scripts/scheduler.sh"]
+    environment:
+      PME360_ENV: ${PME360_ENV:-dev}
+      PME360_BACKUP_DB_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres-dev-only}
+      PME360_BACKUP_PASSPHRASE: ${PME360_BACKUP_PASSPHRASE:-backup-dev-only}
+      PME360_BACKUP_HOUR_UTC: ${PME360_BACKUP_HOUR_UTC:-1}
+    volumes:
+      - ./backup:/scripts:ro
+      - pgbackups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backup-objects:
+    # Réplication continue du stockage des documents et rapports (MinIO en local, S3 en production).
+    image: minio/mc:latest
+    profiles: ["backup"]
+    environment:
+      MC_HOST_local: http://${PME360_MINIO_USER:-pme360}:${PME360_MINIO_PASSWORD:-pme360-dev-only}@minio:9000
+    command: ["mirror", "--watch", "--overwrite", "local/${PME360_S3_BUCKET:-pme360-documents}", "/backups/objects"]
+    volumes:
+      - pgbackups:/backups
+    depends_on:
+      - minio
 
   mailpit:
     # Capture des e-mails (OTP, invitations) en développement : http://localhost:8035
@@ -93,3 +127,4 @@ services:
 volumes:
   pgdata:
   miniodata:
+  pgbackups:
