@@ -528,8 +528,8 @@ ALERT_RULES = [
         kind="ACTION_RETARD",
         name="Action en retard",
         severity="MOYENNE",
-        recipients=["CONSEILLER"],
-        available_in_phase=5,
+        params={"late_days": 15, "critical_priority": 70},
+        recipients=["PME", "CONSEILLER"],
     ),
     dict(
         code="ALR-STAGNATION",
@@ -592,6 +592,20 @@ NOTIFICATION_TEMPLATES = {
         "{document} ({period}) n'a pas été transmis ({days} jours de retard).",
     ),
     "ALERT_RAISED": ("Alerte {severity} : {title}", "{message}"),
+    "PLAN_TO_ACCEPT": (
+        "Votre plan d'accompagnement est prêt",
+        "Votre conseiller a préparé un plan de {actions} actions pour {pme}. Consultez-le et acceptez-le pour démarrer.",
+    ),
+    "PLAN_ACCEPTED": ("Plan accepté : {pme}", "La direction de {pme} a accepté le plan d'accompagnement."),
+    "ACTION_DOCUMENT_REQUESTED": (
+        "Document attendu : {action}",
+        "Pour l'action « {action} », merci de déposer : {documents}. Un modèle et des instructions sont disponibles.",
+    ),
+    "ACTION_DELIVERABLE_REJECTED": (
+        "Document à reprendre : {action}",
+        "Le document déposé pour « {action} » doit être repris : {reason}",
+    ),
+    "ACTION_UNBLOCKED": ("Nouvelle action disponible", "L'action « {action} » peut maintenant démarrer."),
 }
 # Messages toujours envoyés, quelles que soient les préférences (Document 7, § 8.3).
 MANDATORY_EVENTS = {"DEADLINE_ESCALATION", "DOCUMENT_REJECTED_SECURITY"}

@@ -186,6 +186,9 @@ def process(version_id: str) -> None:
             },
         )
         events.emit("document.analyzed", pme_id=str(document.pme_id), document_id=str(document.pk))
+        from pme360.plans.services import on_document_analyzed
+
+        on_document_analyzed(document)  # livrable d'action : l'action passe « À vérifier »
         if not decided:
             notifications.notify(
                 notifications.recipients(document.pme, ["CONSEILLER"]),

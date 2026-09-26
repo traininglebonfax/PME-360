@@ -20,6 +20,7 @@ const QUEUE_KINDS: Record<string, { label: string; tone: "danger" | "warning" | 
   DOCUMENT_A_VERIFIER: { label: "Document", tone: "warning", href: (item) => `/verifications/${item.id}` },
   DIAGNOSTIC_A_VALIDER: { label: "Diagnostic", tone: "info", href: (item) => `/diagnostics/${item.id}/revue` },
   ECHEANCE_EN_RETARD: { label: "Retard", tone: "neutral", href: (item) => `/pme/${item.pme_id}?onglet=documents` },
+  ACTION_EN_RETARD: { label: "Action", tone: "warning", href: (item) => `/actions/${item.id}` },
 };
 
 function signed(value: number): string {
@@ -57,7 +58,11 @@ export default function DashboardPage() {
         <Kpi label="Diagnostics à valider" value={data.kpis.diagnostics_to_validate} hint={`${data.kpis.diagnostics_in_progress} en collecte`} />
         <Kpi label="Intervention urgente" value={data.kpis.pmes_urgent} hint="Priorité P1" />
         <Kpi label="Inactives" value={data.kpis.pmes_inactive} hint={`Sans activité depuis ${data.inactivity_days} j`} />
-        <Kpi label="Documents à vérifier" value={data.kpis.documents_to_verify} />
+        <Kpi
+          label="Documents à vérifier"
+          value={data.kpis.documents_to_verify}
+          hint={`dont livrables d'actions : ${data.kpis.actions_to_verify} · ${data.kpis.actions_overdue} action(s) en retard`}
+        />
         <Kpi
           label="Alertes ouvertes"
           value={data.kpis.alerts_open}
@@ -114,7 +119,6 @@ export default function DashboardPage() {
               })}
             </ul>
           )}
-          <p className="mt-3 text-xs text-muted">Les actions en retard rejoindront cette file en phase {data.work_queue.available_in_phase}.</p>
           <div className="mt-4">
             <BarList items={data.by_lifecycle} labels={LIFECYCLE_LABELS} />
           </div>

@@ -74,6 +74,7 @@ export interface UploadFields {
   document_type?: string;
   document_id?: string;
   deadline_id?: string;
+  deliverable_id?: string;
   title?: string;
   period_start?: string;
   period_end?: string;

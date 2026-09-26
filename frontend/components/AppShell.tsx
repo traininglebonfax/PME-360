@@ -26,6 +26,7 @@ const GUDE_NAV: NavItem[] = [
   { href: "/assistant", label: "Copilot", permission: "ai.ask" },
   { href: "/referentiel", label: "Référentiel", permission: "pme.view" },
   { href: "/conformite", label: "Conformité et obligations", permission: "org.configure" },
+  { href: "/accompagnement", label: "Accompagnement", permission: "org.configure" },
   { href: "/ia", label: "Intelligence artificielle", permission: "ai.review" },
   { href: "/programmes", label: "Programmes", permission: "programme.manage" },
   { href: "/utilisateurs", label: "Utilisateurs", permission: "org.manage_users" },

@@ -331,8 +331,10 @@ def verify(
     )
     after_evidence_change(document.pme)
     from pme360.ai.knowledge import on_document_decision
+    from pme360.plans import services as plans
 
     on_document_decision(document)
+    plans.on_document_decision(document)  # livrables et actions liés (phase 5)
     return document
 
 

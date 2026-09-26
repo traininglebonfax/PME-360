@@ -24,7 +24,8 @@ export interface AdvisorDashboard {
     alerts_critical: number;
     deadlines_this_week: number;
     deadlines_overdue: number;
-    actions_overdue: Pending;
+    actions_overdue: number;
+    actions_to_verify: number;
   };
   by_lifecycle: Breakdown[];
   recent_pmes: {
@@ -38,7 +39,6 @@ export interface AdvisorDashboard {
   }[];
   work_queue: {
     items: { kind: string; id: string; pme_id: string; pme_name: string; label: string; severity?: string; since: string | null }[];
-    available_in_phase: number;
   };
   inactivity_days: number;
 }
@@ -90,7 +90,10 @@ export interface PmeDashboard {
     baseline_date: string | null;
   } | null;
   open_diagnostic: { id: string; type: string; status: string; reference_date: string } | null;
-  next_actions: { items: unknown[]; available_in_phase: number };
+  next_actions: {
+    plan: { id: string; status: string; to_accept: boolean; done: number; total: number } | null;
+    items: { id: string; human_ref: string; title: string; status: string; due_date: string; overdue: boolean }[];
+  };
   compliance: ComplianceRate;
   feedback: { id: string; title: string; status: string; reason: string; decided_at: string }[];
   deadlines: { id: string; label: string; period: string; due_date: string; status: string; document_type: string }[];

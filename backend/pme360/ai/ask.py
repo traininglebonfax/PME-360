@@ -381,9 +381,27 @@ def _local(question: str, ctx: tools.ToolContext):
                         + "."
                     )
                 if "priorites" in intents:
-                    limits.append(
-                        "Le plan d'accompagnement priorisé (Impact × Urgence × Risque × Effort) arrive en phase 5."
-                    )
+                    yield _event("status", text="Lecture du plan d'accompagnement…")
+                    plan = _call(ctx, calls, "list_actions")
+                    if plan and plan["data"]:
+                        open_actions = [
+                            a for a in plan["data"]["actions"] if a["statut"] not in ("Terminée", "Abandonnée")
+                        ]
+                        parts.append(
+                            "Actions prioritaires du plan : "
+                            + (
+                                "; ".join(
+                                    f"{a['reference']} {a['action']} ({a['horizon']}, {a['statut'].lower()}"
+                                    + (f", en retard de {a['en_retard_de_jours']} j" if a["en_retard_de_jours"] else "")
+                                    + ")"
+                                    for a in open_actions[:5]
+                                )
+                                if open_actions
+                                else "toutes les actions sont terminées."
+                            )
+                        )
+                    elif plan:
+                        limits += plan.get("limits", [])
             elif out:
                 limits += out.get("limits", [])
         if "documents" in intents:

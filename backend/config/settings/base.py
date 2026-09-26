@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "pme360.alerts",
     "pme360.notifications",
     "pme360.ai",
+    "pme360.plans",
     "pme360.dashboards",
 ]
 
@@ -254,6 +255,11 @@ SPECTACULAR_SETTINGS = {
         "AiTaskEnum": "pme360.ai.models.AiAnalysis.Task",
         "ExtractionStatusEnum": "pme360.ai.models.DocumentExtraction.Status",
         "SuggestionStatusEnum": "pme360.ai.models.CriterionSuggestion.Status",
+        "ActionStatusEnum": "pme360.plans.models.Action.Status",
+        "ActionPlanStatusEnum": "pme360.plans.models.ActionPlan.Status",
+        "DeliverableStatusEnum": "pme360.plans.models.Deliverable.Status",
+        "RecommendationStatusEnum": "pme360.plans.models.Recommendation.Status",
+        "RecommendationRuleStatusEnum": "pme360.plans.models.RecommendationRule.Status",
     },
 }
 

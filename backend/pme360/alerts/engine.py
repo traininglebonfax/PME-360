@@ -291,7 +291,32 @@ def _ca_baisse(rule: AlertRule, pme: Pme, today: date) -> list[Finding]:
     return []
 
 
+def _action_retard(rule: AlertRule, pme: Pme, today: date) -> list[Finding]:
+    """Action du plan en retard (Document 7, § 8.2) : ÉLEVÉE si critique ou en retard de plus de 15 jours."""
+    from pme360.plans.services import overdue_actions
+
+    findings = []
+    for action in overdue_actions(pme, today):
+        late = (today - action.due_date).days
+        severe = late > rule.params.get("late_days", 15) or float(action.priority_score) >= rule.params.get(
+            "critical_priority", 70
+        )
+        findings.append(
+            Finding(
+                f"action:{action.pk}",
+                f"Action en retard : {action.title}",
+                f"{action.human_ref} devait être terminée le {action.due_date:%d/%m/%Y} ({late} j de retard).",
+                severity="ELEVEE" if severe else None,
+                target_type="action",
+                target_id=str(action.pk),
+                details={"late_days": late, "waiting_on": action.waiting_on},
+            )
+        )
+    return findings
+
+
 EVALUATORS = {
+    "ACTION_RETARD": _action_retard,
     "DOC_EXPIRE": _doc_expire,
     "DOC_MANQUANT": _doc_manquant,
     "ECHEANCE_PROCHE": _echeance_proche,
