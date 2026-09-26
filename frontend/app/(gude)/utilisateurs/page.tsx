@@ -15,7 +15,7 @@ export default function UsersPage() {
   const [tab, setTab] = useState<"membres" | "roles">("membres");
   return (
     <>
-      <PageHeader title="Utilisateurs" subtitle="Équipes GUDE-PME, experts, auditeurs et comptes PME de l'organisation ; rôles et permissions" />
+      <PageHeader title="Utilisateurs" subtitle="Équipes, experts, auditeurs et comptes PME de l'organisation ; rôles et permissions" />
       <div className="mb-6 flex gap-1 border-b border-line" role="tablist">
         {(
           [

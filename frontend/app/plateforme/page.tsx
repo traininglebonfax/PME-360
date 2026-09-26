@@ -9,6 +9,7 @@ import { Alert, Badge, Button, Card, LoadingBlock, SelectInput, TextInput } from
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useLogout } from "@/lib/session";
+import { DEFAULT_BRAND } from "@/lib/brand";
 
 const TYPES: Record<Schemas["OrganizationTypeEnum"], string> = {
   AGENCE_PUBLIQUE: "Agence ou programme public",
@@ -47,7 +48,7 @@ export default function PlatformPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
-        <BrandName name="PME360 · Plateforme" />
+        <BrandName brand={{ ...DEFAULT_BRAND, product_name: "PME360 · Plateforme" }} />
         <button onClick={logout} className="text-sm text-muted hover:text-ink">
           Se déconnecter
         </button>

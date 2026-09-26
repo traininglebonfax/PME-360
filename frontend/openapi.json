@@ -4381,6 +4381,65 @@
                 }
             }
         },
+        "/api/v1/organization/branding": {
+            "get": {
+                "operationId": "organization_branding_retrieve",
+                "description": "Identité de l'organisation : nom du produit, nom court, couleur, logo (administrateur).",
+                "tags": [
+                    "organization"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BrandIdentity"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "organization_branding_update",
+                "description": "Identité de l'organisation : nom du produit, nom court, couleur, logo (administrateur).",
+                "tags": [
+                    "organization"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BrandWriteRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BrandIdentity"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/organization/encryption": {
             "get": {
                 "operationId": "organization_encryption_retrieve",
@@ -6300,6 +6359,42 @@
                 }
             }
         },
+        "/api/v1/public/brand": {
+            "get": {
+                "operationId": "public_brand_retrieve",
+                "description": "Identité affichée sur la page de connexion (``?org=<slug>``) ; identité neutre si inconnue ou suspendue.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "org",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "public"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BrandIdentity"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/recommendation-rules": {
             "get": {
                 "operationId": "recommendation_rules_list",
@@ -7632,7 +7727,7 @@
                     "ABANDONNE"
                 ],
                 "type": "string",
-                "description": "* `BLOQUE` - Bloquée (dépendance)\n* `NON_COMMENCE` - Non commencée\n* `EN_COURS` - En cours\n* `DOCUMENT_DEMANDE` - Document demandé\n* `DOCUMENT_RECU` - Document reçu\n* `A_VERIFIER` - À vérifier\n* `CONFORME` - Conforme\n* `NON_CONFORME` - Non conforme\n* `TERMINE` - Terminée\n* `EN_ATTENTE_PME` - En attente de la PME\n* `EN_ATTENTE_GUDE` - En attente de GUDE-PME\n* `ABANDONNE` - Abandonnée"
+                "description": "* `BLOQUE` - Bloquée (dépendance)\n* `NON_COMMENCE` - Non commencée\n* `EN_COURS` - En cours\n* `DOCUMENT_DEMANDE` - Document demandé\n* `DOCUMENT_RECU` - Document reçu\n* `A_VERIFIER` - À vérifier\n* `CONFORME` - Conforme\n* `NON_CONFORME` - Non conforme\n* `TERMINE` - Terminée\n* `EN_ATTENTE_PME` - En attente de la PME\n* `EN_ATTENTE_GUDE` - En attente de l'organisation\n* `ABANDONNE` - Abandonnée"
             },
             "ActionTransitionOption": {
                 "type": "object",
@@ -8813,6 +8908,88 @@
                 "enum": [
                     ""
                 ]
+            },
+            "Brand": {
+                "type": "object",
+                "properties": {
+                    "product_name": {
+                        "type": "string"
+                    },
+                    "short_name": {
+                        "type": "string"
+                    },
+                    "primary_color": {
+                        "type": "string"
+                    },
+                    "logo": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tagline": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "logo",
+                    "primary_color",
+                    "product_name",
+                    "short_name",
+                    "tagline"
+                ]
+            },
+            "BrandIdentity": {
+                "type": "object",
+                "properties": {
+                    "product_name": {
+                        "type": "string"
+                    },
+                    "short_name": {
+                        "type": "string"
+                    },
+                    "primary_color": {
+                        "type": "string"
+                    },
+                    "logo": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tagline": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "logo",
+                    "primary_color",
+                    "product_name",
+                    "short_name",
+                    "tagline"
+                ]
+            },
+            "BrandWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "product_name": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "short_name": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "primary_color": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 7
+                    },
+                    "logo": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
             },
             "ChainVerification": {
                 "type": "object",
@@ -12377,9 +12554,13 @@
                     "branding": {
                         "type": "object",
                         "additionalProperties": {}
+                    },
+                    "brand": {
+                        "$ref": "#/components/schemas/Brand"
                     }
                 },
                 "required": [
+                    "brand",
                     "branding",
                     "id",
                     "name",
@@ -12639,7 +12820,7 @@
                     "BONNE_PRATIQUE"
                 ],
                 "type": "string",
-                "description": "* `REGLEMENTAIRE` - Réglementaire\n* `PROGRAMME` - Programme (transmission à GUDE-PME)\n* `BONNE_PRATIQUE` - Bonne pratique"
+                "description": "* `REGLEMENTAIRE` - Réglementaire\n* `PROGRAMME` - Programme (transmission à l'organisation)\n* `BONNE_PRATIQUE` - Bonne pratique"
             },
             "Notification": {
                 "type": "object",
@@ -13169,7 +13350,7 @@
                     "PARTENAIRE"
                 ],
                 "type": "string",
-                "description": "* `PME` - PME\n* `GUDE` - GUDE-PME\n* `PARTENAIRE` - Partenaire"
+                "description": "* `PME` - PME\n* `GUDE` - L'organisation d'accompagnement\n* `PARTENAIRE` - Partenaire"
             },
             "PaginatedPmeListList": {
                 "type": "object",
@@ -15210,7 +15391,7 @@
                     "PME_SEULE"
                 ],
                 "type": "string",
-                "description": "* `GUDE` - GUDE-PME\n* `PARTENAIRE` - Partenaire\n* `PME_SEULE` - PME en autonomie"
+                "description": "* `GUDE` - L'organisation d'accompagnement\n* `PARTENAIRE` - Partenaire\n* `PME_SEULE` - PME en autonomie"
             },
             "QuestionOptionRequest": {
                 "type": "object",
@@ -17739,7 +17920,7 @@
                     "PARTAGE_PME"
                 ],
                 "type": "string",
-                "description": "* `INTERNE_GUDE` - Interne GUDE-PME\n* `PARTAGE_PME` - Partagé avec la PME"
+                "description": "* `INTERNE_GUDE` - Interne à l'équipe\n* `PARTAGE_PME` - Partagé avec la PME"
             },
             "WaiveRequest": {
                 "type": "object",

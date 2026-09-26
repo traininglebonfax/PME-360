@@ -1,7 +1,8 @@
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -187,3 +188,86 @@ class EncryptionStatusView(APIView):
             "organization.key_rotated", entity_type="organization_key", entity_id=key.pk, after={"version": key.version}
         )
         return Response(EncryptionStatusSerializer(_encryption_payload(request)).data)
+
+
+# --- Identité visuelle (marque blanche, V1) ---------------------------------------------------------------------
+
+
+class BrandIdentitySerializer(serializers.Serializer):
+    product_name = serializers.CharField()
+    short_name = serializers.CharField()
+    primary_color = serializers.CharField()
+    logo = serializers.CharField(allow_null=True)
+    tagline = serializers.CharField(allow_blank=True)
+
+
+class BrandWriteSerializer(serializers.Serializer):
+    product_name = serializers.CharField(required=False, allow_blank=True, max_length=40)
+    short_name = serializers.CharField(required=False, allow_blank=True, max_length=40)
+    tagline = serializers.CharField(required=False, allow_blank=True, max_length=80)
+    primary_color = serializers.CharField(required=False, max_length=7)
+    logo = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class PublicBrandView(APIView):
+    """Identité affichée sur la page de connexion (``?org=<slug>``) ; identité neutre si inconnue ou suspendue."""
+
+    permission_classes = [AllowAny]
+    requires_organization = False
+
+    @extend_schema(parameters=[OpenApiParameter("org", str)], responses=BrandIdentitySerializer)
+    def get(self, request):
+        from .branding import DEFAULT_COLOR, DEFAULT_PRODUCT, brand
+
+        slug = (request.query_params.get("org") or "").strip()[:80]
+        organization = None
+        if slug:
+            with system_context():
+                organization = Organization.objects.filter(slug=slug, status=Organization.Status.ACTIVE).first()
+        if organization is None:
+            data = {
+                "product_name": DEFAULT_PRODUCT,
+                "short_name": "",
+                "primary_color": DEFAULT_COLOR,
+                "logo": None,
+                "tagline": "Connaître · Accompagner · Mesurer",
+            }
+        else:
+            data = brand(organization)
+        return Response(BrandIdentitySerializer(data).data)
+
+
+class BrandingView(APIView):
+    """Identité de l'organisation : nom du produit, nom court, couleur, logo (administrateur)."""
+
+    required_permissions = {"GET": None, "PUT": "org.configure"}
+
+    @extend_schema(responses=BrandIdentitySerializer)
+    def get(self, request):
+        from .branding import brand
+
+        return Response(
+            BrandIdentitySerializer(brand(get_object_or_404(Organization, pk=request.organization_id))).data
+        )
+
+    @extend_schema(request=BrandWriteSerializer, responses=BrandIdentitySerializer)
+    def put(self, request):
+        from .branding import brand, validate
+
+        organization = get_object_or_404(Organization, pk=request.organization_id)
+        serializer = BrandWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        before = dict(organization.branding or {})
+        organization.branding = validate(serializer.validated_data, before)
+        organization.save(update_fields=["branding", "updated_at"])
+
+        def loggable(data: dict) -> dict:  # le logo n'est pas recopié dans le journal (taille)
+            return {k: ("(image)" if k == "logo" and v else v) for k, v in data.items()}
+
+        audit.record(
+            "organization.branding_updated",
+            instance=organization,
+            before=loggable(before),
+            after=loggable(organization.branding),
+        )
+        return Response(BrandIdentitySerializer(brand(organization)).data)

@@ -160,7 +160,9 @@ def check(text: str, event_code: str) -> list[str]:
 
 def email_text(full_name: str, body: str, link: str = "") -> str:
     url = f"{settings.FRONTEND_URL}{link}" if link else settings.FRONTEND_URL
-    return f"Bonjour {full_name},\n\n{body}\n\n{url}\n\nL'équipe PME360"
+    from pme360.organizations.branding import current_brand
+
+    return f"Bonjour {full_name},\n\n{body}\n\n{url}\n\nL'équipe {current_brand()['short_name']}"
 
 
 # --- Administration -----------------------------------------------------------------------------------------------

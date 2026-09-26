@@ -11,13 +11,13 @@ ORGANIZATIONS = [
         "slug": "gude-pme-demo",
         "name": "GUDE-PME Côte d'Ivoire (DÉMO)",
         "type": "AGENCE_PUBLIQUE",
-        "branding": {"product_name": "GUDE-PME 360", "primary_color": "#0F6B4F"},
+        "branding": {"product_name": "GUDE-PME 360", "short_name": "GUDE-PME", "primary_color": "#0F6B4F"},
     },
     {
         "slug": "banque-demo",
         "name": "Banque Démo Invest (DÉMO)",
         "type": "BANQUE",
-        "branding": {"product_name": "PME360"},
+        "branding": {"product_name": "PME360", "short_name": "Banque Démo Invest"},
     },
 ]
 

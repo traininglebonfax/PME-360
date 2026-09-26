@@ -22,11 +22,21 @@ def _anchor_options(anchors: list[str]) -> list[dict]:
     return [{"value": str(level), "label": label, "level": level} for level, label in enumerate(anchors)]
 
 
+NEUTRAL_FRAMEWORK = ("D360", "Diagnostic 360°")
+
+
 @transaction.atomic
-def install_gude360(organization, published_by=None) -> FrameworkVersion:
-    """Installe le référentiel GUDE-360 v1 publié dans ``organization`` (idempotent)."""
-    framework, _ = Framework.objects.get_or_create(
-        organization=organization, code=spec.FRAMEWORK_CODE, defaults={"name": spec.FRAMEWORK_NAME}
+def install_gude360(
+    organization, published_by=None, *, code: str | None = None, name: str | None = None
+) -> FrameworkVersion:
+    """Installe le référentiel de diagnostic 360° v1 publié dans ``organization`` (idempotent).
+
+    Le contenu est celui du Document 5 ; son code et son nom sont neutres (« Diagnostic 360° ») sauf demande
+    explicite (GUDE-PME : ``code="GUDE-360"``). Un référentiel déjà installé est réutilisé tel quel.
+    """
+    existing_framework = Framework.objects.filter(organization=organization).order_by("created_at").first()
+    framework = existing_framework or Framework.objects.create(
+        organization=organization, code=code or NEUTRAL_FRAMEWORK[0], name=name or NEUTRAL_FRAMEWORK[1]
     )
     existing = FrameworkVersion.objects.filter(framework=framework, version=spec.VERSION).first()
     if existing:

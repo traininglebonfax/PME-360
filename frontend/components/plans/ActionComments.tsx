@@ -10,6 +10,7 @@ import { type FormEvent, useState } from "react";
 import { Alert, Badge, Button, Card, cx } from "@/components/ui";
 import { api, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
+import { OrgName } from "@/components/OrgName";
 
 type Visibility = Schemas["VisibilityEnum"];
 
@@ -65,7 +66,7 @@ export function ActionComments({ actionId, pmeView = false }: { actionId: string
                   <span className="font-medium text-ink">{comment.author_name}</span>
                   {comment.author_is_pme && <span>(PME)</span>}
                   <span>· {formatDateTime(comment.created_at)}</span>
-                  {!pmeView && internal && <Badge tone="warning">Interne GUDE-PME</Badge>}
+                  {!pmeView && internal && <Badge tone="warning">Interne <OrgName /></Badge>}
                 </p>
                 <p className="mt-1 whitespace-pre-line text-ink">{comment.body}</p>
               </li>
@@ -96,7 +97,7 @@ export function ActionComments({ actionId, pmeView = false }: { actionId: string
               </label>
               <label className="flex items-center gap-1.5">
                 <input type="radio" name={`visibility-${actionId}`} className="accent-brand-600" checked={visibility === "INTERNE_GUDE"} onChange={() => setVisibility("INTERNE_GUDE")} />
-                Interne GUDE-PME
+                Interne <OrgName />
               </label>
             </fieldset>
           ) : (

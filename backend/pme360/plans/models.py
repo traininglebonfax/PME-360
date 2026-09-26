@@ -44,7 +44,7 @@ class SupportOffer(TenantModel):
     """Catalogue d'offres d'accompagnement (Document 7, § 3.4)."""
 
     class Provider(models.TextChoices):
-        GUDE = "GUDE", "GUDE-PME"
+        GUDE = "GUDE", "L'organisation d'accompagnement"
         PARTENAIRE = "PARTENAIRE", "Partenaire"
         PME_SEULE = "PME_SEULE", "PME en autonomie"
 
@@ -223,7 +223,7 @@ class Action(TenantModel):
         NON_CONFORME = "NON_CONFORME", "Non conforme"
         TERMINE = "TERMINE", "Terminée"
         EN_ATTENTE_PME = "EN_ATTENTE_PME", "En attente de la PME"
-        EN_ATTENTE_GUDE = "EN_ATTENTE_GUDE", "En attente de GUDE-PME"
+        EN_ATTENTE_GUDE = "EN_ATTENTE_GUDE", "En attente de l'organisation"
         ABANDONNE = "ABANDONNE", "Abandonnée"
 
     TERMINAL = (Status.TERMINE, Status.ABANDONNE)
@@ -237,7 +237,7 @@ class Action(TenantModel):
 
     class Owner(models.TextChoices):
         PME = "PME", "PME"
-        GUDE = "GUDE", "GUDE-PME"
+        GUDE = "GUDE", "L'organisation d'accompagnement"
         PARTENAIRE = "PARTENAIRE", "Partenaire"
 
     human_ref = models.CharField(max_length=20)
@@ -330,10 +330,10 @@ class Deliverable(TenantModel):
 
 
 class Comment(TenantModel):
-    """Échange sur une action (Document 3, § 3.6) : interne à GUDE-PME ou partagé avec la PME. Jamais modifié."""
+    """Échange sur une action (Document 3, § 3.6) : interne à l'équipe ou partagé avec la PME. Jamais modifié."""
 
     class Visibility(models.TextChoices):
-        INTERNE_GUDE = "INTERNE_GUDE", "Interne GUDE-PME"
+        INTERNE_GUDE = "INTERNE_GUDE", "Interne à l'équipe"
         PARTAGE_PME = "PARTAGE_PME", "Partagé avec la PME"
 
     action = models.ForeignKey("Action", on_delete=models.CASCADE, related_name="comments")

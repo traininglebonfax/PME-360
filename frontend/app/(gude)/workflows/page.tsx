@@ -12,6 +12,7 @@ import { useState } from "react";
 import { Alert, Badge, Button, Card, cx, LoadingBlock, PageHeader, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
+import { OrgName } from "@/components/OrgName";
 
 type Admin = Schemas["WorkflowAdmin"];
 type Transition = Schemas["WorkflowTransition"];
@@ -33,6 +34,11 @@ const ORDER = [
   "ABANDONNE",
 ];
 const path = { params: { path: { target: "action" } } };
+
+/** Code technique affiché : neutre, quelle que soit l'organisation (la valeur stockée ne change pas). */
+function displayCode(code: string) {
+  return code === "EN_ATTENTE_GUDE" ? "EN_ATTENTE_EQUIPE" : code;
+}
 
 export default function WorkflowsPage() {
   const queryClient = useQueryClient();
@@ -84,7 +90,7 @@ export default function WorkflowsPage() {
             <ul className="list-disc space-y-1 pl-4 text-xs text-muted">
               <li>Les états eux-mêmes et les passages automatiques (dépôt, analyse, vérification, déblocage).</li>
               <li>Une action se termine seulement si tous ses livrables sont conformes.</li>
-              <li>GUDE-PME peut toujours abandonner une action, avec motif.</li>
+              <li>L'équipe peut toujours abandonner une action, avec motif.</li>
               <li>La PME peut seulement démarrer ou reprendre, ou signaler qu'elle attend son conseiller.</li>
             </ul>
           </Card>
@@ -120,7 +126,7 @@ function WorkflowView({ states, transitions, system }: { states: States; transit
           <tbody className="divide-y divide-line">
             {ORDER.map((code) => (
               <tr key={code}>
-                <td className="py-2 pr-3 font-mono text-xs text-muted">{code}</td>
+                <td className="py-2 pr-3 font-mono text-xs text-muted">{displayCode(code)}</td>
                 <td className="py-2 pr-3">{states[code]?.label}</td>
                 <td className="py-2">{states[code]?.pme_label}</td>
               </tr>
@@ -137,7 +143,7 @@ function WorkflowView({ states, transitions, system }: { states: States; transit
                 <li key={t.to}>
                   → <span className="font-medium">{stateLabel(states, t.to)}</span>{" "}
                   <span className="text-xs text-muted">
-                    · bouton « {t.button} » · {t.actors.map((a) => (a === "PME" ? "PME" : "GUDE-PME")).join(" et ")}
+                    · bouton « {t.button} » · {t.actors.map((a) => (a === "PME" ? "PME" : "l'équipe")).join(" et ")}
                     {t.reason_required && " · motif obligatoire"}
                   </span>
                 </li>
@@ -268,7 +274,7 @@ function DraftEditor({ data, onData }: { data: Admin; onData: (data: Admin) => v
             {ORDER.map((code) => (
               <tr key={code}>
                 <td className="py-2 pr-3">
-                  <span className="font-mono text-xs text-muted">{code}</span>
+                  <span className="font-mono text-xs text-muted">{displayCode(code)}</span>
                   {rules.terminal.includes(code) && (
                     <span className="ml-1">
                       <Badge tone="muted">final</Badge>
@@ -332,7 +338,7 @@ function DraftEditor({ data, onData }: { data: Admin; onData: (data: Admin) => v
                       <span className="text-xs text-muted">Déclenché par :</span>
                       <label className="flex items-center gap-1.5">
                         <input type="checkbox" className="accent-brand-600" checked={t.actors.includes("STAFF")} disabled={mandatory} onChange={() => toggleActor(t, "STAFF")} />
-                        GUDE-PME
+                        <OrgName fallback="Équipe" />
                       </label>
                       <label className={cx("flex items-center gap-1.5", !pmeAllowed && "text-muted")} title={pmeAllowed ? undefined : "La PME ne peut pas déclencher ce passage."}>
                         <input

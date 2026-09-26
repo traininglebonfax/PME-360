@@ -4,11 +4,11 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: { default: "GUDE-PME 360", template: "%s · GUDE-PME 360" },
+  title: { default: "PME360", template: "%s · PME360" },
   description: "Diagnostic 360°, scoring, accompagnement et pilotage des PME.",
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0f6b4f" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#2e4a6b" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

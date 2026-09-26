@@ -18,6 +18,8 @@ import { formatPercent, formatScore } from "@/lib/scoring";
 import { api, errorMessage, unwrap } from "@/lib/api";
 import type { PmeDashboard } from "@/lib/dashboards";
 import { useLogout } from "@/lib/session";
+import { OrgName } from "@/components/OrgName";
+import { useBrand } from "@/lib/brand";
 
 /**
  * Portail PME, mobile d'abord (Document 1, § 10 ; Document 9, § 2).
@@ -25,6 +27,7 @@ import { useLogout } from "@/lib/session";
  */
 export default function PmeSpacePage() {
   const { me, isLoading } = useGuard("pme");
+  const brand = useBrand();
   const logout = useLogout();
   const pmeId = me?.pme_ids[0];
   const dashboard = useQuery({
@@ -41,7 +44,7 @@ export default function PmeSpacePage() {
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <BrandMark className="h-8 w-8" />
+            <BrandMark className="h-8 w-8" brand={brand} />
             <span className="font-semibold">Mon espace</span>
           </div>
           <div className="flex items-center gap-2">
@@ -95,7 +98,13 @@ export default function PmeSpacePage() {
 
             <ReportsList pmeId={dashboard.data.pme.id} pmeView />
 
-            <Card title="Mon conseiller GUDE-PME">
+            <Card
+              title={
+                <>
+                  Mon conseiller <OrgName fallback="" />
+                </>
+              }
+            >
               {dashboard.data.advisor ? (
                 <div className="text-sm">
                   <p className="font-medium">{dashboard.data.advisor.full_name}</p>

@@ -37,7 +37,7 @@
 <body>
 <div id="footer" class="small muted">Rapport de portefeuille {{ d.period.label }} · v{{ version }} · page <pdf:pagenumber/> / <pdf:pagecount/></div>
 
-<p class="muted small">GUDE-PME 360 · Rapport trimestriel de portefeuille · version {{ version }} · édité le {{ d.generated_at|frdate }}</p>
+<p class="muted small">{{ brand.product_name }} · Rapport trimestriel de portefeuille · version {{ version }} · édité le {{ d.generated_at|frdate }}</p>
 <h1>Portefeuille — {{ d.period.label }}</h1>
 <p>Période du {{ d.period.start|frdate }} au {{ d.period.end|frdate }}{% if d.period.partial %} (trimestre en cours : données au {{ d.period.as_of|frdate }}){% endif %} · {{ d.scope.label }} · {{ d.kpis.pmes_total }} PME.</p>
 <p class="small muted">{% if d.scope.include_names %}Diffusion interne : ce rapport cite des PME nommément.{% else %}Rapport anonymisé : aucune PME n'est citée nommément ; diffusable aux partenaires.{% endif %}</p>
@@ -115,7 +115,7 @@
 {% else %}<p class="muted">Aucune recommandation retenue pour l'instant.</p>{% endif %}
 
 <h2>6. Actions réalisées et en retard</h2>
-<p>{{ d.activity.actions_completed }} action(s) terminée(s) au cours du trimestre ; {{ d.actions.overdue }} action(s) en retard à la date d'édition ({{ d.actions.overdue_waiting_gude }} en attente de GUDE-PME, {{ d.actions.overdue_waiting_pme }} en attente des PME).</p>
+<p>{{ d.activity.actions_completed }} action(s) terminée(s) au cours du trimestre ; {{ d.actions.overdue }} action(s) en retard à la date d'édition ({{ d.actions.overdue_waiting_gude }} en attente de {{ brand.short_name }}, {{ d.actions.overdue_waiting_pme }} en attente des PME).</p>
 {% if d.activity.actions_completed_by_offer %}
 <table>
   <tr><th style="width:80%">Actions terminées, par accompagnement</th><th class="num" style="width:20%">Nombre</th></tr>
@@ -157,6 +157,6 @@
   {% for key, text in d.definitions.items %}<tr><td class="small">{{ key|kpi_label }}</td><td class="small">{{ text }}</td></tr>{% endfor %}
 </table>
 <p class="small">Les scores proviennent des diagnostics validés par les conseillers et des preuves vérifiées depuis ; les indicateurs d'actions, d'alertes et de conformité sont arrêtés à la date d'édition. Une cellule portant sur moins de {{ d.min_cell }} PME est masquée pour préserver la confidentialité et la fiabilité.</p>
-<p class="note">Document généré par GUDE-PME 360 à partir de données figées le {{ d.generated_at|frdate }}{% if d.generated_by %} à la demande de {{ d.generated_by }}{% endif %}. Modèle v{{ d.template_version }}. Toute correction donne lieu à une nouvelle version.</p>
+<p class="note">Document généré par {{ brand.product_name }} à partir de données figées le {{ d.generated_at|frdate }}{% if d.generated_by %} à la demande de {{ d.generated_by }}{% endif %}. Modèle v{{ d.template_version }}. Toute correction donne lieu à une nouvelle version.</p>
 </body>
 </html>

@@ -25,7 +25,7 @@ def _without(transitions, source, target):
 def test_guardrails():
     states, transitions = defaults.ACTION_STATES, copy.deepcopy(defaults.ACTION_TRANSITIONS)
     errors, _ = services.check(states, _without(transitions, "EN_COURS", "ABANDONNE"))
-    assert any("abandon par GUDE-PME" in e for e in errors)
+    assert any("abandon par l'équipe" in e for e in errors)
     bad = [*transitions, {**defaults.transition("EN_COURS", "CONFORME")}]
     assert any("automatiquement" in e for e in services.check(states, bad)[0])
     pme_ends = [

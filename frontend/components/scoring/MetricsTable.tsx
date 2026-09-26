@@ -1,6 +1,7 @@
 /** Indicateurs financiers : Indicateur → formule → données utilisées → résultat → interprétation → source (Doc. 6, § 7). */
 import { Badge } from "@/components/ui";
 import { formatInput, formatMetric, INPUT_LABELS, type MetricResult, SOURCE_LABELS } from "@/lib/scoring";
+import { OrgName } from "@/components/OrgName";
 
 const BAND_TONES: Record<string, "danger" | "warning" | "neutral" | "brand" | "info"> = {
   Critique: "danger",
@@ -52,7 +53,7 @@ export function MetricsTable({ metrics }: { metrics: MetricResult[] }) {
         </tbody>
       </table>
       <p className="mt-3 text-xs text-muted">
-        Seuils d'interprétation indicatifs, à calibrer par secteur avec les experts GUDE-PME. Les sources « déclaratif » seront
+        Seuils d'interprétation indicatifs, à calibrer par secteur avec les experts de <OrgName fallback="l'organisation" />. Les sources « déclaratif » seront
         remplacées par les états financiers vérifiés à partir des phases 3 et 4.
       </p>
     </div>

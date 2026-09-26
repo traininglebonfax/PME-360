@@ -2,7 +2,7 @@
 
 RM-08 : une obligation adossée à une règle réglementaire ne peut être ACTIVE que si la règle est VÉRIFIÉE
 (source officielle lue, date et vérificateur renseignés). Les obligations « programme » (transmission d'une
-preuve à GUDE-PME) et « bonne pratique » ne dépendent d'aucune règle légale.
+preuve à l'organisation d'accompagnement) et « bonne pratique » ne dépendent d'aucune règle légale.
 """
 
 from django.conf import settings
@@ -53,7 +53,7 @@ class RegulatoryRule(TenantModel):
 class ObligationTemplate(TenantModel):
     class Nature(models.TextChoices):
         REGLEMENTAIRE = "REGLEMENTAIRE", "Réglementaire"
-        PROGRAMME = "PROGRAMME", "Programme (transmission à GUDE-PME)"
+        PROGRAMME = "PROGRAMME", "Programme (transmission à l'organisation)"
         BONNE_PRATIQUE = "BONNE_PRATIQUE", "Bonne pratique"
 
     class Frequency(models.TextChoices):
