@@ -171,6 +171,10 @@ PME360_S3_SECRET_KEY = env("PME360_S3_SECRET_KEY", "")
 PME360_S3_REGION = env("PME360_S3_REGION", "us-east-1")
 PME360_S3_SSE = env("PME360_S3_SSE", "")  # « AES256 » en production (chiffrement côté serveur)
 PME360_S3_CREATE_BUCKET = env_bool("PME360_S3_CREATE_BUCKET", True)
+# Chiffrement enveloppe des fichiers : une clé AES-256 par organisation, enveloppée par la clé maîtresse (V1).
+# Clés Fernet ; la première enveloppe, toutes désenveloppent (rotation). Obligatoire en production.
+PME360_STORAGE_ENCRYPTION = env_bool("PME360_STORAGE_ENCRYPTION", True)
+STORAGE_MASTER_KEYS = env_list("PME360_STORAGE_MASTER_KEYS")
 PME360_ANTIVIRUS = env("PME360_ANTIVIRUS", "eicar")  # clamd (production) | eicar (développement uniquement)
 PME360_CLAMD_HOST = env("PME360_CLAMD_HOST", "localhost")
 PME360_CLAMD_PORT = int(env("PME360_CLAMD_PORT", "3310"))

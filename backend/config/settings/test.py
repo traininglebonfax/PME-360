@@ -10,3 +10,9 @@ FIELD_ENCRYPTION_KEYS = FIELD_ENCRYPTION_KEYS or ["dGVzdC1rZXktdGVzdC1rZXktdGVzd
 PME360_STORAGE_BACKEND = "local"
 PME360_ANTIVIRUS = "eicar"
 PME360_LOCAL_STORAGE_ROOT = str(BASE_DIR / "var" / "test-documents")  # noqa: F405
+# Clé maîtresse de développement (déterministe, jamais en production) si aucune n'est fournie.
+STORAGE_MASTER_KEYS = STORAGE_MASTER_KEYS or [  # noqa: F405
+    __import__("base64")
+    .urlsafe_b64encode(__import__("hashlib").sha256(b"pme360-dev-storage-master-key").digest())
+    .decode()
+]

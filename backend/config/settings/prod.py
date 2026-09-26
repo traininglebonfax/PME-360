@@ -17,3 +17,5 @@ if PME360_ANTIVIRUS != "clamd":  # noqa: F405
 if PME360_STORAGE_BACKEND != "s3":  # noqa: F405
     raise RuntimeError("En production, le stockage objet S3 est obligatoire (PME360_STORAGE_BACKEND=s3).")
 PME360_S3_SSE = PME360_S3_SSE or "AES256"  # noqa: F405
+if PME360_STORAGE_ENCRYPTION and not STORAGE_MASTER_KEYS:  # noqa: F405
+    raise RuntimeError("PME360_STORAGE_MASTER_KEYS est obligatoire en production (chiffrement des fichiers).")

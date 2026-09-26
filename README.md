@@ -25,7 +25,7 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 4 — IA | ✅ Livrée (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
 | 5 — Accompagnement | ✅ Livrée (voir ci-dessous) ; catalogue d'offres, règles et modèles de livrables **à valider** par GUDE-PME |
 | 6 — Reporting | ✅ Livrée (voir ci-dessous) ; rapport PDF à relire par GUDE-PME ; analyse d'effet des accompagnements descriptive uniquement (RM-09) |
-| V1 — en cours | ✅ Import en masse des PME par CSV ; ✅ rapport trimestriel de portefeuille (PDF, anonymisé par défaut) ; ✅ administration des types de documents et des obligations ; ✅ modèles de notification ; ✅ éditeur de référentiel ; ✅ éditeur de workflows ; ✅ tableau de bord auditeur et rôles personnalisés ; ✅ livrables non fournis et carte régionale |
+| V1 — en cours | ✅ Import en masse des PME par CSV ; ✅ rapport trimestriel de portefeuille (PDF, anonymisé par défaut) ; ✅ administration des types de documents et des obligations ; ✅ modèles de notification ; ✅ éditeur de référentiel ; ✅ éditeur de workflows ; ✅ tableau de bord auditeur et rôles personnalisés ; ✅ livrables non fournis et carte régionale ; ✅ clé de chiffrement par organisation |
 | Compléments MVP | ✅ Échanges sur les actions (internes ou partagés), sauvegardes chiffrées avec test de restauration ([runbook](infra/backup/README.md)) |
 
 ### V1 — généralisation (en cours)
@@ -40,6 +40,7 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 - **Tableau de bord auditeur** (menu « Tableau de bord auditeur », permission `audit.view`, lecture seule) : activité du journal par domaine et par type d'acteur sur la période, échecs de connexion, vérification de l'intégrité de la chaîne, événements sensibles (accès, rôles, publications, exports, fichiers bloqués), revue humaine des propositions de l'IA par dimension (acceptées, modifiées, écartées, taux de modification) et des lectures de documents, échantillonnage reproductible de dossiers PME (graine), export CSV du journal (aussi depuis le journal). Tirages et exports sont eux-mêmes journalisés. Compte de démonstration : `auditeur@demo.test`.
 - **Livrables non fournis** (Analyses) : pour les livrables d'action, taux de non-fourniture (aucun dépôt 30 jours après le passage à « Document demandé ») et délai moyen entre la demande et le premier dépôt ; pour les documents d'obligation, échéances échues sans document, dépôts en retard et retard moyen. Par type, avec effectifs ; effectif < 5 signalé.
 - **Carte des régions** (Analyses) : choroplèthe des 31 régions et 2 districts autonomes — nombre de PME, score moyen, part à risque —, moyennes masquées sous 5 PME évaluées (hachures), info-bulle, vue tableau. Fond de carte précalculé par `infra/geo/build_civ_regions.py` depuis geoBoundaries (CIV ADM2, Banque mondiale 2016, CC BY 4.0, attribution affichée).
+- **Clé de chiffrement par organisation** (chiffrement enveloppe) : chaque document et rapport est chiffré en AES-256-GCM avant d'être stocké, avec une clé propre à l'organisation ; cette clé est conservée en base **enveloppée** par la clé maîtresse de la plateforme (`PME360_STORAGE_MASTER_KEYS`, hors base). Le chemin du fichier est lié au chiffré : un fichier déplacé (autre PME, autre organisation) ou modifié est refusé. Rotation de la clé d'une organisation depuis le tableau de bord auditeur (administrateur) ou `manage.py storage_keys rotate <slug>` : les anciens fichiers restent lisibles, `manage.py encrypt_storage --reencrypt` les passe sur la nouvelle clé. Fichiers antérieurs : relus tels quels, puis chiffrés par `manage.py encrypt_storage` (idempotent, contrôle avant remplacement). Rotation de la clé maîtresse : nouvelle clé en tête de liste puis `manage.py storage_keys rewrap` (aucun fichier à réécrire). **La clé maîtresse doit être sauvegardée à part** (coffre) : sans elle, les fichiers — sauvegardes comprises — sont illisibles.
 
 ### Compléments du MVP
 
@@ -125,7 +126,7 @@ docker compose -f infra/docker-compose.yml up -d
 # 2. Backend
 cd backend
 python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt   # Linux/macOS : .venv/bin/pip
-cp .env.example .env        # puis renseigner DJANGO_SECRET_KEY et PME360_FIELD_ENCRYPTION_KEYS
+cp .env.example .env        # puis renseigner DJANGO_SECRET_KEY, PME360_FIELD_ENCRYPTION_KEYS et PME360_STORAGE_MASTER_KEYS
 .venv/Scripts/python manage.py migrate
 .venv/Scripts/python manage.py seed_demo          # données fictives
 .venv/Scripts/python manage.py runserver 127.0.0.1:8010

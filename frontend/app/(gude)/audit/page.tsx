@@ -9,6 +9,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { EncryptionCard } from "@/components/audit/EncryptionCard";
 import { Alert, Badge, Button, Card, Kpi, LoadingBlock, PageHeader, SelectInput, TextInput } from "@/components/ui";
 import { api, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -62,8 +63,9 @@ export default function AuditorDashboardPage() {
       ) : (
         <Overview data={overview.data!} chain={chain} />
       )}
-      <div className="mt-6">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_24rem]">
         <Sample />
+        <EncryptionCard />
       </div>
     </>
   );

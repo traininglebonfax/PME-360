@@ -1613,6 +1613,24 @@ export interface paths {
         patch: operations["organization_partial_update"];
         trace?: never;
     };
+    "/api/v1/organization/encryption": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description État du chiffrement des fichiers de l'organisation (sans jamais exposer de clé) ; rotation par l'admin. */
+        get: operations["organization_encryption_retrieve"];
+        put?: never;
+        /** @description État du chiffrement des fichiers de l'organisation (sans jamais exposer de clé) ; rotation par l'admin. */
+        post: operations["organization_encryption_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plans/{plan_id}": {
         parameters: {
             query?: never;
@@ -3549,6 +3567,13 @@ export interface components {
             readonly evidence_hint: string;
             readonly order: number;
         };
+        EncryptionStatus: {
+            enabled: boolean;
+            algorithm: string;
+            active_version: number | null;
+            versions: components["schemas"]["KeyVersion"][];
+            can_rotate: boolean;
+        };
         EnrolledCohort: {
             /** Format: uuid */
             id: string;
@@ -3900,6 +3925,14 @@ export interface components {
             errors: string[];
             warnings: string[];
             balance: components["schemas"]["Balance"];
+        };
+        KeyVersion: {
+            version: number;
+            status: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            retired_at: string | null;
         };
         /**
          * @description * `C` - Conformité
@@ -8235,6 +8268,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Organization"];
+                };
+            };
+        };
+    };
+    organization_encryption_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EncryptionStatus"];
+                };
+            };
+        };
+    };
+    organization_encryption_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EncryptionStatus"];
                 };
             };
         };
