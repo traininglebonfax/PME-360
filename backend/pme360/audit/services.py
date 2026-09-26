@@ -132,6 +132,11 @@ def record(
     )
     entry.hash = _digest(entry.prev_hash, _payload(entry))
     entry.save(force_insert=True)
+    if pme_id is not None or action.startswith(("pme.", "plan.", "action.", "alert.", "diagnostic.")):
+        # Tout fait métier concernant une PME peut changer les indicateurs de portefeuille (Document 3, § 6).
+        from pme360.analytics.services import request_refresh
+
+        request_refresh()
     return entry
 
 

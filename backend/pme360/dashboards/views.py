@@ -7,7 +7,7 @@ moyenne et la part de PME à confiance faible (Document 9, § 1.5).
 """
 
 from datetime import timedelta
-from statistics import mean, median
+from statistics import mean
 
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
@@ -297,111 +297,152 @@ class PortfolioDashboardView(APIView):
 
 
 def portfolio_overview(access) -> dict:
-    """Indicateurs et analyses du portefeuille visible par ``access`` (tableau de bord, Copilot)."""
-    organization = Organization.objects.get(pk=access.organization_id)
-    inactivity_days = organization.setting("inactivity_days")
-    pmes = access.pme_queryset(Pme.objects.all())
-    month_start = timezone.localdate().replace(day=1)
-    from pme360.plans.models import ActionPlan
+    """Indicateurs et analyses du portefeuille visible par ``access`` (tableau de bord, Copilot).
 
-    # PME accompagnée : plan d'accompagnement validé ou en cours (Document 9, § 4.1).
-    accompanied = pmes.filter(
-        action_plans__status__in=[ActionPlan.Status.VALIDE, ActionPlan.Status.EN_COURS]
-    ).distinct()
-    latest = latest_snapshots(pmes)
-    starts = baselines(pmes)
-    names = dict(pmes.values_list("id", "legal_name"))
-    scored = [s for s in latest.values() if s.global_score is not None]
-    scores = [float(s.global_score) for s in scored]
-    progress = []
-    for pme_id, snapshot in latest.items():
-        baseline = starts.get(pme_id)
-        if baseline and baseline.pk != snapshot.pk and snapshot.global_score is not None:
-            months = (snapshot.reference_date - baseline.reference_date).days / 30.44
-            progress.append(
-                {
-                    "pme_id": pme_id,
-                    "pme_name": names.get(pme_id),
-                    "delta": round(float(snapshot.global_score - baseline.global_score), 1),
-                    "months": round(months, 1),
-                    "from": _f(baseline.global_score),
-                    "to": _f(snapshot.global_score),
-                }
-            )
-    # Problèmes les plus fréquents : part des PME dont la dimension est sous le seuil (dernier snapshot).
-    weaknesses: dict[str, dict] = {}
-    for snapshot in scored:
-        for dimension in snapshot.result.get("dimensions", []):
-            if dimension["score"] is None:
-                continue
-            entry = weaknesses.setdefault(
-                dimension["code"],
-                {"code": dimension["code"], "name": dimension["short_name"], "weak": 0, "evaluated": 0},
-            )
-            entry["evaluated"] += 1
-            entry["weak"] += dimension["score"] < WEAKNESS_THRESHOLD
-    weakness_list = sorted(
-        ({**w, "share": round(w["weak"] / w["evaluated"], 3)} for w in weaknesses.values()),
-        key=lambda w: -w["share"],
-    )
-    confidences = [float(s.confidence) for s in scored]
-    levels = {}
-    for snapshot in scored:
-        label = snapshot.result.get("maturity", {}).get("label") or "Non déterminé"
-        levels.setdefault(snapshot.maturity_level, {"key": snapshot.maturity_level, "label": label, "count": 0})
-        levels[snapshot.maturity_level]["count"] += 1
+    Tous les chiffres viennent des vues analytiques (Document 9, § 1.4) via ``pme360.analytics.portfolio``.
+    """
+    from pme360.analytics import portfolio, services
+
+    organization = Organization.objects.get(pk=access.organization_id)
+    problems = portfolio.frequent_problems(access)
+    trajectories = portfolio.trajectories(access)
     return {
-        "kpis": {
-            "pmes_total": pmes.count(),
-            "pmes_new_this_month": pmes.filter(onboarding_started_at__date__gte=month_start).count(),
-            "pmes_accompanied": accompanied.count(),
-            "pmes_active": pmes.exclude(_inactive_q(inactivity_days)).count(),
-            "pmes_inactive": pmes.filter(_inactive_q(inactivity_days)).count(),
-            "pmes_without_advisor": pmes.exclude(
-                pk__in=PmeAssignment.objects.filter(
-                    end_date__isnull=True, role_in_pme=PmeAssignment.RoleInPme.CONSEILLER_PRINCIPAL
-                ).values("pme_id")
-            ).count(),
-            "pmes_diagnosed": len(scored),
-            "average_score": round(mean(scores), 1) if scores else None,
-            "median_score": round(median(scores), 1) if scores else None,
-            "average_progress": round(mean(p["delta"] for p in progress), 1) if progress else None,
-            "average_confidence": round(mean(confidences), 3) if confidences else None,
-            "low_confidence_share": round(sum(c < 0.5 for c in confidences) / len(confidences), 3)
-            if confidences
-            else None,
-            "pmes_at_risk": sum(1 for s in scored if s.risk_index is not None and s.risk_index >= 50),
-            "pmes_urgent": sum(1 for s in scored if s.intervention_priority == "P1"),
-            "average_compliance": average_compliance(pmes),
-        },
-        "by_lifecycle": _breakdown(pmes, "lifecycle_status"),
-        "by_sector": _breakdown(pmes, "sector__code", "sector__name"),
-        "by_region": _breakdown(pmes, "region__code", "region__name"),
-        "by_size": _breakdown(pmes, "size_category"),
-        "by_maturity": sorted(levels.values(), key=lambda item: item["key"] or 0),
-        "by_priority": [
-            {"key": p, "label": p, "count": sum(1 for s in scored if s.intervention_priority == p)}
-            for p in ("P1", "P2", "P3", "P4")
-        ],
-        "weaknesses": weakness_list,
-        "weakness_threshold": WEAKNESS_THRESHOLD,
-        "progress": {
-            "top": sorted(progress, key=lambda p: -p["delta"])[:5],
-            "stagnating": [p for p in progress if p["months"] >= 6 and p["delta"] < STAGNATION_POINTS],
-        },
+        "kpis": portfolio.overview(access),
+        **portfolio.breakdowns(access),
+        "weaknesses": problems["dimensions"],
+        "weakness_threshold": problems["threshold"],
+        "progress": {"top": trajectories["top"], "stagnating": trajectories["stagnating"]},
         "urgent": [
             {
-                "pme_id": s.pme_id,
-                "pme_name": names.get(s.pme_id),
-                "global_score": _f(s.global_score),
-                "risk_index": _f(s.risk_index),
+                "pme_id": item["pme_id"],
+                "pme_name": item["pme_name"],
+                "global_score": item["global_score"],
+                "risk_index": item["risk_index"],
             }
-            for s in scored
-            if s.intervention_priority == "P1"
+            for item in portfolio.reinforced_support(access)
+            if item["priority"] == "P1"
         ],
-        "inactivity_days": inactivity_days,
+        "definitions": portfolio.DEFINITIONS,
+        "refreshed_at": services.freshness(),
+        "inactivity_days": organization.setting("inactivity_days"),
         "min_cell": MIN_CELL,
     }
+
+
+class PortfolioAnalysesView(APIView):
+    """Analyses de portefeuille (Document 9, § 4.2) : problèmes fréquents, besoins, secteurs, trajectoires."""
+
+    required_permissions = "dashboard.portfolio"
+
+    @extend_schema(responses=dict)
+    def get(self, request):
+        from pme360.analytics import portfolio, services
+
+        access = get_access(request)
+        return Response(
+            {
+                "frequent_problems": portfolio.frequent_problems(access),
+                "demanded_offers": portfolio.demanded_offers(access),
+                "sector_heatmap": portfolio.sector_heatmap(access),
+                "trajectories": portfolio.trajectories(access),
+                "reinforced_support": portfolio.reinforced_support(access),
+                "offer_effectiveness": portfolio.offer_effectiveness(access),
+                "refreshed_at": services.freshness(),
+            }
+        )
+
+
+PORTFOLIO_COLUMNS = [
+    ("legal_name", "PME"),
+    ("sector_name", "Secteur"),
+    ("region_name", "Région"),
+    ("maturity_level", "Niveau"),
+    ("current_score", "Score"),
+    ("trend_6m", "Tendance 6 mois"),
+    ("confidence", "Confiance"),
+    ("compliance_rate", "Conformité"),
+    ("risk_index", "Risque"),
+    ("intervention_priority", "Priorité"),
+    ("actions_overdue", "Actions en retard"),
+    ("last_activity_at", "Dernière activité"),
+]
+
+
+def portfolio_rows(access) -> list[dict]:
+    """Tableau du portefeuille (Document 9, § 3) : une ligne par PME du périmètre."""
+    from pme360.analytics import services
+
+    today = timezone.localdate()
+    since = today - timedelta(days=183)
+    history: dict = {}
+    pmes = access.pme_queryset(Pme.objects.all())
+    for pme_id, score in (
+        ScoreSnapshot.objects.filter(pme__in=pmes, is_frozen=True, reference_date__lte=since)
+        .order_by("pme_id", "-reference_date")
+        .values_list("pme_id", "global_score")
+    ):
+        history.setdefault(pme_id, score)
+    by_id = {p.pk: p for p in pmes}
+    rows = []
+    for state in services.current_states(access):
+        score = _f(state["current_score"])
+        past = history.get(state["pme_id"])
+        pme = by_id.get(state["pme_id"])
+        rows.append(
+            {
+                "pme_id": state["pme_id"],
+                "legal_name": state["legal_name"],
+                "sector_name": state["sector_name"],
+                "region_name": state["region_name"],
+                "size_category": state["size_category"],
+                "lifecycle_status": state["lifecycle_status"],
+                "maturity_level": state["maturity_level"],
+                "maturity_label": state["maturity_label"],
+                "current_score": score,
+                "trend_6m": round(score - float(past), 1) if score is not None and past is not None else None,
+                "imo": _f(state["imo"]),
+                "ipe": _f(state["ipe"]),
+                "quadrant": state["quadrant"],
+                "confidence": _f(state["confidence"]),
+                "compliance_rate": compliance.compliance_rate(pme, today)["rate"] if pme else None,
+                "risk_index": _f(state["risk_index"]),
+                "intervention_priority": state["intervention_priority"],
+                "actions_overdue": state["actions_overdue"],
+                "alerts_high": state["alerts_high"],
+                "last_activity_at": state["last_activity_at"],
+            }
+        )
+    return rows
+
+
+class PortfolioPmesView(APIView):
+    """Tableau du portefeuille, filtrable côté interface ; ``?format=csv`` pour l'export."""
+
+    required_permissions = "pme.view"
+
+    @extend_schema(responses=dict)
+    def get(self, request):
+        import csv
+        import io
+
+        from django.http import HttpResponse
+
+        access = get_access(request)
+        if access.is_pme_user:
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied()
+        rows = portfolio_rows(access)
+        if request.query_params.get("export") == "csv":
+            buffer = io.StringIO()
+            writer = csv.writer(buffer, delimiter=";")
+            writer.writerow([label for _, label in PORTFOLIO_COLUMNS])
+            for row in rows:
+                writer.writerow(["" if row[key] is None else row[key] for key, _ in PORTFOLIO_COLUMNS])
+            response = HttpResponse("﻿" + buffer.getvalue(), content_type="text/csv; charset=utf-8")
+            response["Content-Disposition"] = f'attachment; filename="portefeuille-{timezone.localdate()}.csv"'
+            return response
+        return Response(rows)
 
 
 class PmeDashboardView(APIView):

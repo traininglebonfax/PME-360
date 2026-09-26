@@ -485,6 +485,11 @@ def validate(diagnostic: Diagnostic, access: AccessContext):
     from pme360.ai.knowledge import index_pme_history
 
     index_pme_history(diagnostic.pme)
+    # Rapport de diagnostic édité à la validation (Document 9, § 7), après validation de la transaction.
+    from pme360.reports.tasks import generate_diagnostic_report
+
+    diagnostic_id, user_id = str(diagnostic.pk), str(access.user.pk)
+    transaction.on_commit(lambda: generate_diagnostic_report.delay(diagnostic_id, user_id))
     pme_services.touch(diagnostic.pme)
     return snapshot
 

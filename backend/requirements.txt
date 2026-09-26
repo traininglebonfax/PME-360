@@ -14,3 +14,7 @@ boto3==1.43.103
 pypdf==6.19.0
 anthropic==1.8.0
 jsonschema==4.26.0
+# Rapports PDF : WeasyPrint (production, bibliothèques Pango installées dans l'image) ; xhtml2pdf en repli
+# pur Python (postes de développement sans Pango).
+weasyprint==70.0
+xhtml2pdf==0.2.20

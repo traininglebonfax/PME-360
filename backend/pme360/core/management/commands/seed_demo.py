@@ -55,7 +55,19 @@ class Command(BaseCommand):
                 self._diagnostics(slug, organization, users, pmes)
                 self._documents(slug, organization, users, pmes)
                 self._plans(slug, organization, users, pmes)
+                self._reports(pmes)
         self._report()
+
+    def _reports(self, pmes: dict[str, Pme]) -> None:
+        """Phase 6 : rapport de diagnostic (16 sections) pour chaque PME ayant un diagnostic validé."""
+        from pme360.reports import services as reports
+        from pme360.reports.models import Report
+
+        for pme in pmes.values():
+            diagnostic = Diagnostic.objects.filter(pme=pme, status=Diagnostic.Status.VALIDE).order_by("-reference_date")
+            latest = diagnostic.first()
+            if latest and not Report.objects.filter(diagnostic=latest).exists():
+                reports.generate_diagnostic_report(latest)
 
     def _plans(self, slug: str, organization: Organization, users: dict, pmes: dict[str, Pme]) -> None:
         """Accompagnement (phase 5) : recommandations ; plan de Boutik Plus accepté, une action menée à terme."""

@@ -68,6 +68,8 @@ INSTALLED_APPS = [
     "pme360.notifications",
     "pme360.ai",
     "pme360.plans",
+    "pme360.analytics",
+    "pme360.reports",
     "pme360.dashboards",
 ]
 
@@ -192,6 +194,8 @@ PME360_AI_PRICING = {
     PME360_AI_MODELS["standard"]: (3.0, 15.0),
     PME360_AI_MODELS["reasoning"]: (5.0, 25.0),
 }
+# Rapports PDF : auto = WeasyPrint si ses bibliothèques natives sont présentes, sinon xhtml2pdf (Document 2).
+PME360_PDF_ENGINE = env("PME360_PDF_ENGINE", "auto")  # auto | weasyprint | xhtml2pdf
 PME360_AI_MAX_TOOL_CALLS = 8  # Ask AI : boucle agentique limitée, lecture seule (Document 4, § 9)
 
 LANGUAGE_CODE = "fr"
@@ -269,6 +273,8 @@ CELERY_TASK_TIME_LIMIT = 300
 CELERY_BEAT_SCHEDULE = {
     "dispatch-outbox": {"task": "pme360.core.tasks.dispatch_outbox", "schedule": 10.0},
     "compliance-daily": {"task": "pme360.compliance.tasks.run_daily", "schedule": crontab(hour=2, minute=0)},
+    # Vues analytiques : rafraîchies par événement (plafond 30 s) et au moins toutes les 15 minutes (retards datés).
+    "analytics-refresh": {"task": "pme360.analytics.tasks.refresh_views", "schedule": 900.0},
 }
 
 LOGGING = {
