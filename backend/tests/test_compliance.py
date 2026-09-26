@@ -8,6 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from pme360.alerts import engine as alerts
 from pme360.alerts.models import Alert
+from pme360.audit.models import AuditLog
 from pme360.compliance import services
 from pme360.compliance.models import Deadline, DeadlineReminder, ObligationTemplate, PmeObligation, RegulatoryRule
 from pme360.compliance.tasks import run_daily_for
@@ -309,3 +310,109 @@ def test_daily_scheduler_runs_for_every_organization(org, other_org, pme, make_p
     assert totals["pmes"] >= 2 and totals["deadlines_created"] > 0
     with tenant_context(other_org.id):
         assert Deadline.objects.exists()
+
+
+# --- Configuration sans code (V1) -----------------------------------------------------------------------------------
+
+
+def test_admin_creates_and_edits_document_types(org, make_user, client_for):
+    admin = client_for(make_user(org, "ADMIN_ORG"), org)
+    created = admin.post(
+        "/api/v1/config/document-types",
+        {
+            "code": "plan_hygiene",
+            "name": "Plan d'hygiène",
+            "category": "QUALITE",
+            "validity_days": 365,
+            "evidence_level": 3,
+        },
+        format="json",
+    )
+    assert created.status_code == 201, created.content
+    body = created.json()
+    assert body["code"] == "PLAN_HYGIENE" and body["usage"] == {"documents": 0, "obligations": [], "criteria": []}
+    assert (
+        admin.post(
+            "/api/v1/config/document-types", {"code": "PLAN_HYGIENE", "name": "x", "category": "QUALITE"}, format="json"
+        ).status_code
+        == 400
+    )
+    renamed = admin.patch(
+        f"/api/v1/config/document-types/{body['id']}", {"name": "Plan HACCP", "code": "AUTRE_CODE"}, format="json"
+    )
+    assert renamed.status_code == 400 and "code" in renamed.json()["errors"]
+    ok = admin.patch(f"/api/v1/config/document-types/{body['id']}", {"name": "Plan HACCP"}, format="json")
+    assert ok.json()["name"] == "Plan HACCP"
+    # Un type exigé par une obligation active ne peut pas être désactivé.
+    rccm = next(t for t in admin.get("/api/v1/config/document-types").json() if t["code"] == "RCCM")
+    assert (
+        "OBL-RCCM" in rccm["usage"]["obligations"] and "FOR-01" not in rccm["usage"]["criteria"]
+    )  # référentiel non installé
+    refused = admin.patch(f"/api/v1/config/document-types/{rccm['id']}", {"is_active": False}, format="json")
+    assert refused.status_code == 400 and refused.json()["code"] == "document_type_in_use"
+    with tenant_context(org.id):
+        assert AuditLog.objects.filter(action="document_type.updated").exists()
+    advisor = client_for(make_user(org, "CONSEILLER"), org)
+    assert (
+        advisor.post(
+            "/api/v1/config/document-types", {"code": "X1", "name": "x", "category": "QUALITE"}, format="json"
+        ).status_code
+        == 403
+    )
+
+
+def test_admin_creates_obligations_with_readable_rules_and_rm08(org, make_user, client_for):
+    admin = client_for(make_user(org, "ADMIN_ORG"), org)
+    base = {"code": "OBL-HYGIENE", "name": "Plan d'hygiène annuel", "document_type": "RCCM", "frequency": "ANNUELLE"}
+    no_rule = admin.post("/api/v1/obligation-templates/new", {**base, "nature": "REGLEMENTAIRE"}, format="json")
+    assert no_rule.status_code == 400 and "regulatory_rule" in no_rule.json()["errors"]
+    bad_logic = admin.post(
+        "/api/v1/obligation-templates/new",
+        {**base, "nature": "PROGRAMME", "applicability": {"exec": ["x"]}},
+        format="json",
+    )
+    assert bad_logic.status_code == 400 and "applicability" in bad_logic.json()["errors"]
+    bad_frequency = admin.post(
+        "/api/v1/obligation-templates/new",
+        {
+            **base,
+            "nature": "PROGRAMME",
+            "frequency_rule": {"if": [{">=": [{"var": "headcount"}, 20]}, "SOUVENT", "RARE"]},
+        },
+        format="json",
+    )
+    assert bad_frequency.status_code == 400 and "frequency_rule" in bad_frequency.json()["errors"]
+    created = admin.post(
+        "/api/v1/obligation-templates/new",
+        {
+            **base,
+            "nature": "PROGRAMME",
+            "applicability": {
+                "and": [{">=": [{"var": "headcount"}, 5]}, {"in": [{"var": "size_category"}, ["PETITE", "MOYENNE"]]}]
+            },
+            "frequency_rule": {"if": [{">=": [{"var": "headcount"}, 20]}, "SEMESTRIELLE", "ANNUELLE"]},
+            "reminder_offsets": [7, -7, 0, 7],
+        },
+        format="json",
+    )
+    assert created.status_code == 201, created.content
+    obligation = created.json()
+    assert not obligation["is_active"] and obligation["reminder_offsets"] == [-7, 0, 7]
+    assert (
+        obligation["applicability_text"] == "Effectif au moins 5 ET Taille parmi Petite entreprise, Moyenne entreprise"
+    )
+    assert obligation["frequency_text"] == "Semestrielle si effectif au moins 20, sinon annuelle"
+    # Réglementaire rattachée à une règle non vérifiée : enregistrable inactive, jamais activable (RM-08).
+    rule = admin.patch(
+        f"/api/v1/obligation-templates/{obligation['id']}",
+        {"nature": "REGLEMENTAIRE", "regulatory_rule": "REG-CNPS-01"},
+        format="json",
+    )
+    assert rule.status_code == 200 and rule.json()["regulatory_rule"] == "REG-CNPS-01"
+    activation = admin.post(
+        f"/api/v1/obligation-templates/{obligation['id']}/activation", {"active": True}, format="json"
+    )
+    assert activation.status_code == 400 and activation.json()["code"] == "rule_not_verified"
+    with tenant_context(org.id):
+        assert AuditLog.objects.filter(action="obligation.created").exists()
+        assert AuditLog.objects.filter(action="obligation.updated").exists()

@@ -69,7 +69,8 @@ test("l'administrateur édite le rapport trimestriel de portefeuille, anonymisé
   await page.getByRole("link", { name: "Rapports", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Rapports de portefeuille" })).toBeVisible();
   const list = page.getByRole("list", { name: "Rapports de portefeuille" });
-  const before = await list.getByRole("listitem").count().catch(() => 0);
+  await expect(list.or(page.getByText("Aucun rapport"))).toBeVisible();
+  const before = await list.getByRole("listitem").count();
   await page.getByRole("button", { name: "Éditer le rapport" }).click();
   await expect(list.getByRole("listitem")).toHaveCount(before + 1, { timeout: 30_000 });
   const first = list.getByRole("listitem").first();

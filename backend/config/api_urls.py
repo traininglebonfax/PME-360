@@ -161,6 +161,11 @@ urlpatterns = [
     path("regulatory-rules/<uuid:rule_id>/status", compliance.RegulatoryRuleStatusView.as_view()),
     path("obligation-templates", compliance.ObligationTemplateListView.as_view()),
     path("obligation-templates/<uuid:template_id>/activation", compliance.ObligationTemplateActivationView.as_view()),
+    path("obligation-templates/new", compliance.ObligationTemplateCreateView.as_view()),
+    path("obligation-templates/<uuid:template_id>", compliance.ObligationTemplateDetailView.as_view()),
+    path("config/document-categories", compliance.DocumentCategoryListView.as_view()),
+    path("config/document-types", compliance.DocumentTypeAdminListView.as_view()),
+    path("config/document-types/<uuid:type_id>", compliance.DocumentTypeAdminDetailView.as_view()),
     path("compliance/run", compliance.ComplianceRunView.as_view()),
     # Alertes et notifications
     path("alerts", alerts.AlertListView.as_view()),

@@ -1338,6 +1338,141 @@
                 }
             }
         },
+        "/api/v1/config/document-categories": {
+            "get": {
+                "operationId": "config_document_categories_list",
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DocumentCategory"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/document-types": {
+            "get": {
+                "operationId": "config_document_types_list",
+                "description": "Tous les types de documents (actifs et inactifs) avec leur usage ; création.",
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DocumentTypeAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "config_document_types_create",
+                "description": "Tous les types de documents (actifs et inactifs) avec leur usage ; création.",
+                "tags": [
+                    "config"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DocumentTypeWriteRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentTypeAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/document-types/{type_id}": {
+            "patch": {
+                "operationId": "config_document_types_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "type_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedDocumentTypeWriteRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentTypeAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/dashboards/advisor": {
             "get": {
                 "operationId": "dashboards_advisor_retrieve",
@@ -2861,6 +2996,51 @@
                 }
             }
         },
+        "/api/v1/obligation-templates/{template_id}": {
+            "patch": {
+                "operationId": "obligation_templates_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "template_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "obligation-templates"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedObligationWriteRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObligationTemplate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/obligation-templates/{template_id}/activation": {
             "post": {
                 "operationId": "obligation_templates_activation_create",
@@ -2895,6 +3075,40 @@
                 ],
                 "responses": {
                     "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ObligationTemplate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/obligation-templates/new": {
+            "post": {
+                "operationId": "obligation_templates_new_create",
+                "tags": [
+                    "obligation-templates"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ObligationWriteRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -8157,6 +8371,21 @@
                     "verified_by_name"
                 ]
             },
+            "DocumentCategory": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "name"
+                ]
+            },
             "DocumentCheck": {
                 "type": "object",
                 "properties": {
@@ -8440,6 +8669,170 @@
                     "sensitive",
                     "validity_days"
                 ]
+            },
+            "DocumentTypeAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "category_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "guidance": {
+                        "type": "string",
+                        "description": "Comment l'obtenir / le préparer (langage simple)."
+                    },
+                    "period_kind": {
+                        "$ref": "#/components/schemas/PeriodKindEnum"
+                    },
+                    "validity_days": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "Durée de validité depuis la délivrance."
+                    },
+                    "freshness_days": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "« À jour » si daté de moins de N jours."
+                    },
+                    "evidence_level": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "description": "Niveau de critère prouvé par ce document."
+                    },
+                    "sensitive": {
+                        "type": "boolean",
+                        "description": "Données personnelles : jamais envoyé à une IA externe."
+                    },
+                    "order": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "usage": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DocumentTypeUsage"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "category",
+                    "category_name",
+                    "code",
+                    "id",
+                    "name",
+                    "usage"
+                ]
+            },
+            "DocumentTypeUsage": {
+                "type": "object",
+                "properties": {
+                    "documents": {
+                        "type": "integer"
+                    },
+                    "obligations": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "criteria": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "criteria",
+                    "documents",
+                    "obligations"
+                ]
+            },
+            "DocumentTypeWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "category": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "guidance": {
+                        "type": "string"
+                    },
+                    "period_kind": {
+                        "$ref": "#/components/schemas/PeriodKindEnum"
+                    },
+                    "validity_days": {
+                        "type": "integer",
+                        "maximum": 3650,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "freshness_days": {
+                        "type": "integer",
+                        "maximum": 3650,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "evidence_level": {
+                        "type": "integer",
+                        "maximum": 4,
+                        "minimum": 0
+                    },
+                    "sensitive": {
+                        "type": "boolean"
+                    },
+                    "order": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                }
             },
             "DocumentVersion": {
                 "type": "object",
@@ -10172,10 +10565,19 @@
                     "pmes": {
                         "type": "integer",
                         "readOnly": true
+                    },
+                    "applicability_text": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "frequency_text": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "applicability",
+                    "applicability_text",
                     "code",
                     "description",
                     "document_type",
@@ -10183,6 +10585,7 @@
                     "due_days_after_period_end",
                     "frequency",
                     "frequency_rule",
+                    "frequency_text",
                     "id",
                     "is_active",
                     "is_critical",
@@ -10193,6 +10596,58 @@
                     "regulatory_status",
                     "reminder_offsets"
                 ]
+            },
+            "ObligationWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "nature": {
+                        "$ref": "#/components/schemas/NatureEnum"
+                    },
+                    "document_type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "regulatory_rule": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 40
+                    },
+                    "frequency": {
+                        "$ref": "#/components/schemas/FrequencyEnum"
+                    },
+                    "frequency_rule": {
+                        "nullable": true
+                    },
+                    "due_days_after_period_end": {
+                        "type": "integer"
+                    },
+                    "applicability": {
+                        "nullable": true
+                    },
+                    "reminder_offsets": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "is_critical": {
+                        "type": "boolean"
+                    }
+                }
             },
             "OfferRef": {
                 "type": "object",
@@ -10533,6 +10988,114 @@
                         "description": "Seuils de la règle (jours, points, pourcentages…)."
                     },
                     "is_active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PatchedDocumentTypeWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "category": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "guidance": {
+                        "type": "string"
+                    },
+                    "period_kind": {
+                        "$ref": "#/components/schemas/PeriodKindEnum"
+                    },
+                    "validity_days": {
+                        "type": "integer",
+                        "maximum": 3650,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "freshness_days": {
+                        "type": "integer",
+                        "maximum": 3650,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "evidence_level": {
+                        "type": "integer",
+                        "maximum": 4,
+                        "minimum": 0
+                    },
+                    "sensitive": {
+                        "type": "boolean"
+                    },
+                    "order": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PatchedObligationWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "nature": {
+                        "$ref": "#/components/schemas/NatureEnum"
+                    },
+                    "document_type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "regulatory_rule": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 40
+                    },
+                    "frequency": {
+                        "$ref": "#/components/schemas/FrequencyEnum"
+                    },
+                    "frequency_rule": {
+                        "nullable": true
+                    },
+                    "due_days_after_period_end": {
+                        "type": "integer"
+                    },
+                    "applicability": {
+                        "nullable": true
+                    },
+                    "reminder_offsets": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "is_critical": {
                         "type": "boolean"
                     }
                 }
