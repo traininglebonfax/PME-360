@@ -350,6 +350,38 @@ class PlanReasonSerializer(serializers.Serializer):
 class RuleSerializer(serializers.ModelSerializer):
     offer_code = serializers.CharField(source="offer.code", read_only=True)
     offer_title = serializers.CharField(source="offer.title", read_only=True)
+    condition_text = serializers.SerializerMethodField()
+    problem_readable = serializers.SerializerMethodField()
+    rationale_readable = serializers.SerializerMethodField()
+    editable_visually = serializers.SerializerMethodField()
+
+    def _labels(self) -> dict:
+        from .rule_labels import labels
+
+        if "labels" not in self.context:
+            self.context["labels"] = labels()
+        return self.context["labels"]
+
+    def get_condition_text(self, rule) -> str:
+        from .rule_labels import describe
+
+        return describe(rule.condition, self._labels())
+
+    def get_problem_readable(self, rule) -> str:
+        from .rule_labels import readable_template
+
+        return readable_template(rule.problem_template, self._labels())
+
+    def get_rationale_readable(self, rule) -> str:
+        from .rule_labels import readable_template
+
+        return readable_template(rule.rationale_template, self._labels())
+
+    @staticmethod
+    def get_editable_visually(rule) -> bool:
+        from .rule_labels import is_simple
+
+        return is_simple(rule.condition)
 
     class Meta:
         model = RecommendationRule
@@ -359,6 +391,8 @@ class RuleSerializer(serializers.ModelSerializer):
             "version",
             "name",
             "condition",
+            "condition_text",
+            "editable_visually",
             "offer_code",
             "offer_title",
             "impact",
@@ -366,6 +400,8 @@ class RuleSerializer(serializers.ModelSerializer):
             "risk",
             "problem_template",
             "rationale_template",
+            "problem_readable",
+            "rationale_readable",
             "status",
             "tested_at",
             "test_result",
@@ -384,6 +420,13 @@ class RuleWriteSerializer(serializers.Serializer):
     risk = serializers.IntegerField(min_value=1, max_value=5, required=False, allow_null=True)
     problem_template = serializers.CharField(max_length=300)
     rationale_template = serializers.CharField()
+
+
+class RuleVariableSerializer(serializers.Serializer):
+    key = serializers.CharField()
+    label = serializers.CharField()
+    type = serializers.ChoiceField(choices=["score", "level", "boolean", "rate", "count", "maturity"])
+    group = serializers.CharField()
 
 
 class RuleTestResultSerializer(serializers.Serializer):

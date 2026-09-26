@@ -1735,6 +1735,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recommendation-rules/variables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Variables utilisables dans une condition, avec leur libellé métier (constructeur visuel). */
+        get: operations["recommendation_rules_variables_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/recommendations/{recommendation_id}/decision": {
         parameters: {
             query?: never;
@@ -4088,6 +4105,8 @@ export interface components {
             readonly version: number;
             readonly name: string;
             readonly condition: unknown;
+            readonly condition_text: string;
+            readonly editable_visually: boolean;
             readonly offer_code: string;
             readonly offer_title: string;
             /** @description Vide : calculé. */
@@ -4096,6 +4115,8 @@ export interface components {
             readonly risk: number | null;
             readonly problem_template: string;
             readonly rationale_template: string;
+            readonly problem_readable: string;
+            readonly rationale_readable: string;
             readonly status: components["schemas"]["RecommendationRuleStatusEnum"];
             /** Format: date-time */
             readonly tested_at: string | null;
@@ -4122,6 +4143,22 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        RuleVariable: {
+            key: string;
+            label: string;
+            type: components["schemas"]["RuleVariableTypeEnum"];
+            group: string;
+        };
+        /**
+         * @description * `score` - score
+         *     * `level` - level
+         *     * `boolean` - boolean
+         *     * `rate` - rate
+         *     * `count` - count
+         *     * `maturity` - maturity
+         * @enum {string}
+         */
+        RuleVariableTypeEnum: "score" | "level" | "boolean" | "rate" | "count" | "maturity";
         RuleWriteRequest: {
             code: string;
             name: string;
@@ -7227,6 +7264,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RuleTestResult"];
+                };
+            };
+        };
+    };
+    recommendation_rules_variables_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleVariable"][];
                 };
             };
         };

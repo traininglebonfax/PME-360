@@ -4822,6 +4822,35 @@
                 }
             }
         },
+        "/api/v1/recommendation-rules/variables": {
+            "get": {
+                "operationId": "recommendation_rules_variables_list",
+                "description": "Variables utilisables dans une condition, avec leur libellé métier (constructeur visuel).",
+                "tags": [
+                    "recommendation-rules"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RuleVariable"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/recommendations/{recommendation_id}/decision": {
             "post": {
                 "operationId": "recommendations_decision_create",
@@ -12600,6 +12629,14 @@
                     "condition": {
                         "readOnly": true
                     },
+                    "condition_text": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "editable_visually": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
                     "offer_code": {
                         "type": "string",
                         "readOnly": true
@@ -12632,6 +12669,14 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "problem_readable": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "rationale_readable": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "status": {
                         "allOf": [
                             {
@@ -12659,13 +12704,17 @@
                 "required": [
                     "code",
                     "condition",
+                    "condition_text",
                     "created_at",
+                    "editable_visually",
                     "id",
                     "impact",
                     "name",
                     "offer_code",
                     "offer_title",
+                    "problem_readable",
                     "problem_template",
+                    "rationale_readable",
                     "rationale_template",
                     "risk",
                     "status",
@@ -12719,6 +12768,41 @@
                     "evaluated",
                     "matched"
                 ]
+            },
+            "RuleVariable": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/RuleVariableTypeEnum"
+                    },
+                    "group": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "group",
+                    "key",
+                    "label",
+                    "type"
+                ]
+            },
+            "RuleVariableTypeEnum": {
+                "enum": [
+                    "score",
+                    "level",
+                    "boolean",
+                    "rate",
+                    "count",
+                    "maturity"
+                ],
+                "type": "string",
+                "description": "* `score` - score\n* `level` - level\n* `boolean` - boolean\n* `rate` - rate\n* `count` - count\n* `maturity` - maturity"
             },
             "RuleWriteRequest": {
                 "type": "object",

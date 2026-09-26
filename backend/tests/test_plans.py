@@ -412,3 +412,26 @@ def test_advisor_records_offline_acceptance_with_reason(api, pme, diagnosed):
     with tenant_context(pme.organization_id):
         entry = AuditLog.objects.filter(action="plan.accept_offline").get()
     assert "PV signé" in entry.after["reason"]
+
+
+def test_rules_are_readable_in_french(org, make_user, client_for, pme):
+    from pme360.plans.rule_labels import describe, is_simple, readable_template
+
+    names = {"criterion.RHO-01.level": "Organigramme à jour (RHO-01) — niveau", "dimension.D08.score": "Score RH (D08)"}
+    condition = {"or": [{"<=": [{"var": "criterion.RHO-01.level"}, 2]}, {"<": [{"var": "dimension.D08.score"}, 50]}]}
+    assert (
+        describe(condition, names) == "Organigramme à jour (RHO-01) — niveau au plus 2 OU Score RH (D08) inférieur à 50"
+    )
+    assert readable_template("RH à {{dimension.D08.score}}, RHO-01 niveau {{criterion.RHO-01.level}}", names) == (
+        "RH à [score RH], RHO-01 niveau [niveau RHO-01]"
+    )
+    assert is_simple(condition) and not is_simple({"and": [condition]})
+
+    admin = client_for(make_user(org, "ADMIN_ORG"), org)
+    variables = admin.get("/api/v1/recommendation-rules/variables").json()
+    rho = next(v for v in variables if v["key"] == "criterion.RHO-01.level")
+    assert rho["type"] == "level" and "(RHO-01)" in rho["label"]
+    admin.get("/api/v1/support-offers")  # installe le catalogue par défaut
+    rule = next(r for r in admin.get("/api/v1/recommendation-rules").json() if r["code"] == "R-RHO-001")
+    assert rule["condition_text"].startswith("Organigramme") and " OU " in rule["condition_text"]
+    assert "{{" not in rule["rationale_readable"] and rule["editable_visually"]

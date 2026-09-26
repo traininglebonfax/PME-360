@@ -31,6 +31,7 @@ from .serializers import (
     RecommendationSerializer,
     RuleSerializer,
     RuleTestResultSerializer,
+    RuleVariableSerializer,
     RuleWriteSerializer,
     SupportOfferSerializer,
 )
@@ -355,6 +356,18 @@ class RuleListView(APIView):
         serializer.is_valid(raise_exception=True)
         rule = services.save_rule(get_access(request), serializer.validated_data)
         return Response(RuleSerializer(rule).data, status=status.HTTP_201_CREATED)
+
+
+class RuleVariablesView(APIView):
+    """Variables utilisables dans une condition, avec leur libellé métier (constructeur visuel)."""
+
+    required_permissions = "org.configure"
+
+    @extend_schema(responses=RuleVariableSerializer(many=True))
+    def get(self, request):
+        from .rule_labels import variables_catalog
+
+        return Response(RuleVariableSerializer(variables_catalog(), many=True).data)
 
 
 class RuleTestView(APIView):
