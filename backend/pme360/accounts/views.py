@@ -1,5 +1,5 @@
 from django.contrib.auth import logout
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -33,7 +33,10 @@ from .serializers import (
     OtpVerifySerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
+    RoleAdminSerializer,
+    RolesAdminSerializer,
     RoleSerializer,
+    RoleWriteSerializer,
     SwitchOrganizationSerializer,
     UserSummarySerializer,
 )
@@ -274,9 +277,76 @@ class AdvisorListView(APIView):
         users = (
             User.objects.filter(
                 is_active=True,
-                memberships__in=UserMembership.objects.filter(active_membership_q(), role__code__in=ADVISOR_ROLE_CODES),
+                memberships__in=UserMembership.objects.filter(active_membership_q()).filter(
+                    Q(role__code__in=ADVISOR_ROLE_CODES)
+                    # Rôle personnalisé à périmètre portefeuille : suit des PME comme un conseiller.
+                    | Q(role__organization__isnull=False, role__default_scope="PORTEFEUILLE")
+                ),
             )
             .distinct()
             .order_by("full_name")
         )
         return Response(UserSummarySerializer(users, many=True).data)
+
+
+# --- Rôles personnalisés (V1) --------------------------------------------------------------------------------
+
+
+def _roles_payload(request) -> dict:
+    from .catalog import PERMISSIONS
+    from .roles import PERMISSION_GROUPS, PME_ONLY_PERMISSIONS
+
+    access = get_access(request)
+    roles = Role.objects.prefetch_related("permissions").order_by("organization_id", "code")
+    grantable = sorted(
+        code
+        for code in PERMISSIONS
+        if code not in PME_ONLY_PERMISSIONS and (access.has(code) or request.user.is_platform_admin)
+    )
+    return {
+        "roles": roles,
+        "permission_groups": [
+            {"label": label, "permissions": [{"code": c, "label": PERMISSIONS[c]} for c in codes]}
+            for label, codes in PERMISSION_GROUPS
+        ],
+        "grantable": grantable,
+    }
+
+
+class RoleAdminListView(APIView):
+    """Rôles système et personnalisés, avec leurs permissions et le nombre de personnes qui les détiennent."""
+
+    required_permissions = "org.manage_users"
+
+    @extend_schema(responses=RolesAdminSerializer)
+    def get(self, request):
+        return Response(RolesAdminSerializer(_roles_payload(request)).data)
+
+    @extend_schema(request=RoleWriteSerializer, responses={201: RoleAdminSerializer})
+    def post(self, request):
+        from .roles import create_role
+
+        serializer = RoleWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        role = create_role(get_access(request), serializer.validated_data)
+        return Response(RoleAdminSerializer(role).data, status=status.HTTP_201_CREATED)
+
+
+class RoleAdminDetailView(APIView):
+    required_permissions = "org.manage_users"
+
+    @extend_schema(request=RoleWriteSerializer, responses=RoleAdminSerializer)
+    def patch(self, request, role_id):
+        from .roles import update_role
+
+        role = get_object_or_404(Role, pk=role_id)
+        serializer = RoleWriteSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(RoleAdminSerializer(update_role(get_access(request), role, serializer.validated_data)).data)
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, role_id):
+        from .roles import delete_role
+
+        delete_role(get_access(request), get_object_or_404(Role, pk=role_id))
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -956,6 +956,69 @@
                 }
             }
         },
+        "/api/v1/audit-logs/export": {
+            "get": {
+                "operationId": "audit_logs_export_retrieve",
+                "description": "Export CSV du journal (mêmes filtres que la liste) ; l'export est lui-même journalisé.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "action",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "actor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "from",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "to",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "audit-logs"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/audit-logs/verify": {
             "get": {
                 "operationId": "audit_logs_verify_retrieve",
@@ -974,6 +1037,89 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ChainVerification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/audit/overview": {
+            "get": {
+                "operationId": "audit_overview_retrieve",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "from",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "to",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "audit"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuditOverview"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/audit/sample": {
+            "get": {
+                "operationId": "audit_sample_retrieve",
+                "description": "Échantillon reproductible de dossiers PME : la même graine redonne le même échantillon.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "seed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "size",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "audit"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Sample"
                                 }
                             }
                         },
@@ -1624,6 +1770,137 @@
                             }
                         },
                         "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/roles": {
+            "get": {
+                "operationId": "config_roles_retrieve",
+                "description": "Rôles système et personnalisés, avec leurs permissions et le nombre de personnes qui les détiennent.",
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RolesAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "config_roles_create",
+                "description": "Rôles système et personnalisés, avec leurs permissions et le nombre de personnes qui les détiennent.",
+                "tags": [
+                    "config"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RoleWriteRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/roles/{role_id}": {
+            "patch": {
+                "operationId": "config_roles_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "role_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedRoleWriteRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RoleAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "config_roles_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "role_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
                     }
                 }
             }
@@ -7378,6 +7655,26 @@
                     "version"
                 ]
             },
+            "ActorCount": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "count": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "count",
+                    "id",
+                    "name"
+                ]
+            },
             "ActorTypeEnum": {
                 "enum": [
                     "USER",
@@ -7737,6 +8034,52 @@
                     "max_severity",
                     "reason",
                     "status"
+                ]
+            },
+            "AiReview": {
+                "type": "object",
+                "properties": {
+                    "suggestions_reviewed": {
+                        "type": "integer"
+                    },
+                    "suggestions_change_rate": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "by_dimension": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DimensionReview"
+                        }
+                    },
+                    "documents_reviewed": {
+                        "type": "integer"
+                    },
+                    "documents_validated": {
+                        "type": "integer"
+                    },
+                    "documents_corrected": {
+                        "type": "integer"
+                    },
+                    "documents_rejected": {
+                        "type": "integer"
+                    },
+                    "documents_change_rate": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "by_dimension",
+                    "documents_change_rate",
+                    "documents_corrected",
+                    "documents_rejected",
+                    "documents_reviewed",
+                    "documents_validated",
+                    "suggestions_change_rate",
+                    "suggestions_reviewed"
                 ]
             },
             "AiSettingsPayload": {
@@ -8324,6 +8667,63 @@
                     "hash",
                     "id",
                     "label"
+                ]
+            },
+            "AuditOverview": {
+                "type": "object",
+                "properties": {
+                    "period_start": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "period_end": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "by_actor_type": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    },
+                    "by_domain": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DomainCount"
+                        }
+                    },
+                    "top_actors": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActorCount"
+                        }
+                    },
+                    "login_failures": {
+                        "type": "integer"
+                    },
+                    "sensitive": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SensitiveEntry"
+                        }
+                    },
+                    "ai_review": {
+                        "$ref": "#/components/schemas/AiReview"
+                    }
+                },
+                "required": [
+                    "ai_review",
+                    "by_actor_type",
+                    "by_domain",
+                    "login_failures",
+                    "period_end",
+                    "period_start",
+                    "sensitive",
+                    "top_actors",
+                    "total"
                 ]
             },
             "AvStatusEnum": {
@@ -9338,6 +9738,43 @@
                     "modules"
                 ]
             },
+            "DimensionReview": {
+                "type": "object",
+                "properties": {
+                    "dimension": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "reviewed": {
+                        "type": "integer"
+                    },
+                    "accepted": {
+                        "type": "integer"
+                    },
+                    "modified": {
+                        "type": "integer"
+                    },
+                    "rejected": {
+                        "type": "integer"
+                    },
+                    "change_rate": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "accepted",
+                    "change_rate",
+                    "dimension",
+                    "modified",
+                    "name",
+                    "rejected",
+                    "reviewed"
+                ]
+            },
             "DimensionWriteRequest": {
                 "type": "object",
                 "properties": {
@@ -10128,6 +10565,21 @@
                     "text_status",
                     "uploaded_by_name",
                     "version_no"
+                ]
+            },
+            "DomainCount": {
+                "type": "object",
+                "properties": {
+                    "domain": {
+                        "type": "string"
+                    },
+                    "count": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "count",
+                    "domain"
                 ]
             },
             "DownloadUrl": {
@@ -13232,6 +13684,30 @@
                     }
                 }
             },
+            "PatchedRoleWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "default_scope": {
+                        "$ref": "#/components/schemas/RoleWriteDefaultScopeEnum"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    }
+                }
+            },
             "PatchedVersionNotesRequest": {
                 "type": "object",
                 "properties": {
@@ -13251,6 +13727,39 @@
                 ],
                 "type": "string",
                 "description": "* `AUCUNE` - Aucune\n* `MOIS` - Mois\n* `TRIMESTRE` - Trimestre\n* `SEMESTRE` - Semestre\n* `ANNEE` - Année\n* `EXERCICE` - Exercice comptable"
+            },
+            "PermissionGroup": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PermissionItem"
+                        }
+                    }
+                },
+                "required": [
+                    "label",
+                    "permissions"
+                ]
+            },
+            "PermissionItem": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "label"
+                ]
             },
             "Person": {
                 "type": "object",
@@ -15740,6 +16249,62 @@
                     "permissions"
                 ]
             },
+            "RoleAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "label": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "default_scope": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ScopeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "is_pme_role": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Rôle côté PME (portail PME, connexion par OTP)."
+                    },
+                    "is_system": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "members": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "code",
+                    "default_scope",
+                    "id",
+                    "is_pme_role",
+                    "is_system",
+                    "label",
+                    "members",
+                    "permissions"
+                ]
+            },
             "RoleEnum": {
                 "enum": [
                     "GERANT",
@@ -15760,6 +16325,68 @@
                 ],
                 "type": "string",
                 "description": "* `CONSEILLER_PRINCIPAL` - Conseiller principal\n* `EXPERT` - Expert"
+            },
+            "RoleWriteDefaultScopeEnum": {
+                "enum": [
+                    "ORG",
+                    "PROGRAMME",
+                    "PORTEFEUILLE"
+                ],
+                "type": "string",
+                "description": "* `ORG` - ORG\n* `PROGRAMME` - PROGRAMME\n* `PORTEFEUILLE` - PORTEFEUILLE"
+            },
+            "RoleWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "default_scope": {
+                        "$ref": "#/components/schemas/RoleWriteDefaultScopeEnum"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    }
+                }
+            },
+            "RolesAdmin": {
+                "type": "object",
+                "properties": {
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RoleAdmin"
+                        }
+                    },
+                    "permission_groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PermissionGroup"
+                        }
+                    },
+                    "grantable": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Permissions que vous pouvez accorder."
+                    }
+                },
+                "required": [
+                    "grantable",
+                    "permission_groups",
+                    "roles"
+                ]
             },
             "Rule": {
                 "type": "object",
@@ -16037,6 +16664,82 @@
                     "reminders"
                 ]
             },
+            "Sample": {
+                "type": "object",
+                "properties": {
+                    "seed": {
+                        "type": "string"
+                    },
+                    "size": {
+                        "type": "integer"
+                    },
+                    "population": {
+                        "type": "integer"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SampleItem"
+                        }
+                    }
+                },
+                "required": [
+                    "items",
+                    "population",
+                    "seed",
+                    "size"
+                ]
+            },
+            "SampleItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "sector": {
+                        "type": "string"
+                    },
+                    "region": {
+                        "type": "string"
+                    },
+                    "lifecycle_status": {
+                        "type": "string"
+                    },
+                    "last_validated_diagnostic": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "documents": {
+                        "type": "integer"
+                    },
+                    "documents_verified": {
+                        "type": "integer"
+                    },
+                    "ai_suggestions_changed": {
+                        "type": "integer"
+                    },
+                    "audit_entries": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "ai_suggestions_changed",
+                    "audit_entries",
+                    "documents",
+                    "documents_verified",
+                    "id",
+                    "last_validated_diagnostic",
+                    "lifecycle_status",
+                    "name",
+                    "region",
+                    "sector"
+                ]
+            },
             "ScopeEnum": {
                 "enum": [
                     "ORG",
@@ -16046,6 +16749,49 @@
                 ],
                 "type": "string",
                 "description": "* `ORG` - Toute l'organisation\n* `PROGRAMME` - Un programme\n* `PORTEFEUILLE` - PME assignées\n* `PME` - Sa propre PME"
+            },
+            "SensitiveEntry": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "action": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "actor_name": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "actor_type": {
+                        "type": "string"
+                    },
+                    "entity_type": {
+                        "type": "string"
+                    },
+                    "pme_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "action",
+                    "actor_name",
+                    "actor_type",
+                    "at",
+                    "entity_type",
+                    "id",
+                    "label",
+                    "pme_id"
+                ]
             },
             "SeverityEnum": {
                 "enum": [

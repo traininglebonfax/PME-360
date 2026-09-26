@@ -298,6 +298,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/audit-logs/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Export CSV du journal (mêmes filtres que la liste) ; l'export est lui-même journalisé. */
+        get: operations["audit_logs_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit-logs/verify": {
         parameters: {
             query?: never;
@@ -307,6 +324,39 @@ export interface paths {
         };
         /** @description Recalcule la chaîne de hash du journal de l'organisation (détection d'altération). */
         get: operations["audit_logs_verify_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["audit_overview_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit/sample": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Échantillon reproductible de dossiers PME : la même graine redonne le même échantillon. */
+        get: operations["audit_sample_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -630,6 +680,40 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Rôles système et personnalisés, avec leurs permissions et le nombre de personnes qui les détiennent. */
+        get: operations["config_roles_retrieve"];
+        put?: never;
+        /** @description Rôles système et personnalisés, avec leurs permissions et le nombre de personnes qui les détiennent. */
+        post: operations["config_roles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/roles/{role_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["config_roles_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["config_roles_partial_update"];
         trace?: never;
     };
     "/api/v1/config/workflows/{target}": {
@@ -2582,6 +2666,12 @@ export interface components {
             };
             transitions: components["schemas"]["WorkflowTransition"][];
         };
+        ActorCount: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            count: number;
+        };
         /**
          * @description * `USER` - Utilisateur
          *     * `SYSTEM` - Système
@@ -2687,6 +2777,18 @@ export interface components {
             reason: string;
             anomalies: number;
             max_severity: string | null;
+        };
+        AiReview: {
+            suggestions_reviewed: number;
+            /** Format: double */
+            suggestions_change_rate: number | null;
+            by_dimension: components["schemas"]["DimensionReview"][];
+            documents_reviewed: number;
+            documents_validated: number;
+            documents_corrected: number;
+            documents_rejected: number;
+            /** Format: double */
+            documents_change_rate: number | null;
         };
         AiSettingsPayload: {
             external_allowed: boolean;
@@ -2860,6 +2962,21 @@ export interface components {
             ip?: string | null;
             request_id?: string;
             hash: string;
+        };
+        AuditOverview: {
+            /** Format: date */
+            period_start: string;
+            /** Format: date */
+            period_end: string;
+            total: number;
+            by_actor_type: {
+                [key: string]: number;
+            };
+            by_domain: components["schemas"]["DomainCount"][];
+            top_actors: components["schemas"]["ActorCount"][];
+            login_failures: number;
+            sensitive: components["schemas"]["SensitiveEntry"][];
+            ai_review: components["schemas"]["AiReview"];
         };
         /**
          * @description * `SAIN` - Sain
@@ -3163,6 +3280,16 @@ export interface components {
             actual: string;
             modules: components["schemas"]["ModuleBalance"][];
         };
+        DimensionReview: {
+            dimension: string;
+            name: string;
+            reviewed: number;
+            accepted: number;
+            modified: number;
+            rejected: number;
+            /** Format: double */
+            change_rate: number | null;
+        };
         DimensionWriteRequest: {
             code?: string;
             pillar?: string;
@@ -3337,6 +3464,10 @@ export interface components {
             readonly created_at: string;
             readonly checks: components["schemas"]["DocumentCheck"][];
             readonly downloadable: boolean;
+        };
+        DomainCount: {
+            domain: string;
+            count: number;
         };
         DownloadUrl: {
             url: string;
@@ -4259,6 +4390,12 @@ export interface components {
             evidence_hint?: string;
             order?: number;
         };
+        PatchedRoleWriteRequest: {
+            code?: string;
+            label?: string;
+            default_scope?: components["schemas"]["RoleWriteDefaultScopeEnum"];
+            permissions?: string[];
+        };
         PatchedVersionNotesRequest: {
             notes?: string;
         };
@@ -4272,6 +4409,14 @@ export interface components {
          * @enum {string}
          */
         PeriodKindEnum: "AUCUNE" | "MOIS" | "TRIMESTRE" | "SEMESTRE" | "ANNEE" | "EXERCICE";
+        PermissionGroup: {
+            label: string;
+            permissions: components["schemas"]["PermissionItem"][];
+        };
+        PermissionItem: {
+            code: string;
+            label: string;
+        };
         Person: {
             /** Format: uuid */
             readonly id: string;
@@ -4959,6 +5104,18 @@ export interface components {
             is_pme_role?: boolean;
             readonly permissions: string[];
         };
+        RoleAdmin: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly label: string;
+            readonly default_scope: components["schemas"]["ScopeEnum"];
+            /** @description Rôle côté PME (portail PME, connexion par OTP). */
+            readonly is_pme_role: boolean;
+            readonly is_system: boolean;
+            readonly members: number;
+            readonly permissions: string[];
+        };
         /**
          * @description * `GERANT` - Gérant
          *     * `DG` - Directeur général
@@ -4976,6 +5133,25 @@ export interface components {
          * @enum {string}
          */
         RoleInPmeEnum: "CONSEILLER_PRINCIPAL" | "EXPERT";
+        /**
+         * @description * `ORG` - ORG
+         *     * `PROGRAMME` - PROGRAMME
+         *     * `PORTEFEUILLE` - PORTEFEUILLE
+         * @enum {string}
+         */
+        RoleWriteDefaultScopeEnum: "ORG" | "PROGRAMME" | "PORTEFEUILLE";
+        RoleWriteRequest: {
+            code?: string;
+            label?: string;
+            default_scope?: components["schemas"]["RoleWriteDefaultScopeEnum"];
+            permissions?: string[];
+        };
+        RolesAdmin: {
+            roles: components["schemas"]["RoleAdmin"][];
+            permission_groups: components["schemas"]["PermissionGroup"][];
+            /** @description Permissions que vous pouvez accorder. */
+            grantable: string[];
+        };
         Rule: {
             /** Format: uuid */
             readonly id: string;
@@ -5054,6 +5230,26 @@ export interface components {
             deadlines_created: number;
             reminders: number;
         };
+        Sample: {
+            seed: string;
+            size: number;
+            population: number;
+            items: components["schemas"]["SampleItem"][];
+        };
+        SampleItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            sector: string;
+            region: string;
+            lifecycle_status: string;
+            /** Format: date-time */
+            last_validated_diagnostic: string | null;
+            documents: number;
+            documents_verified: number;
+            ai_suggestions_changed: number;
+            audit_entries: number;
+        };
         /**
          * @description * `ORG` - Toute l'organisation
          *     * `PROGRAMME` - Un programme
@@ -5062,6 +5258,18 @@ export interface components {
          * @enum {string}
          */
         ScopeEnum: "ORG" | "PROGRAMME" | "PORTEFEUILLE" | "PME";
+        SensitiveEntry: {
+            id: number;
+            /** Format: date-time */
+            at: string;
+            action: string;
+            label: string;
+            actor_name: string | null;
+            actor_type: string;
+            entity_type: string;
+            /** Format: uuid */
+            pme_id: string | null;
+        };
         /**
          * @description * `INFO` - Information
          *     * `MOYENNE` - Moyenne
@@ -5969,6 +6177,31 @@ export interface operations {
             };
         };
     };
+    audit_logs_export_retrieve: {
+        parameters: {
+            query?: {
+                action?: string;
+                actor?: string;
+                from?: string;
+                pme_id?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+        };
+    };
     audit_logs_verify_retrieve: {
         parameters: {
             query?: never;
@@ -5984,6 +6217,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChainVerification"];
+                };
+            };
+        };
+    };
+    audit_overview_retrieve: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOverview"];
+                };
+            };
+        };
+    };
+    audit_sample_retrieve: {
+        parameters: {
+            query?: {
+                seed?: string;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sample"];
                 };
             };
         };
@@ -6414,6 +6691,93 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TestSent"];
+                };
+            };
+        };
+    };
+    config_roles_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RolesAdmin"];
+                };
+            };
+        };
+    };
+    config_roles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RoleWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleAdmin"];
+                };
+            };
+        };
+    };
+    config_roles_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                role_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    config_roles_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                role_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRoleWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleAdmin"];
                 };
             };
         };
