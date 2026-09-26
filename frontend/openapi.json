@@ -1473,6 +1473,161 @@
                 }
             }
         },
+        "/api/v1/config/notification-templates": {
+            "get": {
+                "operationId": "config_notification_templates_list",
+                "description": "Modèles de message par événement, avec variables disponibles et texte par défaut.",
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/NotificationTemplateAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/notification-templates/{event_code}": {
+            "put": {
+                "operationId": "config_notification_templates_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "event_code",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NotificationTemplateWriteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationTemplateAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/notification-templates/{event_code}/reset": {
+            "post": {
+                "operationId": "config_notification_templates_reset_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "event_code",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationTemplateAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/notification-templates/{event_code}/test": {
+            "post": {
+                "operationId": "config_notification_templates_test_create",
+                "description": "Envoie à l'administrateur le message rendu avec les valeurs d'exemple (texte saisi, non enregistré).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "event_code",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NotificationTemplateWriteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TestSent"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/dashboards/advisor": {
             "get": {
                 "operationId": "dashboards_advisor_retrieve",
@@ -10482,6 +10637,77 @@
                     "title"
                 ]
             },
+            "NotificationTemplateAdmin": {
+                "type": "object",
+                "properties": {
+                    "event_code": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "audience": {
+                        "type": "string"
+                    },
+                    "mandatory": {
+                        "type": "boolean"
+                    },
+                    "subject": {
+                        "type": "string"
+                    },
+                    "body": {
+                        "type": "string"
+                    },
+                    "default_subject": {
+                        "type": "string"
+                    },
+                    "default_body": {
+                        "type": "string"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "variables": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TemplateVariable"
+                        }
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "audience",
+                    "body",
+                    "default_body",
+                    "default_subject",
+                    "event_code",
+                    "is_default",
+                    "label",
+                    "mandatory",
+                    "subject",
+                    "updated_at",
+                    "variables"
+                ]
+            },
+            "NotificationTemplateWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "subject": {
+                        "type": "string"
+                    },
+                    "body": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "body",
+                    "subject"
+                ]
+            },
             "ObligationTemplate": {
                 "type": "object",
                 "properties": {
@@ -14506,6 +14732,37 @@
                 },
                 "required": [
                     "organization_id"
+                ]
+            },
+            "TemplateVariable": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "example",
+                    "label",
+                    "name"
+                ]
+            },
+            "TestSent": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "required": [
+                    "email"
                 ]
             },
             "TextStatusEnum": {

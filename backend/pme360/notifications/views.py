@@ -1,11 +1,15 @@
+from django.core.mail import send_mail
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from pme360.compliance.defaults import MANDATORY_EVENTS, NOTIFICATION_TEMPLATES
+from pme360.core.permissions import get_access
 
+from . import catalog
 from .models import Notification, NotificationPreference
 from .services import EVENT_LABELS
 
@@ -92,3 +96,98 @@ class NotificationPreferencesView(APIView):
                 defaults={"in_app": item["in_app"], "email": item["email"]},
             )
         return Response(PreferenceSerializer(self._payload(request.user), many=True).data)
+
+
+# --- Administration des modèles de notification (V1) -----------------------------------------------------------
+
+
+class TemplateVariableSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    label = serializers.CharField()
+    example = serializers.CharField(allow_blank=True)
+
+
+class NotificationTemplateAdminSerializer(serializers.Serializer):
+    event_code = serializers.CharField()
+    label = serializers.CharField()
+    audience = serializers.CharField()
+    mandatory = serializers.BooleanField()
+    subject = serializers.CharField()
+    body = serializers.CharField()
+    default_subject = serializers.CharField()
+    default_body = serializers.CharField()
+    is_default = serializers.BooleanField()
+    variables = TemplateVariableSerializer(many=True)
+    updated_at = serializers.DateTimeField(allow_null=True)
+
+
+class NotificationTemplateWriteSerializer(serializers.Serializer):
+    subject = serializers.CharField(allow_blank=True, trim_whitespace=False)
+    body = serializers.CharField(allow_blank=True, trim_whitespace=False)
+
+
+class TestSentSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+def _entry(event_code: str) -> dict:
+    return next(item for item in catalog.entries() if item["event_code"] == event_code)
+
+
+def _event(event_code: str) -> str:
+    if event_code not in catalog.EVENTS:
+        raise NotFound()
+    return event_code
+
+
+class NotificationTemplateListView(APIView):
+    """Modèles de message par événement, avec variables disponibles et texte par défaut."""
+
+    required_permissions = "org.configure"
+
+    @extend_schema(responses=NotificationTemplateAdminSerializer(many=True))
+    def get(self, request):
+        return Response(NotificationTemplateAdminSerializer(catalog.entries(), many=True).data)
+
+
+class NotificationTemplateDetailView(APIView):
+    required_permissions = "org.configure"
+
+    @extend_schema(request=NotificationTemplateWriteSerializer, responses=NotificationTemplateAdminSerializer)
+    def put(self, request, event_code):
+        event_code = _event(event_code)
+        serializer = NotificationTemplateWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        catalog.save(get_access(request), event_code, **serializer.validated_data)
+        return Response(NotificationTemplateAdminSerializer(_entry(event_code)).data)
+
+
+class NotificationTemplateResetView(APIView):
+    required_permissions = "org.configure"
+
+    @extend_schema(request=None, responses=NotificationTemplateAdminSerializer)
+    def post(self, request, event_code):
+        event_code = _event(event_code)
+        catalog.reset(get_access(request), event_code)
+        return Response(NotificationTemplateAdminSerializer(_entry(event_code)).data)
+
+
+class NotificationTemplateTestView(APIView):
+    """Envoie à l'administrateur le message rendu avec les valeurs d'exemple (texte saisi, non enregistré)."""
+
+    required_permissions = "org.configure"
+
+    @extend_schema(request=NotificationTemplateWriteSerializer, responses=TestSentSerializer)
+    def post(self, request, event_code):
+        event_code = _event(event_code)
+        serializer = NotificationTemplateWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        subject, body = catalog.validate(event_code, **serializer.validated_data)
+        values = catalog.examples(event_code)
+        send_mail(
+            "[Test] " + catalog.render(subject, values),
+            catalog.email_text(request.user.full_name, catalog.render(body, values)),
+            None,
+            [request.user.email],
+        )
+        return Response({"email": request.user.email})

@@ -566,6 +566,72 @@ export interface paths {
         patch: operations["config_document_types_partial_update"];
         trace?: never;
     };
+    "/api/v1/config/notification-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Modèles de message par événement, avec variables disponibles et texte par défaut. */
+        get: operations["config_notification_templates_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/notification-templates/{event_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["config_notification_templates_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/notification-templates/{event_code}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["config_notification_templates_reset_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/notification-templates/{event_code}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Envoie à l'administrateur le message rendu avec les valeurs d'exemple (texte saisi, non enregistré). */
+        post: operations["config_notification_templates_test_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboards/advisor": {
         parameters: {
             query?: never;
@@ -3505,6 +3571,24 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        NotificationTemplateAdmin: {
+            event_code: string;
+            label: string;
+            audience: string;
+            mandatory: boolean;
+            subject: string;
+            body: string;
+            default_subject: string;
+            default_body: string;
+            is_default: boolean;
+            variables: components["schemas"]["TemplateVariable"][];
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        NotificationTemplateWriteRequest: {
+            subject: string;
+            body: string;
+        };
         ObligationTemplate: {
             /** Format: uuid */
             readonly id: string;
@@ -4694,6 +4778,15 @@ export interface components {
             /** Format: uuid */
             organization_id: string;
         };
+        TemplateVariable: {
+            name: string;
+            label: string;
+            example: string;
+        };
+        TestSent: {
+            /** Format: email */
+            email: string;
+        };
         /**
          * @description * `EN_ATTENTE` - En attente
          *     * `TEXTE_NATIF` - Texte natif extrait
@@ -5704,6 +5797,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentTypeAdmin"];
+                };
+            };
+        };
+    };
+    config_notification_templates_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationTemplateAdmin"][];
+                };
+            };
+        };
+    };
+    config_notification_templates_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationTemplateWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationTemplateAdmin"];
+                };
+            };
+        };
+    };
+    config_notification_templates_reset_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationTemplateAdmin"];
+                };
+            };
+        };
+    };
+    config_notification_templates_test_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationTemplateWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestSent"];
                 };
             };
         };
