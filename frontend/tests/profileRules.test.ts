@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildApplicability,
   buildFrequencyRule,
+  CRITERION_VARIABLES,
   describeApplicability,
   parseApplicability,
   parseFrequencyRule,
@@ -37,5 +38,15 @@ describe("règles de profil des obligations", () => {
     expect(logic).toEqual({ if: [{ ">=": [{ var: "headcount" }, 20] }, "MENSUELLE", "TRIMESTRIELLE"] });
     expect(parseFrequencyRule(logic)).toEqual(rule);
     expect(parseFrequencyRule({ if: [{ "<": [{ var: "headcount" }, 20] }, "MENSUELLE", "ANNUELLE"] })).toBeNull();
+  });
+
+  it("lit les règles d'applicabilité des critères (variables du profil de scoring)", () => {
+    const logic = { and: [{ "==": [{ var: "has_stock" }, true] }, { ">=": [{ var: "company_age_years" }, 2] }] };
+    const clauses = parseApplicability(logic, CRITERION_VARIABLES)!;
+    expect(clauses.map((c) => c.kind)).toEqual(["boolean", "number"]);
+    expect(buildApplicability(clauses)).toEqual(logic);
+    expect(describeApplicability(clauses, {}, CRITERION_VARIABLES)).toBe("Gère un stock égal à oui ET Âge de l'entreprise (années) au moins 2");
+    // Variable inconnue du contexte obligations : hors constructeur.
+    expect(parseApplicability({ "==": [{ var: "has_stock" }, true] })).toBeNull();
   });
 });

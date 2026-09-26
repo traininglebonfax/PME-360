@@ -8,20 +8,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
+import { initialRuleState, ProfileRuleBuilder, type RuleState, ruleValue } from "@/components/rules/ProfileRuleBuilder";
 import { Alert, Button, SelectInput, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { LIFECYCLE_LABELS, SIZE_LABELS } from "@/lib/labels";
-import {
-  buildApplicability,
-  buildFrequencyRule,
-  type Clause,
-  describeApplicability,
-  newClause,
-  parseApplicability,
-  parseFrequencyRule,
-  PROFILE_VARIABLES,
-  type ProfileVar,
-} from "@/lib/profileRules";
+import { buildFrequencyRule, parseFrequencyRule, PROFILE_VARIABLES } from "@/lib/profileRules";
 import { useReference } from "@/lib/references";
 
 export const NATURES: Record<string, string> = { REGLEMENTAIRE: "Réglementaire", PROGRAMME: "Programme", BONNE_PRATIQUE: "Bonne pratique" };
@@ -57,9 +48,7 @@ export function ObligationForm({ initial, onDone }: { initial: Template | null; 
   const set = (patch: Partial<typeof form>) => setForm({ ...form, ...patch });
 
   // Applicabilité : constructeur si la règle s'y prête, sinon JSON avancé.
-  const parsedClauses = useMemo(() => parseApplicability(initial?.applicability), [initial]);
-  const [clauses, setClauses] = useState<Clause[]>(parsedClauses ?? []);
-  const [applicabilityJson, setApplicabilityJson] = useState<string | null>(parsedClauses ? null : jsonText(initial?.applicability));
+  const [applicability, setApplicability] = useState<RuleState>(() => initialRuleState(initial?.applicability, PROFILE_VARIABLES));
 
   // Périodicité : fixe, selon l'effectif, ou JSON avancé.
   const parsedFrequency = useMemo(() => parseFrequencyRule(initial?.frequency_rule), [initial]);
@@ -71,14 +60,6 @@ export function ObligationForm({ initial, onDone }: { initial: Template | null; 
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const labels = useMemo(
-    () => ({
-      size_category: SIZE_LABELS as Record<string, string>,
-      lifecycle_status: LIFECYCLE_LABELS as Record<string, string>,
-      sector: Object.fromEntries((sectors.data ?? []).map((s) => [s.code, s.name])),
-    }),
-    [sectors.data],
-  );
   const listOptions: Record<string, { value: string; label: string }[]> = {
     size_category: Object.entries(SIZE_LABELS).map(([value, label]) => ({ value, label })),
     lifecycle_status: Object.entries(LIFECYCLE_LABELS).map(([value, label]) => ({ value, label })),
@@ -88,16 +69,12 @@ export function ObligationForm({ initial, onDone }: { initial: Template | null; 
   const save = useMutation({
     mutationFn: () => {
       const local: Record<string, string> = {};
-      let applicability: unknown = null;
+      let applicabilityRule: unknown = null;
       let frequencyRule: unknown = null;
-      if (applicabilityJson !== null) {
-        try {
-          applicability = applicabilityJson.trim() ? JSON.parse(applicabilityJson) : null;
-        } catch {
-          local.applicability = "JSON invalide.";
-        }
-      } else {
-        applicability = buildApplicability(clauses);
+      try {
+        applicabilityRule = ruleValue(applicability);
+      } catch {
+        local.applicability = "JSON invalide.";
       }
       if (frequencyMode === "headcount") frequencyRule = buildFrequencyRule(byHeadcount);
       if (frequencyMode === "json") {
@@ -125,7 +102,7 @@ export function ObligationForm({ initial, onDone }: { initial: Template | null; 
         frequency: form.frequency as Schemas["FrequencyEnum"],
         frequency_rule: frequencyRule,
         due_days_after_period_end: Number(form.due_days_after_period_end || 0),
-        applicability,
+        applicability: applicabilityRule,
         reminder_offsets: offsets,
         is_critical: form.is_critical,
       };
@@ -145,7 +122,6 @@ export function ObligationForm({ initial, onDone }: { initial: Template | null; 
   });
   const fieldError = Object.keys(errors).length > 0;
 
-  const updateClause = (index: number, clause: Clause) => setClauses(clauses.map((c, i) => (i === index ? clause : c)));
   const frequencyOptions = Object.entries(FREQUENCIES).map(([value, label]) => ({ value, label }));
 
   return (
@@ -204,125 +180,16 @@ export function ObligationForm({ initial, onDone }: { initial: Template | null; 
         />
       </div>
 
-      <fieldset className="space-y-2 rounded-lg border border-line p-3 sm:col-span-2">
-        <legend className="px-1 text-sm font-medium">À qui s'applique l'obligation</legend>
-        {applicabilityJson === null ? (
-          <>
-            {clauses.length === 0 && <p className="text-sm text-muted">Toutes les PME du portefeuille.</p>}
-            {clauses.map((clause, index) => (
-              <div key={index} className="flex flex-wrap items-center gap-2 text-sm" data-testid="applicability-clause">
-                {index > 0 && <span className="text-xs font-semibold text-muted">ET</span>}
-                <span className="font-medium">{PROFILE_VARIABLES.find((v) => v.key === clause.key)?.label}</span>
-                {clause.kind === "number" && (
-                  <>
-                    <select
-                      aria-label="Comparaison"
-                      className="rounded-md border border-line px-2 py-1"
-                      value={clause.op}
-                      onChange={(e) => updateClause(index, { ...clause, op: e.target.value as ">=" })}
-                    >
-                      <option value=">=">au moins</option>
-                      <option value="<=">au plus</option>
-                      <option value=">">supérieur à</option>
-                      <option value="<">inférieur à</option>
-                    </select>
-                    <input
-                      type="number"
-                      min={0}
-                      aria-label="Valeur"
-                      className="w-24 rounded-md border border-line px-2 py-1"
-                      value={clause.value}
-                      onChange={(e) => updateClause(index, { ...clause, value: Number(e.target.value) })}
-                    />
-                  </>
-                )}
-                {clause.kind === "boolean" && (
-                  <select
-                    aria-label="Valeur"
-                    className="rounded-md border border-line px-2 py-1"
-                    value={clause.value ? "oui" : "non"}
-                    onChange={(e) => updateClause(index, { ...clause, value: e.target.value === "oui" })}
-                  >
-                    <option value="oui">oui</option>
-                    <option value="non">non</option>
-                  </select>
-                )}
-                {clause.kind === "list" && (
-                  <span className="flex flex-wrap gap-x-3 gap-y-1">
-                    parmi
-                    {listOptions[clause.key].map((option) => (
-                      <label key={option.value} className="flex items-center gap-1">
-                        <input
-                          type="checkbox"
-                          className="accent-brand-600"
-                          checked={clause.values.includes(option.value)}
-                          onChange={(e) =>
-                            updateClause(index, {
-                              ...clause,
-                              values: e.target.checked ? [...clause.values, option.value] : clause.values.filter((v) => v !== option.value),
-                            })
-                          }
-                        />
-                        {option.label}
-                      </label>
-                    ))}
-                  </span>
-                )}
-                <button type="button" className="text-xs text-red-700 hover:underline" onClick={() => setClauses(clauses.filter((_, i) => i !== index))}>
-                  Retirer
-                </button>
-              </div>
-            ))}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <select
-                aria-label="Ajouter une condition"
-                className="rounded-md border border-line px-2 py-1 text-sm"
-                value=""
-                onChange={(e) => e.target.value && setClauses([...clauses, newClause(e.target.value as ProfileVar)])}
-              >
-                <option value="">+ Ajouter une condition…</option>
-                {PROFILE_VARIABLES.map((v) => (
-                  <option key={v.key} value={v.key}>
-                    {v.label}
-                  </option>
-                ))}
-              </select>
-              <button type="button" className="text-xs text-muted hover:underline" onClick={() => setApplicabilityJson(jsonText(buildApplicability(clauses)))}>
-                Règle avancée (JSON)
-              </button>
-            </div>
-            <p className="text-xs text-muted" data-testid="applicability-preview">
-              Lecture : {describeApplicability(clauses, labels)}
-            </p>
-          </>
-        ) : (
-          <>
-            <textarea
-              aria-label="Applicabilité (JSON Logic)"
-              className="h-28 w-full rounded-md border border-line p-2 font-mono text-xs"
-              value={applicabilityJson}
-              onChange={(e) => setApplicabilityJson(e.target.value)}
-              placeholder='{"and": [{">=": [{"var": "headcount"}, 1]}]}'
-            />
-            <p className="text-xs text-muted">
-              Variables : headcount, size_category, sector, lifecycle_status, is_company. Laisser vide pour toutes les PME.
-              {parseApplicability(safeParse(applicabilityJson)) && (
-                <button
-                  type="button"
-                  className="ml-2 text-brand-700 hover:underline"
-                  onClick={() => {
-                    setClauses(parseApplicability(safeParse(applicabilityJson)) ?? []);
-                    setApplicabilityJson(null);
-                  }}
-                >
-                  Revenir au constructeur
-                </button>
-              )}
-            </p>
-          </>
-        )}
-        {errors.applicability && <p className="text-xs text-red-700" role="alert">{errors.applicability}</p>}
-      </fieldset>
+      <div className="sm:col-span-2">
+        <ProfileRuleBuilder
+          legend="À qui s'applique l'obligation"
+          variables={PROFILE_VARIABLES}
+          listOptions={listOptions}
+          state={applicability}
+          onChange={setApplicability}
+          error={errors.applicability}
+        />
+      </div>
 
       <fieldset className="space-y-2 rounded-lg border border-line p-3 sm:col-span-2">
         <legend className="px-1 text-sm font-medium">Périodicité et échéance</legend>
@@ -448,13 +315,4 @@ export function ObligationForm({ initial, onDone }: { initial: Template | null; 
       </div>
     </form>
   );
-}
-
-function safeParse(text: string | null): unknown {
-  if (!text?.trim()) return null;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return "invalide";
-  }
 }

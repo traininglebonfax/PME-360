@@ -1,12 +1,13 @@
 "use client";
 
 /**
- * Référentiel de diagnostic versionné (Document 5 ; ADR-004) : consultation, clonage en brouillon, publication.
- * L'éditeur visuel (pondérations, questions) arrive en V1 ; une version publiée est immuable.
+ * Référentiel de diagnostic versionné (Document 5 ; ADR-004) : consultation, clonage en brouillon, édition sans code
+ * du brouillon (V1 : dimensions, critères, questions, pondérations) et publication. Une version publiée est immuable.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { FrameworkEditor } from "@/components/framework/FrameworkEditor";
 import { Alert, Badge, Button, Card, cx, LoadingBlock, PageHeader, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, unwrap } from "@/lib/api";
 import { formatDate } from "@/lib/format";
@@ -31,7 +32,11 @@ export default function FrameworkPage() {
   });
   const [newVersion, setNewVersion] = useState("");
   const [openDimension, setOpenDimension] = useState<string | null>(null);
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["framework-versions"] });
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["framework-versions"] });
+    queryClient.invalidateQueries({ queryKey: ["framework-version", current] });
+    queryClient.invalidateQueries({ queryKey: ["framework-editor", current] });
+  };
   const clone = useMutation({
     mutationFn: () =>
       unwrap(api.POST("/api/v1/framework-versions/{version_id}/clone", { params: { path: { version_id: current! } }, body: { version: newVersion } })),
@@ -49,6 +54,7 @@ export default function FrameworkPage() {
   if (versions.isLoading) return <LoadingBlock />;
   if (versions.error) return <Alert>{errorMessage(versions.error)}</Alert>;
   const version = detail.data;
+  const editing = canConfigure && version?.status === "DRAFT" && version.id === current;
   const publishErrors = publish.error instanceof ApiError ? Object.values(publish.error.fieldErrors()) : [];
 
   return (
@@ -114,6 +120,14 @@ export default function FrameworkPage() {
         <section>
           {!version ? (
             <LoadingBlock />
+          ) : editing ? (
+            <FrameworkEditor
+              versionId={version.id}
+              onDeleted={() => {
+                setSelected(null);
+                queryClient.invalidateQueries({ queryKey: ["framework-versions"] });
+              }}
+            />
           ) : (
             <div className="space-y-4">
               <Card>

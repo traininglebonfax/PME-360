@@ -1139,6 +1139,105 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/framework-versions/{version_id}/criteria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["framework_criterion_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/criteria/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["framework_criterion_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["framework_criterion_update"];
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/dimensions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["framework_dimension_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/dimensions/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["framework_dimension_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["framework_dimension_update"];
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/editor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Arbre complet (identifiants compris) et état de publication ; notes et suppression d'un brouillon. */
+        get: operations["framework_versions_editor_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Arbre complet (identifiants compris) et état de publication ; notes et suppression d'un brouillon. */
+        delete: operations["framework_versions_editor_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Arbre complet (identifiants compris) et état de publication ; notes et suppression d'un brouillon. */
+        patch: operations["framework_versions_editor_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/pillars/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["framework_versions_pillars_partial_update"];
+        trace?: never;
+    };
     "/api/v1/framework-versions/{version_id}/publish": {
         parameters: {
             query?: never;
@@ -1153,6 +1252,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["framework_question_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/framework-versions/{version_id}/questions/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["framework_question_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["framework_question_update"];
         trace?: never;
     };
     "/api/v1/health": {
@@ -2651,6 +2782,11 @@ export interface components {
          * @enum {string}
          */
         AvStatusEnum: "SAIN" | "INFECTE";
+        Balance: {
+            pillars_total: string;
+            pillars: components["schemas"]["PillarBalance"][];
+            dimensions: components["schemas"]["DimensionBalance"][];
+        };
         /** @enum {unknown} */
         BlankEnum: "";
         ChainVerification: {
@@ -2758,6 +2894,24 @@ export interface components {
             /** @description Code secteur ; vide = tronc commun. */
             readonly sector_module: string;
             readonly metrics: components["schemas"]["MetricDefinition"][];
+        };
+        CriterionWriteRequest: {
+            code?: string;
+            dimension?: string;
+            name?: string;
+            lens?: components["schemas"]["LensEnum"];
+            /** Format: decimal */
+            weight?: string;
+            is_critical?: boolean;
+            rubric?: string[];
+            declarative_cap_level?: number;
+            applicability?: unknown;
+            evidence_policy?: components["schemas"]["EvidencePolicyEnum"];
+            evidence_document_types?: string[];
+            sector_module?: string;
+            order?: number;
+            /** @description Question principale (création seulement). */
+            question?: string;
         };
         /**
          * @description * `A_JOUR` - À jour
@@ -2917,6 +3071,24 @@ export interface components {
             /** Format: decimal */
             readonly sector_module_share: string;
             readonly criteria: components["schemas"]["Criterion"][];
+        };
+        DimensionBalance: {
+            code: string;
+            expected: string;
+            actual: string;
+            modules: components["schemas"]["ModuleBalance"][];
+        };
+        DimensionWriteRequest: {
+            code?: string;
+            pillar?: string;
+            name?: string;
+            short_name?: string;
+            description?: string;
+            /** Format: decimal */
+            weight?: string;
+            /** Format: decimal */
+            sector_module_share?: string;
+            order?: number;
         };
         Document: {
             /** Format: uuid */
@@ -3094,6 +3266,72 @@ export interface components {
             /** Format: double */
             similarity?: number;
             accessible: boolean;
+        };
+        EditorCriterion: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly name: string;
+            readonly lens: components["schemas"]["LensEnum"];
+            /** Format: decimal */
+            readonly weight: string;
+            readonly is_critical: boolean;
+            readonly rubric: string[];
+            readonly declarative_cap_level: number;
+            /** @description Règle JSON Logic sur le profil de la PME. */
+            readonly applicability: unknown;
+            readonly evidence_policy: components["schemas"]["EvidencePolicyEnum"];
+            readonly evidence_document_types: string[];
+            /** @description Code secteur ; vide = tronc commun. */
+            readonly sector_module: string;
+            readonly order: number;
+            readonly questions: components["schemas"]["EditorQuestion"][];
+            readonly metrics: components["schemas"]["MetricDefinition"][];
+        };
+        EditorDimension: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly name: string;
+            readonly short_name: string;
+            readonly description: string;
+            readonly pillar: string;
+            /** Format: decimal */
+            readonly weight: string;
+            /** Format: decimal */
+            readonly sector_module_share: string;
+            readonly order: number;
+            readonly criteria: components["schemas"]["EditorCriterion"][];
+            readonly questions: components["schemas"]["EditorQuestion"][];
+        };
+        EditorPillar: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly name: string;
+            /** Format: decimal */
+            readonly weight: string;
+            readonly order: number;
+        };
+        EditorQuestion: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly text: string;
+            readonly help_text: string;
+            /** @description « Pourquoi cette question ? » en langage simple. */
+            readonly why_text: string;
+            readonly type: components["schemas"]["QuestionTypeEnum"];
+            /** @description [{value, label, level}] ; level = niveau du critère. */
+            readonly options: unknown;
+            /** @description Règle JSON Logic (profil + réponses). */
+            readonly visibility: unknown;
+            readonly target_audience: components["schemas"]["TargetAudienceEnum"];
+            readonly is_required: boolean;
+            readonly feeds: string;
+            /** @description Preuve demandée pour les niveaux élevés. */
+            readonly evidence_hint: string;
+            readonly order: number;
         };
         EnrolledCohort: {
             /** Format: uuid */
@@ -3279,6 +3517,24 @@ export interface components {
             state: string;
             documents: components["schemas"]["Document"][];
         };
+        FrameworkEditor: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly framework_code: string;
+            readonly framework_name: string;
+            readonly version: string;
+            readonly status: components["schemas"]["FrameworkVersionStatusEnum"];
+            /** Format: date-time */
+            readonly published_at: string | null;
+            readonly published_by_name: string;
+            readonly notes: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly editable: boolean;
+            readonly pillars: components["schemas"]["EditorPillar"][];
+            readonly dimensions: components["schemas"]["EditorDimension"][];
+            readonly issues: components["schemas"]["Issues"];
+        };
         FrameworkVersion: {
             /** Format: uuid */
             readonly id: string;
@@ -3414,6 +3670,11 @@ export interface components {
             /** Format: uuid */
             scope_ref_id?: string | null;
         };
+        Issues: {
+            errors: string[];
+            warnings: string[];
+            balance: components["schemas"]["Balance"];
+        };
         /**
          * @description * `C` - Conformité
          *     * `O` - Organisation
@@ -3543,6 +3804,11 @@ export interface components {
         MfaSetup: {
             secret: string;
             otpauth_uri: string;
+        };
+        ModuleBalance: {
+            sector: string;
+            expected: string;
+            actual: string;
         };
         NamedRef: {
             /** Format: uuid */
@@ -3749,6 +4015,36 @@ export interface components {
             params?: unknown;
             is_active?: boolean;
         };
+        PatchedCriterionWriteRequest: {
+            code?: string;
+            dimension?: string;
+            name?: string;
+            lens?: components["schemas"]["LensEnum"];
+            /** Format: decimal */
+            weight?: string;
+            is_critical?: boolean;
+            rubric?: string[];
+            declarative_cap_level?: number;
+            applicability?: unknown;
+            evidence_policy?: components["schemas"]["EvidencePolicyEnum"];
+            evidence_document_types?: string[];
+            sector_module?: string;
+            order?: number;
+            /** @description Question principale (création seulement). */
+            question?: string;
+        };
+        PatchedDimensionWriteRequest: {
+            code?: string;
+            pillar?: string;
+            name?: string;
+            short_name?: string;
+            description?: string;
+            /** Format: decimal */
+            weight?: string;
+            /** Format: decimal */
+            sector_module_share?: string;
+            order?: number;
+        };
         PatchedDocumentTypeWriteRequest: {
             code?: string;
             name?: string;
@@ -3803,6 +4099,11 @@ export interface components {
             /** @description Facultatif (statistiques). */
             birth_year?: number | null;
         };
+        PatchedPillarWriteRequest: {
+            name?: string;
+            /** Format: decimal */
+            weight?: string;
+        };
         PatchedPmeRequest: {
             /** Raison sociale */
             legal_name?: string;
@@ -3840,6 +4141,24 @@ export interface components {
             end_date?: string | null;
             funder?: string;
             objectives?: unknown;
+        };
+        PatchedQuestionWriteRequest: {
+            code?: string;
+            criterion?: string;
+            dimension?: string;
+            text?: string;
+            help_text?: string;
+            why_text?: string;
+            type?: components["schemas"]["QuestionTypeEnum"];
+            options?: components["schemas"]["QuestionOptionRequest"][];
+            visibility?: unknown;
+            target_audience?: components["schemas"]["TargetAudienceEnum"];
+            is_required?: boolean;
+            evidence_hint?: string;
+            order?: number;
+        };
+        PatchedVersionNotesRequest: {
+            notes?: string;
         };
         /**
          * @description * `AUCUNE` - Aucune
@@ -3903,6 +4222,11 @@ export interface components {
             readonly name: string;
             /** Format: decimal */
             readonly weight: string;
+        };
+        PillarBalance: {
+            code: string;
+            expected: string;
+            actual: string;
         };
         Plan: {
             /** Format: uuid */
@@ -4213,6 +4537,11 @@ export interface components {
          * @enum {string}
          */
         ProviderTypeEnum: "GUDE" | "PARTENAIRE" | "PME_SEULE";
+        QuestionOptionRequest: {
+            value?: string;
+            label: string;
+            level: number;
+        };
         QuestionRequest: {
             question: string;
         };
@@ -4226,6 +4555,21 @@ export interface components {
          * @enum {string}
          */
         QuestionTypeEnum: "SINGLE" | "BOOLEAN" | "NUMBER" | "AMOUNT" | "PERCENT" | "TEXT";
+        QuestionWriteRequest: {
+            code?: string;
+            criterion?: string;
+            dimension?: string;
+            text?: string;
+            help_text?: string;
+            why_text?: string;
+            type?: components["schemas"]["QuestionTypeEnum"];
+            options?: components["schemas"]["QuestionOptionRequest"][];
+            visibility?: unknown;
+            target_audience?: components["schemas"]["TargetAudienceEnum"];
+            is_required?: boolean;
+            evidence_hint?: string;
+            order?: number;
+        };
         Questionnaire: {
             diagnostic: components["schemas"]["Diagnostic"];
             editable: boolean;
@@ -4778,6 +5122,13 @@ export interface components {
             /** Format: uuid */
             organization_id: string;
         };
+        /**
+         * @description * `PME` - PME
+         *     * `CONSEILLER` - Conseiller
+         *     * `LES_DEUX` - Les deux
+         * @enum {string}
+         */
+        TargetAudienceEnum: "PME" | "CONSEILLER" | "LES_DEUX";
         TemplateVariable: {
             name: string;
             label: string;
@@ -6609,6 +6960,244 @@ export interface operations {
             };
         };
     };
+    framework_criterion_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CriterionWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_criterion_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_criterion_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCriterionWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_dimension_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DimensionWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_dimension_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_dimension_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDimensionWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_versions_editor_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_versions_editor_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    framework_versions_editor_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedVersionNotesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_versions_pillars_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPillarWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
     framework_versions_publish_create: {
         parameters: {
             query?: never;
@@ -6626,6 +7215,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FrameworkVersion"];
+                };
+            };
+        };
+    };
+    framework_question_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["QuestionWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_question_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
+                };
+            };
+        };
+    };
+    framework_question_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedQuestionWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FrameworkEditor"];
                 };
             };
         };

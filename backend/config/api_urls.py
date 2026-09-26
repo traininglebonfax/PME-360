@@ -90,6 +90,16 @@ urlpatterns = [
     path("framework-versions/<uuid:version_id>", diagnostic.FrameworkVersionDetailView.as_view()),
     path("framework-versions/<uuid:version_id>/clone", diagnostic.FrameworkVersionCloneView.as_view()),
     path("framework-versions/<uuid:version_id>/publish", diagnostic.FrameworkVersionPublishView.as_view()),
+    path("framework-versions/<uuid:version_id>/editor", diagnostic.FrameworkEditorView.as_view()),
+    path("framework-versions/<uuid:version_id>/pillars/<uuid:item_id>", diagnostic.EditorPillarView.as_view()),
+    path("framework-versions/<uuid:version_id>/dimensions", diagnostic.EditorDimensionCollectionView.as_view()),
+    path(
+        "framework-versions/<uuid:version_id>/dimensions/<uuid:item_id>", diagnostic.EditorDimensionItemView.as_view()
+    ),
+    path("framework-versions/<uuid:version_id>/criteria", diagnostic.EditorCriterionCollectionView.as_view()),
+    path("framework-versions/<uuid:version_id>/criteria/<uuid:item_id>", diagnostic.EditorCriterionItemView.as_view()),
+    path("framework-versions/<uuid:version_id>/questions", diagnostic.EditorQuestionCollectionView.as_view()),
+    path("framework-versions/<uuid:version_id>/questions/<uuid:item_id>", diagnostic.EditorQuestionItemView.as_view()),
     # Diagnostics
     path("pmes/<uuid:pme_id>/diagnostics", diagnostic.PmeDiagnosticsView.as_view()),
     path("diagnostics/<uuid:diagnostic_id>", diagnostic.DiagnosticDetailView.as_view()),

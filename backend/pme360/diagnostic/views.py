@@ -8,22 +8,28 @@ from pme360.core.permissions import get_access
 from pme360.pmes.models import Pme
 from pme360.scoring import services as scoring
 
-from . import referential, services
-from .models import Answer, Criterion, CriterionAssessment, Diagnostic, FrameworkVersion
+from . import editor, referential, services
+from .models import Answer, Criterion, CriterionAssessment, Diagnostic, Dimension, FrameworkVersion, Pillar, Question
 from .serializers import (
     AcceptResultSerializer,
     AnswerBatchResultSerializer,
     AnswerBatchSerializer,
     AssessmentSerializer,
     CloneSerializer,
+    CriterionWriteSerializer,
     DiagnosticSerializer,
+    DimensionWriteSerializer,
+    FrameworkEditorSerializer,
     FrameworkVersionDetailSerializer,
     FrameworkVersionSerializer,
+    PillarWriteSerializer,
     QuestionnaireSerializer,
+    QuestionWriteSerializer,
     ReasonSerializer,
     ReviewPayloadSerializer,
     ReviewSerializer,
     StartDiagnosticSerializer,
+    VersionNotesSerializer,
 )
 
 
@@ -90,6 +96,112 @@ class FrameworkVersionPublishView(APIView):
     def post(self, request, version_id):
         version = get_object_or_404(FrameworkVersion, pk=version_id)
         return Response(FrameworkVersionSerializer(referential.publish_version(version, request.user)).data)
+
+
+# --- Éditeur de référentiel (V1) -------------------------------------------------------------------------------
+
+
+def _draft_item(model, version, item_id):
+    return get_object_or_404(model.objects.filter(framework_version=version), pk=item_id)
+
+
+def _editor_response(version, status_code=status.HTTP_200_OK):
+    version = FrameworkVersion.objects.select_related("framework", "published_by").get(pk=version.pk)
+    return Response(FrameworkEditorSerializer(version).data, status=status_code)
+
+
+class FrameworkEditorView(APIView):
+    """Arbre complet (identifiants compris) et état de publication ; notes et suppression d'un brouillon."""
+
+    required_permissions = "org.configure"
+
+    @extend_schema(responses=FrameworkEditorSerializer)
+    def get(self, request, version_id):
+        return _editor_response(get_object_or_404(FrameworkVersion, pk=version_id))
+
+    @extend_schema(request=VersionNotesSerializer, responses=FrameworkEditorSerializer)
+    def patch(self, request, version_id):
+        version = get_object_or_404(FrameworkVersion, pk=version_id)
+        serializer = VersionNotesSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        editor.update_notes(get_access(request), version, serializer.validated_data["notes"])
+        return _editor_response(version)
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, version_id):
+        editor.delete_draft(get_access(request), get_object_or_404(FrameworkVersion, pk=version_id))
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class EditorPillarView(APIView):
+    required_permissions = "org.configure"
+
+    @extend_schema(request=PillarWriteSerializer, responses=FrameworkEditorSerializer)
+    def patch(self, request, version_id, item_id):
+        version = get_object_or_404(FrameworkVersion, pk=version_id)
+        serializer = PillarWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        pillar = _draft_item(Pillar, version, item_id)
+        editor.update_pillar(get_access(request), version, pillar, serializer.validated_data)
+        return _editor_response(version)
+
+
+def _collection_view(write_serializer, save, name):
+    class CollectionView(APIView):
+        required_permissions = "org.configure"
+
+        @extend_schema(
+            request=write_serializer,
+            responses={201: FrameworkEditorSerializer},
+            operation_id=f"framework_{name}_create",
+        )
+        def post(self, request, version_id):
+            version = get_object_or_404(FrameworkVersion, pk=version_id)
+            serializer = write_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            save(get_access(request), version, serializer.validated_data)
+            return _editor_response(version, status.HTTP_201_CREATED)
+
+    CollectionView.__name__ = CollectionView.__qualname__ = f"Editor{name.title()}CollectionView"
+    return CollectionView
+
+
+def _item_view(model, write_serializer, save, delete, name):
+    class ItemView(APIView):
+        required_permissions = "org.configure"
+
+        @extend_schema(
+            request=write_serializer, responses=FrameworkEditorSerializer, operation_id=f"framework_{name}_update"
+        )
+        def patch(self, request, version_id, item_id):
+            version = get_object_or_404(FrameworkVersion, pk=version_id)
+            serializer = write_serializer(data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            save(get_access(request), version, serializer.validated_data, _draft_item(model, version, item_id))
+            return _editor_response(version)
+
+        @extend_schema(responses={200: FrameworkEditorSerializer}, operation_id=f"framework_{name}_delete")
+        def delete(self, request, version_id, item_id):
+            version = get_object_or_404(FrameworkVersion, pk=version_id)
+            delete(get_access(request), version, _draft_item(model, version, item_id))
+            return _editor_response(version)
+
+    ItemView.__name__ = ItemView.__qualname__ = f"Editor{name.title()}ItemView"
+    return ItemView
+
+
+EditorDimensionCollectionView = _collection_view(DimensionWriteSerializer, editor.save_dimension, "dimension")
+EditorDimensionItemView = _item_view(
+    Dimension, DimensionWriteSerializer, editor.save_dimension, editor.delete_dimension, "dimension"
+)
+EditorCriterionCollectionView = _collection_view(CriterionWriteSerializer, editor.save_criterion, "criterion")
+EditorCriterionItemView = _item_view(
+    Criterion, CriterionWriteSerializer, editor.save_criterion, editor.delete_criterion, "criterion"
+)
+EditorQuestionCollectionView = _collection_view(QuestionWriteSerializer, editor.save_question, "question")
+EditorQuestionItemView = _item_view(
+    Question, QuestionWriteSerializer, editor.save_question, editor.delete_question, "question"
+)
 
 
 # --- Diagnostics ----------------------------------------------------------------------------------------------
