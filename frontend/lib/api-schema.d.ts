@@ -1613,6 +1613,24 @@ export interface paths {
         patch: operations["organization_partial_update"];
         trace?: never;
     };
+    "/api/v1/organization/branding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Identité de l'organisation : nom du produit, nom court, couleur, logo (administrateur). */
+        get: operations["organization_branding_retrieve"];
+        /** @description Identité de l'organisation : nom du produit, nom court, couleur, logo (administrateur). */
+        put: operations["organization_branding_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organization/encryption": {
         parameters: {
             query?: never;
@@ -2168,6 +2186,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/brand": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Identité affichée sur la page de connexion (``?org=<slug>``) ; identité neutre si inconnue ou suspendue. */
+        get: operations["public_brand_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/recommendation-rules": {
         parameters: {
             query?: never;
@@ -2658,7 +2693,7 @@ export interface components {
          *     * `NON_CONFORME` - Non conforme
          *     * `TERMINE` - Terminée
          *     * `EN_ATTENTE_PME` - En attente de la PME
-         *     * `EN_ATTENTE_GUDE` - En attente de GUDE-PME
+         *     * `EN_ATTENTE_GUDE` - En attente de l'organisation
          *     * `ABANDONNE` - Abandonnée
          * @enum {string}
          */
@@ -3009,6 +3044,27 @@ export interface components {
         };
         /** @enum {unknown} */
         BlankEnum: "";
+        Brand: {
+            product_name: string;
+            short_name: string;
+            primary_color: string;
+            logo: string | null;
+            tagline: string;
+        };
+        BrandIdentity: {
+            product_name: string;
+            short_name: string;
+            primary_color: string;
+            logo: string | null;
+            tagline: string;
+        };
+        BrandWriteRequest: {
+            product_name?: string;
+            short_name?: string;
+            tagline?: string;
+            primary_color?: string;
+            logo?: string | null;
+        };
         ChainVerification: {
             valid: boolean;
             entries_checked: number;
@@ -4000,6 +4056,7 @@ export interface components {
             branding: {
                 [key: string]: unknown;
             };
+            brand: components["schemas"]["Brand"];
         };
         MeUser: {
             /** Format: uuid */
@@ -4076,7 +4133,7 @@ export interface components {
         };
         /**
          * @description * `REGLEMENTAIRE` - Réglementaire
-         *     * `PROGRAMME` - Programme (transmission à GUDE-PME)
+         *     * `PROGRAMME` - Programme (transmission à l'organisation)
          *     * `BONNE_PRATIQUE` - Bonne pratique
          * @enum {string}
          */
@@ -4229,7 +4286,7 @@ export interface components {
         };
         /**
          * @description * `PME` - PME
-         *     * `GUDE` - GUDE-PME
+         *     * `GUDE` - L'organisation d'accompagnement
          *     * `PARTENAIRE` - Partenaire
          * @enum {string}
          */
@@ -4811,7 +4868,7 @@ export interface components {
             submit_threshold: number;
         };
         /**
-         * @description * `GUDE` - GUDE-PME
+         * @description * `GUDE` - L'organisation d'accompagnement
          *     * `PARTENAIRE` - Partenaire
          *     * `PME_SEULE` - PME en autonomie
          * @enum {string}
@@ -5600,7 +5657,7 @@ export interface components {
             note: string;
         };
         /**
-         * @description * `INTERNE_GUDE` - Interne GUDE-PME
+         * @description * `INTERNE_GUDE` - Interne à l'équipe
          *     * `PARTAGE_PME` - Partagé avec la PME
          * @enum {string}
          */
@@ -8272,6 +8329,48 @@ export interface operations {
             };
         };
     };
+    organization_branding_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrandIdentity"];
+                };
+            };
+        };
+    };
+    organization_branding_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BrandWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrandIdentity"];
+                };
+            };
+        };
+    };
     organization_encryption_retrieve: {
         parameters: {
             query?: never;
@@ -9323,6 +9422,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Cohort"][];
+                };
+            };
+        };
+    };
+    public_brand_retrieve: {
+        parameters: {
+            query?: {
+                org?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrandIdentity"];
                 };
             };
         };

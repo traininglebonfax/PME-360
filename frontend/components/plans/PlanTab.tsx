@@ -14,6 +14,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { useActionStatus } from "@/lib/actionWorkflow";
 import { AXES, DIMENSIONS, PHASES, PLAN_STATUS, priorityLabel, RECOMMENDATION_STATUS, SOURCE_LABELS } from "@/lib/plans";
 import { hasPermission, useMe } from "@/lib/session";
+import { OrgName } from "@/components/OrgName";
 
 type Recommendation = Schemas["Recommendation"];
 type Plan = Schemas["PlanDetail"];
@@ -353,7 +354,7 @@ function PlanPanel({ plan, pmeId, canEdit }: { plan: Plan; pmeId: string; canEdi
             )}
             {plan.status === "EN_VALIDATION" && !plan.validated_at && (
               <Button loading={transition.isPending} onClick={() => transition.mutate({ action: "validate", reason: "" })}>
-                Valider (GUDE-PME)
+                Valider (<OrgName />)
               </Button>
             )}
             {awaitingPme && (

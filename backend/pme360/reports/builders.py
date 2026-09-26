@@ -284,6 +284,7 @@ def diagnostic_report_data(diagnostic, generated_by=None) -> dict:
             "validated_at": diagnostic.validated_at.isoformat() if diagnostic.validated_at else None,
             "validated_by": diagnostic.validated_by.full_name if diagnostic.validated_by_id else None,
             "framework_version": result.get("framework_version"),
+            "framework_name": diagnostic.framework_version.framework.name,
             "engine_version": result.get("engine_version"),
             "evidence_as_of": result.get("evidence_as_of"),
             "criteria_evaluated": len(criteria),

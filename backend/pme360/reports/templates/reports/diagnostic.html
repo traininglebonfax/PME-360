@@ -39,7 +39,7 @@
 <body>
 <div id="footer" class="small muted">{{ d.pme.legal_name }} · Rapport de diagnostic v{{ version }} · page <pdf:pagenumber/> / <pdf:pagecount/></div>
 
-  <p class="muted small">GUDE-PME 360 · Rapport de diagnostic · version {{ version }} · édité le {{ d.generated_at|frdate }}</p>
+  <p class="muted small">{{ brand.product_name }} · Rapport de diagnostic · version {{ version }} · édité le {{ d.generated_at|frdate }}</p>
   <h1>{{ d.pme.legal_name }}</h1>
   <p>{{ d.diagnostic.type }} au {{ d.diagnostic.reference_date|frdate }}{% if d.diagnostic.validated_at %} · validé le {{ d.diagnostic.validated_at|frdate }}{% if d.diagnostic.validated_by %} par {{ d.diagnostic.validated_by }}{% endif %}{% endif %}</p>
   <p class="small muted">Niveau de confiance du diagnostic : <b>{{ d.score.confidence|pct }}</b> ({{ d.score.confidence_label|lower }}). Plus la part de preuves vérifiées est élevée, plus la confiance est forte.</p>
@@ -56,7 +56,7 @@
 </table>
 
 <h2>2. Méthodologie</h2>
-<p>Le diagnostic 360° évalue {{ d.diagnostic.criteria_evaluated }} critères sur {{ d.diagnostic.criteria_total }} (référentiel GUDE-360 v{{ d.diagnostic.framework_version }}, moteur v{{ d.diagnostic.engine_version }}), regroupés en 12 dimensions et 3 piliers. Chaque critère est noté de 0 à 4 à partir des réponses de l'entreprise, revues par le conseiller ; un critère exigeant une preuve reste plafonné tant que le justificatif n'est pas vérifié. Les indicateurs financiers sont calculés selon les formules de l'annexe.</p>
+<p>Le diagnostic 360° évalue {{ d.diagnostic.criteria_evaluated }} critères sur {{ d.diagnostic.criteria_total }} (référentiel {{ d.diagnostic.framework_name|default:"Diagnostic 360°" }} v{{ d.diagnostic.framework_version }}, moteur v{{ d.diagnostic.engine_version }}), regroupés en 12 dimensions et 3 piliers. Chaque critère est noté de 0 à 4 à partir des réponses de l'entreprise, revues par le conseiller ; un critère exigeant une preuve reste plafonné tant que le justificatif n'est pas vérifié. Les indicateurs financiers sont calculés selon les formules de l'annexe.</p>
 <p class="small muted">Preuves prises en compte à la date du {{ d.diagnostic.evidence_as_of|frdate }}. Les scores de ce rapport sont figés : ils ne changent plus, même si la situation évolue ensuite.</p>
 
 <h2>3. Score global</h2>
@@ -171,7 +171,7 @@
   <tr><th style="width:22%">Indicateur</th><th style="width:30%">Formule</th><th class="num" style="width:16%">Résultat</th><th style="width:14%">Interprétation</th><th style="width:18%">Source</th></tr>
   {% for m in d.annexes.metrics %}<tr><td>{{ m.name }}</td><td class="small">{{ m.formula }}</td><td class="num">{{ m.value }}</td><td>{{ m.band|default:"—" }}</td><td class="small">{{ m.sources }}</td></tr>{% endfor %}
 </table>
-<p class="small muted">Seuils d'interprétation indicatifs, à calibrer par secteur avec les experts GUDE-PME.</p>
+<p class="small muted">Seuils d'interprétation indicatifs, à calibrer par secteur avec les experts de {{ brand.short_name }}.</p>
 <h3>B. Journal de validation</h3>
 {% if d.annexes.assessments %}
 <table>
@@ -183,6 +183,6 @@
   <tr><th style="width:15%">Date</th><th style="width:55%">Événement</th><th style="width:30%">Par</th></tr>
   {% for e in d.annexes.journal %}<tr><td>{{ e.at|frdate }}</td><td class="small">{{ e.action }}</td><td class="small">{{ e.actor }}</td></tr>{% endfor %}
 </table>
-<p class="note">Document généré par GUDE-PME 360 à partir de données figées le {{ d.generated_at|frdate }}{% if d.generated_by %} à la demande de {{ d.generated_by }}{% endif %}. Modèle de rapport v{{ d.template_version }}. Toute correction donne lieu à une nouvelle version du rapport.</p>
+<p class="note">Document généré par {{ brand.product_name }} à partir de données figées le {{ d.generated_at|frdate }}{% if d.generated_by %} à la demande de {{ d.generated_by }}{% endif %}. Modèle de rapport v{{ d.template_version }}. Toute correction donne lieu à une nouvelle version du rapport.</p>
 </body>
 </html>

@@ -16,7 +16,7 @@ export const ACTION_STATUS: Record<ActionStatus, { label: string; tone: Tone; pm
   NON_CONFORME: { label: "Non conforme", tone: "danger", pme: "Document à reprendre" },
   TERMINE: { label: "Terminée", tone: "brand", pme: "Terminée" },
   EN_ATTENTE_PME: { label: "En attente PME", tone: "warning", pme: "En attente de votre part" },
-  EN_ATTENTE_GUDE: { label: "En attente GUDE-PME", tone: "info", pme: "En attente de votre conseiller" },
+  EN_ATTENTE_GUDE: { label: "En attente de l'équipe", tone: "info", pme: "En attente de votre conseiller" },
   ABANDONNE: { label: "Abandonnée", tone: "muted", pme: "Abandonnée" },
 };
 
@@ -25,7 +25,7 @@ export const TRANSITION_LABELS: Partial<Record<ActionStatus, string>> = {
   EN_COURS: "Démarrer / reprendre",
   DOCUMENT_DEMANDE: "Demander le document",
   EN_ATTENTE_PME: "En attente de la PME",
-  EN_ATTENTE_GUDE: "En attente de GUDE-PME",
+  EN_ATTENTE_GUDE: "En attente de l'équipe",
   TERMINE: "Terminer l'action",
   ABANDONNE: "Abandonner",
 };

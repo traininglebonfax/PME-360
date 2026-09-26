@@ -1,4 +1,4 @@
-"""Données figées du rapport trimestriel de portefeuille (Document 9, § 7) — direction GUDE-PME et bailleurs.
+"""Données figées du rapport trimestriel de portefeuille (Document 9, § 7) — direction de l'organisation et bailleurs.
 
 Contenu : PME accompagnées, évolution des scores, principaux problèmes, besoins, actions réalisées ou en retard,
 progression par secteur et par région, recommandations de pilotage. Règles de présentation (Document 9, § 6.2) :
@@ -16,6 +16,7 @@ from statistics import mean
 from django.utils import timezone
 
 from pme360.core.exceptions import BusinessError
+from pme360.organizations.branding import current_brand
 
 TEMPLATE_VERSION = "1.0.0"
 MIN_CELL = 5
@@ -284,7 +285,8 @@ def steering_recommendations(data: dict) -> list[dict]:
             {
                 "topic": "Traiter les actions en retard",
                 "basis": f"{actions['overdue']} action(s) en retard, dont {actions['overdue_waiting_gude']} "
-                f"en attente de GUDE-PME et {actions['overdue_waiting_pme']} en attente des PME : "
+                f"en attente de {current_brand()['short_name']} et {actions['overdue_waiting_pme']} "
+                "en attente des PME : "
                 "vérifier la charge des conseillers.",
             }
         )

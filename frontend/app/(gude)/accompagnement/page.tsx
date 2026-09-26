@@ -12,6 +12,7 @@ import { RulesPanel } from "@/components/plans/RulesPanel";
 import { Alert, Badge, Card, cx, LoadingBlock, PageHeader } from "@/components/ui";
 import { api, errorMessage, unwrap } from "@/lib/api";
 import { DIMENSIONS, formatCost } from "@/lib/plans";
+import { OrgName } from "@/components/OrgName";
 
 type Tab = "regles" | "offres" | "livrables";
 
@@ -96,7 +97,7 @@ function Templates() {
     <Card>
       <p className="mb-3 text-sm text-muted">
         Chaque modèle donne des instructions en langage simple et les points que le conseiller vérifie. Les fichiers modèles (docx, xlsx) seront
-        fournis par GUDE-PME.
+        fournis par <OrgName />.
       </p>
       <ul className="divide-y divide-line">
         {templates.data!.map((template) => (

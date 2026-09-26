@@ -13,7 +13,7 @@ ACTION_STATES = {
     "NON_CONFORME": {"label": "Non conforme", "pme_label": "Document à reprendre"},
     "TERMINE": {"label": "Terminée", "pme_label": "Terminée"},
     "EN_ATTENTE_PME": {"label": "En attente PME", "pme_label": "En attente de votre part"},
-    "EN_ATTENTE_GUDE": {"label": "En attente GUDE-PME", "pme_label": "En attente de votre conseiller"},
+    "EN_ATTENTE_GUDE": {"label": "En attente de l'équipe", "pme_label": "En attente de votre conseiller"},
     "ABANDONNE": {"label": "Abandonnée", "pme_label": "Abandonnée"},
 }
 TERMINAL = {"TERMINE", "ABANDONNE"}
@@ -27,7 +27,7 @@ BUTTONS = {
     "EN_COURS": ("Démarrer / reprendre", "Je démarre cette action"),
     "DOCUMENT_DEMANDE": ("Demander le document", ""),
     "EN_ATTENTE_PME": ("En attente de la PME", ""),
-    "EN_ATTENTE_GUDE": ("En attente de GUDE-PME", "J'attends mon conseiller"),
+    "EN_ATTENTE_GUDE": ("En attente de l'équipe", "J'attends mon conseiller"),
     "TERMINE": ("Terminer l'action", ""),
     "ABANDONNE": ("Abandonner", ""),
     "NON_COMMENCE": ("Remettre à démarrer", ""),

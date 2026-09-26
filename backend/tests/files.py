@@ -24,14 +24,19 @@ def png() -> bytes:
 
 
 def office(kind: str = "docx", macro: bool = False) -> bytes:
+    """Archive Office minimale ; date fixe : deux appels donnent exactement les mêmes octets (doublons)."""
+
+    def entry(name: str) -> zipfile.ZipInfo:
+        return zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         content_type = "application/vnd.ms-word.document.macroEnabled.main+xml" if macro else "application/xml"
-        archive.writestr("[Content_Types].xml", f'<Types><Override ContentType="{content_type}"/></Types>')
+        archive.writestr(entry("[Content_Types].xml"), f'<Types><Override ContentType="{content_type}"/></Types>')
         root = "word/document.xml" if kind == "docx" else "xl/sharedStrings.xml"
-        archive.writestr(root, "<w:document><w:t>Organigramme de la société</w:t></w:document>")
+        archive.writestr(entry(root), "<w:document><w:t>Organigramme de la société</w:t></w:document>")
         if macro:
-            archive.writestr(("word/" if kind == "docx" else "xl/") + "vbaProject.bin", b"VBA")
+            archive.writestr(entry(("word/" if kind == "docx" else "xl/") + "vbaProject.bin"), b"VBA")
     return buffer.getvalue()
 
 

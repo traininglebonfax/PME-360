@@ -42,8 +42,10 @@ export function useLogout() {
   const queryClient = useQueryClient();
   const router = useRouter();
   return async () => {
+    // Retour à la page de connexion de la même organisation (même identité visuelle).
+    const slug = queryClient.getQueryData<Me | null>(ME_KEY)?.organization?.slug;
     await api.POST("/api/v1/auth/logout");
     queryClient.clear();
-    router.replace("/connexion");
+    router.replace(slug ? `/connexion?org=${encodeURIComponent(slug)}` : "/connexion");
   };
 }

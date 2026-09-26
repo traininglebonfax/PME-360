@@ -169,7 +169,15 @@ class MeView(APIView):
         organization = None
         if access.organization_id:
             org = Organization.objects.get(pk=access.organization_id)
-            organization = {"id": org.id, "name": org.name, "slug": org.slug, "branding": org.branding}
+            from pme360.organizations.branding import brand
+
+            organization = {
+                "id": org.id,
+                "name": org.name,
+                "slug": org.slug,
+                "branding": org.branding,
+                "brand": brand(org),
+            }
         if access.memberships:
             portal = "pme" if access.is_pme_user else "gude"
         else:

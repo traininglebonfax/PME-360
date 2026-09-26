@@ -352,7 +352,7 @@ OBLIGATIONS = [
         applicability=HAS_EMPLOYEES,
         critical=True,
         active=False,
-        description="Transmettre à GUDE-PME le justificatif CNPS de chaque période (15 jours légaux + 15 jours de "
+        description="Transmettre à votre organisation d'accompagnement le justificatif CNPS de chaque période (15 jours légaux + 15 jours de "
         "transmission). Activation après vérification de REG-CNPS-01.",
     ),
     dict(

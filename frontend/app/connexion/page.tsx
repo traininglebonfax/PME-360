@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import QRCode from "qrcode";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import { type FormEvent, Suspense, useEffect, useState } from "react";
 import { BrandName } from "@/components/Brand";
 import { Alert, Button, cx, LoadingBlock, TextInput } from "@/components/ui";
 import { api, errorMessage, unwrap } from "@/lib/api";
+import { type Brand, DEFAULT_BRAND, useApplyBrand } from "@/lib/brand";
 import { homeFor, ME_KEY, type Me, useMe } from "@/lib/session";
 
 type Step = "credentials" | "mfa" | "mfa_setup" | "otp_email" | "otp_code";
@@ -26,6 +27,15 @@ function Login() {
   const params = useSearchParams();
   const queryClient = useQueryClient();
   const { data: me } = useMe();
+  // Identité de la page : organisation désignée par ?org=<identifiant>, sinon identité neutre « PME360 ».
+  const organization = params.get("org") ?? "";
+  const publicBrand = useQuery({
+    queryKey: ["public-brand", organization],
+    queryFn: () => unwrap(api.GET("/api/v1/public/brand", { params: { query: { org: organization || undefined } } })),
+    staleTime: 5 * 60_000,
+  });
+  const brand: Brand = publicBrand.data ?? DEFAULT_BRAND;
+  useApplyBrand(brand);
   const [audience, setAudience] = useState<Audience>("gude");
   const [step, setStep] = useState<Step>("credentials");
   const [email, setEmail] = useState("");
@@ -120,7 +130,7 @@ function Login() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-8 flex justify-center">
-          <BrandName />
+          <BrandName brand={brand} />
         </div>
         <div className="rounded-2xl border border-line bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="Type d'espace">
@@ -135,7 +145,7 @@ function Login() {
                   audience === value ? "bg-white text-ink shadow-sm" : "text-muted hover:text-ink",
                 )}
               >
-                {value === "gude" ? "Équipe GUDE-PME" : "Espace PME"}
+                {value === "gude" ? (brand.short_name ? `Équipe ${brand.short_name}` : "Équipe d'accompagnement") : "Espace PME"}
               </button>
             ))}
           </div>
@@ -250,7 +260,7 @@ function Login() {
             </form>
           )}
         </div>
-        <p className="mt-6 text-center text-xs text-muted">Vos données sont confidentielles et ne sont visibles que par votre conseiller GUDE-PME.</p>
+        <p className="mt-6 text-center text-xs text-muted">Vos données sont confidentielles et ne sont visibles que par votre conseiller{brand.short_name ? ` ${brand.short_name}` : ""}.</p>
       </div>
     </main>
   );

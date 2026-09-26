@@ -8,17 +8,19 @@ import { BrandMark } from "@/components/Brand";
 import { NotificationBell } from "@/components/NotificationBell";
 import { LoadingBlock } from "@/components/ui";
 import type { Me } from "@/lib/session";
+import { useBrand } from "@/lib/brand";
 
 /** En-tête simple du portail PME (mobile d'abord) et garde d'accès. */
 export function PmeShell({ title, subtitle, children }: { title: string; subtitle?: string; children: (me: Me) => ReactNode }) {
   const { me, isLoading } = useGuard("pme");
+  const brand = useBrand();
   if (isLoading || !me) return <LoadingBlock />;
   return (
     <div className="min-h-screen">
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <Link href="/espace" className="flex items-center gap-2">
-            <BrandMark className="h-8 w-8" />
+            <BrandMark className="h-8 w-8" brand={brand} />
             <span className="font-semibold">Mon espace</span>
           </Link>
           <div className="flex items-center gap-2">

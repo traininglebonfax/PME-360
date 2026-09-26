@@ -19,6 +19,7 @@ from pme360.audit import services as audit
 from pme360.core.exceptions import BusinessError
 from pme360.diagnostic.models import Diagnostic
 from pme360.notifications import services as notifications
+from pme360.organizations.branding import current_brand
 from pme360.pmes.models import Pme
 
 from . import priority, rules
@@ -640,7 +641,9 @@ def transition_plan(plan: ActionPlan, access, action: str, reason: str = "") -> 
         _require(access, "plan.accept")
         _expect(plan, ActionPlan.Status.EN_VALIDATION)
         if plan.validated_at is None:
-            raise BusinessError("Le plan doit d'abord être validé par GUDE-PME.", code="not_validated")
+            raise BusinessError(
+                f"Le plan doit d'abord être validé par {current_brand()['short_name']}.", code="not_validated"
+            )
         if access.is_pme_user and plan.pme_id not in access.own_pme_ids:
             raise PermissionDenied()
         plan.status, plan.accepted_by, plan.accepted_at = ActionPlan.Status.VALIDE, access.user, now
@@ -656,7 +659,9 @@ def transition_plan(plan: ActionPlan, access, action: str, reason: str = "") -> 
         _require(access, "plan.edit", staff=True)
         _expect(plan, ActionPlan.Status.EN_VALIDATION)
         if plan.validated_at is None:
-            raise BusinessError("Le plan doit d'abord être validé par GUDE-PME.", code="not_validated")
+            raise BusinessError(
+                f"Le plan doit d'abord être validé par {current_brand()['short_name']}.", code="not_validated"
+            )
         if not reason.strip():
             raise ValidationError({"reason": ["Précisez comment la PME a accepté le plan (entretien, PV signé…)."]})
         plan.status, plan.accepted_by, plan.accepted_at = ActionPlan.Status.VALIDE, access.user, now

@@ -24,6 +24,7 @@ ACTION_LABELS = {
     "pme.assigned": "Conseiller ou expert assigné",
     "pme.unassigned": "Fin de suivi par un conseiller ou expert",
     "document.infected": "Fichier bloqué par l'antivirus",
+    "organization.branding_updated": "Identité visuelle de l'organisation modifiée",
     "organization.key_rotated": "Clé de chiffrement des fichiers renouvelée",
     "role.created": "Rôle personnalisé créé",
     "role.updated": "Rôle personnalisé modifié",

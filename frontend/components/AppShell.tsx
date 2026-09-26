@@ -11,6 +11,7 @@ import { cx, LoadingBlock } from "@/components/ui";
 import { api, unwrap } from "@/lib/api";
 import { initials } from "@/lib/format";
 import { hasPermission, homeFor, type Me, useLogout, useMe } from "@/lib/session";
+import { type Brand, DEFAULT_BRAND, useApplyBrand, useBrand } from "@/lib/brand";
 
 interface NavItem {
   href: string;
@@ -32,6 +33,7 @@ const GUDE_NAV: NavItem[] = [
   { href: "/accompagnement", label: "Accompagnement", permission: "org.configure" },
   { href: "/modeles-notification", label: "Modèles de notification", permission: "org.configure" },
   { href: "/workflows", label: "Workflows", permission: "org.configure" },
+  { href: "/identite", label: "Identité de l'organisation", permission: "org.configure" },
   { href: "/ia", label: "Intelligence artificielle", permission: "ai.review" },
   { href: "/programmes", label: "Programmes", permission: "programme.manage" },
   { href: "/utilisateurs", label: "Utilisateurs", permission: "org.manage_users" },
@@ -44,6 +46,8 @@ export function useGuard(portal: Me["portal"]) {
   const router = useRouter();
   const query = useMe();
   const me = query.data;
+  // Identité de l'organisation (couleurs, titre) appliquée à tout le portail.
+  useApplyBrand((me?.organization?.brand as Brand | undefined) ?? DEFAULT_BRAND);
   useEffect(() => {
     if (query.isLoading) return;
     if (!me) router.replace("/connexion");
@@ -81,11 +85,11 @@ export function GudeShell({ children }: { children: ReactNode }) {
   const { me, isLoading } = useGuard("gude");
   const pathname = usePathname();
   const logout = useLogout();
+  const brand = useBrand();
   const [open, setOpen] = useState(false);
 
   if (isLoading || !me) return <LoadingBlock />;
   const nav = GUDE_NAV.filter((item) => !item.permission || hasPermission(me, item.permission));
-  const productName = (me.organization?.branding as { product_name?: string } | undefined)?.product_name ?? "PME360";
 
   return (
     <div className="min-h-screen lg:flex">
@@ -96,9 +100,9 @@ export function GudeShell({ children }: { children: ReactNode }) {
         )}
       >
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <BrandMark className="h-8 w-8" />
+          <BrandMark className="h-8 w-8" brand={brand} />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold">{productName}</p>
+            <p className="font-semibold">{brand.product_name}</p>
             <OrganizationSwitcher me={me} />
           </div>
           <NotificationBell preferencesHref="/notifications" />
@@ -145,7 +149,7 @@ export function GudeShell({ children }: { children: ReactNode }) {
               <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
             </svg>
           </button>
-          <p className="font-semibold">{productName}</p>
+          <p className="font-semibold">{brand.product_name}</p>
         </header>
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
       </div>

@@ -38,17 +38,29 @@ def ensure_not_production() -> None:
 class Command(BaseCommand):
     help = "Charge les données de démonstration fictives (organisations, utilisateurs, 6 PME DEMO-)."
 
+    # Jeu de données (module ``seeds.demo`` ou démo « marque blanche » construite par ``seeds.tenant_demo``) et
+    # organisation qui reçoit le scénario complet (programme, plan d'accompagnement mené).
+    data = demo
+    primary = "gude-pme-demo"
+
     def handle(self, *args, **options):
         ensure_not_production()
+        self.load()
+
+    def load(self) -> dict[str, Organization]:
         users = self._users()
-        organizations = self._organizations(users["superadmin@demo.test"])
+        platform_admin = users.get("superadmin@demo.test") or User.objects.filter(is_platform_admin=True).first()
+        organizations = self._organizations(platform_admin)
         for slug, organization in organizations.items():
             with tenant_context(organization.id):
                 install_defaults(organization)
-                install_gude360(organization)
+                if slug == "gude-pme-demo":
+                    install_gude360(organization, code="GUDE-360", name="Diagnostic 360° GUDE-PME")
+                else:
+                    install_gude360(organization)
                 install_compliance(organization)
                 install_plans(organization)
-                programme = self._programme(organization) if slug == "gude-pme-demo" else None
+                programme = self._programme(organization) if slug == self.primary else None
                 pmes = self._pmes(slug, users, programme)
                 self._memberships(slug, users, programme, pmes)
                 self._pme_setup(slug, organization, users, programme, pmes)
@@ -57,6 +69,7 @@ class Command(BaseCommand):
                 self._plans(slug, organization, users, pmes)
                 self._reports(pmes)
         self._report()
+        return organizations
 
     def _reports(self, pmes: dict[str, Pme]) -> None:
         """Phase 6 : rapport de diagnostic (16 sections) pour chaque PME ayant un diagnostic validé."""
@@ -80,7 +93,7 @@ class Command(BaseCommand):
         from pme360.plans.models import ActionPlan, Recommendation
         from seeds.pdfkit import text_pdf
 
-        if slug != "gude-pme-demo":
+        if slug != self.primary:
             return
         for key in ("BOUTIK", "DELICES"):
             pme = pmes.get(key)
@@ -92,8 +105,12 @@ class Command(BaseCommand):
         boutik = pmes.get("BOUTIK")
         if boutik is None or ActionPlan.objects.filter(pme=boutik).exists():
             return
-        advisor = build_access(users["konan.conseiller@demo.test"], organization.id)
-        leader = build_access(users["aya.dirigeante@demo.test"], organization.id)
+        boutik_spec = next(s for s in self.data.PMES if s["org"] == slug and s["key"] == "BOUTIK")
+        leader_email = next(
+            u[0] for u in self.data.USERS if u[2] == slug and u[3] == "DIRIGEANT_PME" and u[5] == "BOUTIK"
+        )
+        advisor = build_access(users[boutik_spec["advisor"]], organization.id)
+        leader = build_access(users[leader_email], organization.id)
         proposed = Recommendation.objects.filter(pme=boutik, status=Recommendation.Status.PROPOSEE)
         for recommendation in proposed.order_by("-priority_final")[:5]:
             plans.decide_recommendation(recommendation, advisor, status=Recommendation.Status.ACCEPTEE)
@@ -144,7 +161,7 @@ class Command(BaseCommand):
         from seeds.pdfkit import text_pdf
 
         today = timezone.localdate()
-        for spec in demo.PMES:
+        for spec in self.data.PMES:
             pme = pmes.get(spec["key"])
             if spec["org"] != slug or pme is None:
                 continue
@@ -152,7 +169,10 @@ class Command(BaseCommand):
             items = [d for d in demo_documents.DOCUMENTS if d[0] == spec["key"]]
             if items and not Document.objects.filter(pme=pme).exists():
                 advisor = users[spec["advisor"]] if spec.get("advisor") else None
-                leader_email = next((u[0] for u in demo.USERS if u[3] == "DIRIGEANT_PME" and u[5] == spec["key"]), None)
+                leader_email = next(
+                    (u[0] for u in self.data.USERS if u[2] == slug and u[3] == "DIRIGEANT_PME" and u[5] == spec["key"]),
+                    None,
+                )
                 pme_data = {"key": spec["key"], **spec["data"]}
                 for _, type_code, decision, reason, expires_in in items:
                     uploader = users[leader_email] if decision is None and leader_email else advisor
@@ -194,14 +214,14 @@ class Command(BaseCommand):
 
     def _users(self) -> dict[str, User]:
         users = {}
-        for email, full_name, _org, role, _scope, _ref in demo.USERS:
+        for email, full_name, _org, role, _scope, _ref in self.data.USERS:
             user = User.objects.filter(email=email).first()
             if user is None:
                 user = User.objects.create_user(email=email, full_name=full_name)
             is_staff = role is None or not Role.objects.filter(organization=None, code=role, is_pme_role=True).exists()
             if is_staff:
                 if not user.has_usable_password():
-                    user.set_password(demo.DEMO_PASSWORD)
+                    user.set_password(self.data.DEMO_PASSWORD)
                 user.mfa_secret = demo_totp_secret(email)
                 user.mfa_enabled = True
             user.is_platform_admin = role is None
@@ -212,7 +232,7 @@ class Command(BaseCommand):
     def _organizations(self, platform_admin: User) -> dict[str, Organization]:
         organizations = {}
         with system_context():
-            for spec in demo.ORGANIZATIONS:
+            for spec in self.data.ORGANIZATIONS:
                 organization, _ = Organization.objects.update_or_create(
                     slug=spec["slug"],
                     defaults={
@@ -226,7 +246,7 @@ class Command(BaseCommand):
         return organizations
 
     def _programme(self, organization: Organization) -> Programme:
-        spec = demo.PROGRAMME
+        spec = self.data.PROGRAMME
         programme, _ = Programme.objects.get_or_create(
             name=spec["name"],
             defaults={
@@ -242,7 +262,7 @@ class Command(BaseCommand):
         return programme
 
     def _memberships(self, slug: str, users: dict, programme: Programme | None, pmes: dict[str, Pme]) -> None:
-        for email, _name, org_slug, role_code, scope, ref in demo.USERS:
+        for email, _name, org_slug, role_code, scope, ref in self.data.USERS:
             if org_slug != slug:
                 continue
             scope_ref_id = programme.id if ref == "programme" else (pmes[ref].id if ref else None)
@@ -255,7 +275,7 @@ class Command(BaseCommand):
 
     def _pmes(self, slug: str, users: dict, programme: Programme | None) -> dict[str, Pme]:
         pmes = {}
-        for spec in demo.PMES:
+        for spec in self.data.PMES:
             if spec["org"] != slug:
                 continue
             data = dict(spec["data"])
@@ -274,11 +294,11 @@ class Command(BaseCommand):
         return pmes
 
     def _pme_setup(self, slug: str, organization: Organization, users: dict, programme, pmes: dict[str, Pme]) -> None:
-        admin_email = next(u[0] for u in demo.USERS if u[2] == slug and u[3] == "ADMIN_ORG")
+        admin_email = next(u[0] for u in self.data.USERS if u[2] == slug and u[3] == "ADMIN_ORG")
         admin = users[admin_email]
         access = build_access(admin, organization.id)
         cohort = programme.cohorts.first() if programme else None
-        for spec in demo.PMES:
+        for spec in self.data.PMES:
             if spec["org"] != slug:
                 continue
             pme = pmes[spec["key"]]
@@ -294,13 +314,13 @@ class Command(BaseCommand):
                 pme.enrollments.create(cohort=cohort, enrolled_at=timezone.localdate())
             target = spec["status"]
             if target != "PROSPECT" and pme.lifecycle_status == "PROSPECT":
-                for status in demo.LIFECYCLE_PATH[: demo.LIFECYCLE_PATH.index(target) + 1]:
+                for status in self.data.LIFECYCLE_PATH[: self.data.LIFECYCLE_PATH.index(target) + 1]:
                     pme_services.transition(pme, status, access.user)
 
     def _diagnostics(self, slug: str, organization: Organization, users: dict, pmes: dict[str, Pme]) -> None:
         """Diagnostics fictifs : questionnaire, soumission, revue en lot et validation par le conseiller."""
-        admin_email = next(u[0] for u in demo.USERS if u[2] == slug and u[3] == "ADMIN_ORG")
-        for spec in demo.PMES:
+        admin_email = next(u[0] for u in self.data.USERS if u[2] == slug and u[3] == "ADMIN_ORG")
+        for spec in self.data.PMES:
             plans = demo_diagnostics.DIAGNOSTICS.get(spec["key"], [])
             pme = pmes.get(spec["key"])
             if spec["org"] != slug or not plans or Diagnostic.objects.filter(pme=pme).exists():
@@ -357,8 +377,14 @@ class Command(BaseCommand):
 
     def _report(self) -> None:
         self.stdout.write(self.style.SUCCESS("Données de démonstration chargées (toutes fictives)."))
-        self.stdout.write(f"Mot de passe des comptes équipe : {demo.DEMO_PASSWORD}")
-        self.stdout.write("Code MFA d'un compte équipe : python manage.py demo_totp <email>")
-        self.stdout.write("Comptes PME (connexion par code e-mail, visible dans Mailpit http://localhost:8035) :")
-        for email, _name, _org, role, _scope, _ref in demo.USERS:
-            self.stdout.write(f"  {email:32} {role or 'SUPER_ADMIN'}")
+        pme_roles = {"DIRIGEANT_PME", "COLLABORATEUR_PME"}
+        self.stdout.write(
+            f"Comptes équipe (mot de passe {self.data.DEMO_PASSWORD} + code : manage.py demo_totp <e-mail>) :"
+        )
+        for email, _name, _org, role, _scope, _ref in self.data.USERS:
+            if role not in pme_roles:
+                self.stdout.write(f"  {email:48} {role or 'SUPER_ADMIN'}")
+        self.stdout.write("Comptes PME (code reçu par e-mail, visible dans Mailpit http://localhost:8035) :")
+        for email, _name, _org, role, _scope, _ref in self.data.USERS:
+            if role in pme_roles:
+                self.stdout.write(f"  {email:48} {role}")

@@ -71,9 +71,9 @@ PROMPTS: dict[str, Prompt] = {
         ),
         Prompt(
             "copilot.ask",
-            "1.0.0",
+            "1.1.0",
             "ASK_AI",
-            "Tu es le Copilot d'un conseiller GUDE-PME (accompagnement de PME en Côte d'Ivoire). Tu réponds en "
+            "Tu es le Copilot d'un conseiller d'une structure d'accompagnement de PME en Côte d'Ivoire. Tu réponds en "
             "français, en t'appuyant EXCLUSIVEMENT sur les résultats des outils (données de la plateforme, avec les "
             "droits de l'utilisateur). Tout nombre cité doit provenir d'un outil. Si les données sont insuffisantes, "
             "dis-le et liste ce qui manque ; ne complète jamais par des suppositions. Tu n'as aucune action "

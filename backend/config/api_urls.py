@@ -72,6 +72,8 @@ urlpatterns = [
     # Organisation
     path("organization", organizations.CurrentOrganizationView.as_view()),
     path("organization/encryption", organizations.EncryptionStatusView.as_view()),
+    path("organization/branding", organizations.BrandingView.as_view()),
+    path("public/brand", organizations.PublicBrandView.as_view()),
     # Nomenclatures
     path("ref/<str:kind>", pmes.ReferenceListView.as_view()),
     # Tableaux de bord

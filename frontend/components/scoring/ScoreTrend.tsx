@@ -46,8 +46,8 @@ export function ScoreTrend({ points }: { points: TrendPoint[] }) {
             </text>
           </g>
         ))}
-        <path d={`${path} L${x(new Date(last.date).getTime())},${y(0)} L${x(t0)},${y(0)} Z`} fill="#0f6b4f" fillOpacity={0.08} />
-        <path d={path} fill="none" stroke="#0f6b4f" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <path d={`${path} L${x(new Date(last.date).getTime())},${y(0)} L${x(t0)},${y(0)} Z`} fill="var(--color-brand-600)" fillOpacity={0.08} />
+        <path d={path} fill="none" stroke="var(--color-brand-600)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {data.map((p) => {
           const cx = x(new Date(p.date).getTime());
           return (
@@ -59,7 +59,7 @@ export function ScoreTrend({ points }: { points: TrendPoint[] }) {
                 cx={cx}
                 cy={y(p.score)}
                 r={active === p.id ? 6 : 4.5}
-                fill="#0f6b4f"
+                fill="var(--color-brand-600)"
                 stroke="#ffffff"
                 strokeWidth={2}
                 tabIndex={0}

@@ -54,7 +54,9 @@ def _winansi(html: str) -> str:
 def render_pdf(template: str, context: dict) -> tuple[bytes, str]:
     """Rend ``template`` en PDF ; renvoie (contenu, moteur utilisé)."""
     name = engine()
-    html = render_to_string(template, {**context, "engine": name})
+    from pme360.organizations.branding import current_brand
+
+    html = render_to_string(template, {"brand": current_brand(), **context, "engine": name})
     if name == "weasyprint":
         import weasyprint
 

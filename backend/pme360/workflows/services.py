@@ -88,19 +88,20 @@ def check(states: dict, transitions: list[dict]) -> tuple[list[str], list[str]]:
             errors.append(f"{name} : indiquez qui peut déclencher cette transition.")
         if defaults.PME in actors and target not in defaults.PME_TARGETS:
             errors.append(
-                f"{name} : la PME ne peut que démarrer ou reprendre une action, ou signaler qu'elle attend GUDE-PME."
+                f"{name} : la PME ne peut que démarrer ou reprendre une action, "
+                "ou signaler qu'elle attend son conseiller."
             )
         for field in ("button", "pme_button"):
             if len(str(t.get(field, ""))) > LABEL_MAX:
                 errors.append(f"{name} : libellé de bouton trop long ({LABEL_MAX} caractères au plus).")
         if not str(t.get("button", "")).strip():
             errors.append(f"{name} : libellé du bouton obligatoire.")
-    # Garde-fou : toute action non terminée peut être abandonnée par GUDE-PME, avec motif (Document 7, § 2.2).
+    # Garde-fou : toute action non terminée peut être abandonnée par l'équipe, avec motif (Document 7, § 2.2).
     for code in sorted(codes - defaults.TERMINAL):
         abandon = next((t for t in transitions if t.get("from") == code and t.get("to") == defaults.ABANDON), None)
         if abandon is None or defaults.STAFF not in (abandon.get("actors") or []) or not abandon.get("reason_required"):
             errors.append(
-                f"{states.get(code, {}).get('label', code)} : l'abandon par GUDE-PME avec motif doit rester possible."
+                f"{states.get(code, {}).get('label', code)} : l'abandon par l'équipe avec motif doit rester possible."
             )
     # Accessibilité : une action démarrée doit pouvoir être terminée.
     graph: dict[str, set[str]] = {}

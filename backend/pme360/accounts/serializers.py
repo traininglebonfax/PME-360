@@ -90,11 +90,20 @@ class InviteSerializer(serializers.Serializer):
     scope_ref_id = serializers.UUIDField(required=False, allow_null=True)
 
 
+class BrandSerializer(serializers.Serializer):
+    product_name = serializers.CharField()
+    short_name = serializers.CharField()
+    primary_color = serializers.CharField()
+    logo = serializers.CharField(allow_null=True)
+    tagline = serializers.CharField(allow_blank=True)
+
+
 class MeOrganizationSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     name = serializers.CharField()
     slug = serializers.CharField()
     branding = serializers.DictField()
+    brand = BrandSerializer()
 
 
 class MeMembershipSerializer(serializers.Serializer):
