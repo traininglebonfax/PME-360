@@ -1,6 +1,6 @@
 /** Composants d'interface de base : sobres, accessibles, lisibles sur mobile (Document 1, § 10). */
 import Link from "next/link";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, Ref, SelectHTMLAttributes } from "react";
 import { useId } from "react";
 
 function cx(...classes: (string | false | null | undefined)[]): string {
@@ -109,7 +109,14 @@ export function Field({ label, error, hint, required, children, id }: FieldProps
 const CONTROL =
   "w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-ink placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100";
 
-export function TextInput({ label, error, hint, required, className, ...props }: FieldProps & InputHTMLAttributes<HTMLInputElement>) {
+export function TextInput({
+  label,
+  error,
+  hint,
+  required,
+  className,
+  ...props
+}: FieldProps & InputHTMLAttributes<HTMLInputElement> & { ref?: Ref<HTMLInputElement> }) {
   const id = useId();
   return (
     <Field label={label} error={error} hint={hint} required={required} id={id}>

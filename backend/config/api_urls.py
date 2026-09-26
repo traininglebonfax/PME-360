@@ -176,6 +176,10 @@ urlpatterns = [
     path("notifications/unread-count", notifications.NotificationCountView.as_view()),
     path("notifications/read", notifications.NotificationReadView.as_view()),
     path("me/notification-preferences", notifications.NotificationPreferencesView.as_view()),
+    path("config/notification-templates", notifications.NotificationTemplateListView.as_view()),
+    path("config/notification-templates/<str:event_code>", notifications.NotificationTemplateDetailView.as_view()),
+    path("config/notification-templates/<str:event_code>/reset", notifications.NotificationTemplateResetView.as_view()),
+    path("config/notification-templates/<str:event_code>/test", notifications.NotificationTemplateTestView.as_view()),
     # Audit
     path("audit-logs", audit.AuditLogListView.as_view()),
     path("audit-logs/verify", audit.AuditVerifyView.as_view()),

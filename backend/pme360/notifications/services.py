@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import structlog
-from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 
@@ -12,14 +11,10 @@ from pme360.accounts.models import Scope, User, UserMembership
 from pme360.compliance.defaults import MANDATORY_EVENTS, NOTIFICATION_TEMPLATES
 from pme360.pmes.models import Pme, PmeAssignment
 
+from . import catalog
 from .models import Notification, NotificationPreference, NotificationTemplate
 
 logger = structlog.get_logger(__name__)
-
-
-class _SafeDict(dict):
-    def __missing__(self, key):  # une variable absente ne casse pas le message
-        return ""
 
 
 # --- Destinataires --------------------------------------------------------------------------------------------
@@ -77,9 +72,12 @@ def recipients(pme: Pme, kinds: list[str]) -> list[User]:
 
 
 def _template(event_code: str) -> tuple[str, str]:
+    """Modèle de l'organisation s'il est valide, sinon texte par défaut (un modèle cassé ne bloque pas l'envoi)."""
     template = NotificationTemplate.objects.filter(event_code=event_code).first()
-    if template:
-        return template.subject, template.body
+    if template and event_code in catalog.EVENTS:
+        if not (catalog.check(template.subject, event_code) or catalog.check(template.body, event_code)):
+            return template.subject, template.body
+        logger.warning("notification.template_invalid", event_code=event_code)
     return NOTIFICATION_TEMPLATES[event_code]
 
 
@@ -88,9 +86,8 @@ def notify(
 ) -> list[Notification]:
     """Notifie chaque utilisateur selon ses préférences ; les événements obligatoires ignorent les préférences."""
     subject_template, body_template = _template(event_code)
-    values = _SafeDict({key: ("" if value is None else value) for key, value in context.items()})
-    subject = subject_template.format_map(values)
-    body = body_template.format_map(values).strip()
+    subject = catalog.render(subject_template, context)
+    body = catalog.render(body_template, context).strip()
     mandatory = event_code in MANDATORY_EVENTS
     preferences = {p.user_id: p for p in NotificationPreference.objects.filter(user__in=users, event_code=event_code)}
     created = []
@@ -112,10 +109,7 @@ def notify(
         )
         if email:
             try:
-                url = f"{settings.FRONTEND_URL}{link}" if link else settings.FRONTEND_URL
-                send_mail(
-                    subject, f"Bonjour {user.full_name},\n\n{body}\n\n{url}\n\nL'équipe PME360", None, [user.email]
-                )
+                send_mail(subject, catalog.email_text(user.full_name, body, link), None, [user.email])
                 notification.emailed_at = timezone.now()
                 notification.save(update_fields=["emailed_at"])
             except Exception:  # l'échec d'un e-mail ne doit pas bloquer le traitement métier
@@ -124,22 +118,4 @@ def notify(
     return created
 
 
-EVENT_LABELS = {
-    "DOCUMENT_TO_VERIFY": "Document déposé à vérifier",
-    "DOCUMENT_DECISION": "Décision sur un document",
-    "DOCUMENT_REJECTED_SECURITY": "Fichier bloqué par l'antivirus",
-    "DEADLINE_REMINDER": "Rappel d'échéance",
-    "DEADLINE_DUE_TODAY": "Échéance du jour",
-    "DEADLINE_OVERDUE": "Échéance dépassée",
-    "DEADLINE_ESCALATION": "Obligation critique en retard (escalade)",
-    "ALERT_RAISED": "Nouvelle alerte",
-    "AI_BUDGET_WARNING": "Budget IA (80 %)",
-    "PREDIAGNOSTIC_READY": "Pré-diagnostic IA prêt",
-    "PLAN_TO_ACCEPT": "Plan d'accompagnement à accepter",
-    "PLAN_ACCEPTED": "Plan accepté par la PME",
-    "ACTION_DOCUMENT_REQUESTED": "Document attendu pour une action",
-    "ACTION_DELIVERABLE_REJECTED": "Livrable à reprendre",
-    "ACTION_UNBLOCKED": "Action débloquée",
-    "REPORT_READY": "Rapport disponible",
-    "ACTION_COMMENTED": "Message sur une action",
-}
+EVENT_LABELS = {code: meta["label"] for code, meta in catalog.EVENTS.items()}
