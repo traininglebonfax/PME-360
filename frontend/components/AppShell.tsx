@@ -35,6 +35,7 @@ const GUDE_NAV: NavItem[] = [
   { href: "/ia", label: "Intelligence artificielle", permission: "ai.review" },
   { href: "/programmes", label: "Programmes", permission: "programme.manage" },
   { href: "/utilisateurs", label: "Utilisateurs", permission: "org.manage_users" },
+  { href: "/audit", label: "Tableau de bord auditeur", permission: "audit.view" },
   { href: "/journal", label: "Journal d'audit", permission: "audit.view" },
 ];
 

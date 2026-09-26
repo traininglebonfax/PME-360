@@ -67,6 +67,8 @@ urlpatterns = [
     path("users/advisors", accounts.AdvisorListView.as_view()),
     path("memberships/<uuid:membership_id>/revoke", accounts.RevokeMembershipView.as_view()),
     path("roles", accounts.RoleListView.as_view()),
+    path("config/roles", accounts.RoleAdminListView.as_view()),
+    path("config/roles/<uuid:role_id>", accounts.RoleAdminDetailView.as_view()),
     # Organisation
     path("organization", organizations.CurrentOrganizationView.as_view()),
     # Nomenclatures
@@ -198,5 +200,8 @@ urlpatterns = [
     # Audit
     path("audit-logs", audit.AuditLogListView.as_view()),
     path("audit-logs/verify", audit.AuditVerifyView.as_view()),
+    path("audit-logs/export", audit.AuditExportView.as_view()),
+    path("audit/overview", audit.AuditOverviewView.as_view()),
+    path("audit/sample", audit.AuditSampleView.as_view()),
     path("", include(router.urls)),
 ]

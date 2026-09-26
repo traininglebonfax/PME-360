@@ -3,7 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { Alert, Badge, Button, Card, LoadingBlock, PageHeader, SelectInput, TextInput } from "@/components/ui";
+import { RolesAdmin } from "@/components/users/RolesAdmin";
+import { Alert, Badge, Button, Card, cx, LoadingBlock, PageHeader, SelectInput, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatRelative } from "@/lib/format";
 import { SCOPE_LABELS } from "@/lib/labels";
@@ -11,6 +12,34 @@ import { SCOPE_LABELS } from "@/lib/labels";
 const EMPTY = { email: "", full_name: "", phone: "", role: "CONSEILLER", scope_ref_id: "" };
 
 export default function UsersPage() {
+  const [tab, setTab] = useState<"membres" | "roles">("membres");
+  return (
+    <>
+      <PageHeader title="Utilisateurs" subtitle="Équipes GUDE-PME, experts, auditeurs et comptes PME de l'organisation ; rôles et permissions" />
+      <div className="mb-6 flex gap-1 border-b border-line" role="tablist">
+        {(
+          [
+            ["membres", "Membres et invitations"],
+            ["roles", "Rôles et permissions"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={cx("border-b-2 px-3 py-2.5 text-sm", tab === key ? "border-brand-600 font-medium text-brand-800" : "border-transparent text-muted")}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === "membres" ? <Members /> : <RolesAdmin />}
+    </>
+  );
+}
+
+function Members() {
   const queryClient = useQueryClient();
   const members = useQuery({ queryKey: ["members"], queryFn: () => unwrap(api.GET("/api/v1/users")) });
   const roles = useQuery({ queryKey: ["roles"], queryFn: () => unwrap(api.GET("/api/v1/roles")) });
@@ -56,7 +85,6 @@ export default function UsersPage() {
 
   return (
     <>
-      <PageHeader title="Utilisateurs" subtitle="Équipes GUDE-PME, experts, auditeurs et comptes PME de l'organisation" />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card title="Membres" className="lg:col-span-2">
           {members.isLoading ? (

@@ -120,3 +120,48 @@ class MeSerializer(serializers.Serializer):
     roles = serializers.ListField(child=serializers.CharField())
     portal = serializers.ChoiceField(choices=["gude", "pme", "platform", "none"])
     pme_ids = serializers.ListField(child=serializers.UUIDField())
+
+
+# --- Rôles personnalisés (V1) --------------------------------------------------------------------------------
+
+
+class RoleAdminSerializer(serializers.ModelSerializer):
+    permissions = serializers.SlugRelatedField(slug_field="code", many=True, read_only=True)
+    is_system = serializers.SerializerMethodField()
+    members = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Role
+        fields = ["id", "code", "label", "default_scope", "is_pme_role", "is_system", "members", "permissions"]
+        read_only_fields = fields
+
+    def get_is_system(self, obj) -> bool:
+        return obj.organization_id is None
+
+    def get_members(self, obj) -> int:
+        from .roles import members_count
+
+        return members_count(obj)
+
+
+class PermissionItemSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    label = serializers.CharField()
+
+
+class PermissionGroupSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    permissions = PermissionItemSerializer(many=True)
+
+
+class RolesAdminSerializer(serializers.Serializer):
+    roles = RoleAdminSerializer(many=True)
+    permission_groups = PermissionGroupSerializer(many=True)
+    grantable = serializers.ListField(child=serializers.CharField(), help_text="Permissions que vous pouvez accorder.")
+
+
+class RoleWriteSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=40, required=False)
+    label = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    default_scope = serializers.ChoiceField(choices=["ORG", "PROGRAMME", "PORTEFEUILLE"], required=False)
+    permissions = serializers.ListField(child=serializers.CharField(), required=False)

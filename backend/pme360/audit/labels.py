@@ -23,6 +23,19 @@ ACTION_LABELS = {
     "pme.person_removed": "Dirigeant ou contact retiré",
     "pme.assigned": "Conseiller ou expert assigné",
     "pme.unassigned": "Fin de suivi par un conseiller ou expert",
+    "document.infected": "Fichier bloqué par l'antivirus",
+    "role.created": "Rôle personnalisé créé",
+    "role.updated": "Rôle personnalisé modifié",
+    "role.deleted": "Rôle personnalisé supprimé",
+    "audit.exported": "Journal d'audit exporté",
+    "audit.sampled": "Échantillon de dossiers tiré",
+    "workflow.activated": "Workflow activé",
+    "framework.published": "Référentiel publié",
+    "notification_template.updated": "Modèle de notification modifié",
+    "document_type.created": "Type de document créé",
+    "document_type.updated": "Type de document modifié",
+    "obligation.created": "Obligation créée",
+    "obligation.updated": "Obligation modifiée",
 }
 
 

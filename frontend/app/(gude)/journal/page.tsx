@@ -26,9 +26,18 @@ export default function AuditPage() {
         title="Journal d'audit"
         subtitle="Toutes les actions sont enregistrées, horodatées et chaînées : aucune entrée ne peut être modifiée ni supprimée."
         actions={
-          <Button variant="secondary" loading={verification.isFetching} onClick={() => verification.refetch()}>
-            Vérifier l'intégrité
-          </Button>
+          <div className="flex gap-2">
+            <a
+              href={`/api/v1/audit-logs/export${action ? `?action=${encodeURIComponent(action)}` : ""}`}
+              download
+              className="rounded-lg border border-line px-3 py-2.5 text-sm font-medium text-ink hover:bg-gray-50"
+            >
+              Exporter (CSV)
+            </a>
+            <Button variant="secondary" loading={verification.isFetching} onClick={() => verification.refetch()}>
+              Vérifier l'intégrité
+            </Button>
+          </div>
         }
       />
       {verification.data && (
