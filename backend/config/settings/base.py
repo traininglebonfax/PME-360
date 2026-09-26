@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "pme360.analytics",
     "pme360.reports",
     "pme360.dashboards",
+    "pme360.workflows",
 ]
 
 MIDDLEWARE = [
@@ -265,6 +266,7 @@ SPECTACULAR_SETTINGS = {
         "DeliverableStatusEnum": "pme360.plans.models.Deliverable.Status",
         "RecommendationStatusEnum": "pme360.plans.models.Recommendation.Status",
         "RecommendationRuleStatusEnum": "pme360.plans.models.RecommendationRule.Status",
+        "WorkflowStatusEnum": "pme360.workflows.models.WorkflowDefinition.Status",
     },
 }
 

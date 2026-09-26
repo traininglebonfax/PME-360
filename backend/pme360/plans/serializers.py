@@ -235,12 +235,19 @@ class TransitionSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class ActionTransitionOptionSerializer(serializers.Serializer):
+    to = serializers.ChoiceField(choices=Action.Status.choices)
+    label = serializers.CharField()
+    reason_required = serializers.BooleanField()
+
+
 class ActionDetailSerializer(ActionSerializer):
     deliverables = DeliverableSerializer(many=True, read_only=True)
     transitions = TransitionSerializer(many=True, read_only=True)
     dependents = serializers.SerializerMethodField()
     rationale = serializers.CharField(source="recommendation.rationale", read_only=True, default=None)
     allowed_transitions = serializers.SerializerMethodField()
+    transition_options = serializers.SerializerMethodField()
 
     class Meta(ActionSerializer.Meta):
         fields = [
@@ -250,6 +257,7 @@ class ActionDetailSerializer(ActionSerializer):
             "dependents",
             "rationale",
             "allowed_transitions",
+            "transition_options",
         ]
         read_only_fields = fields
 
@@ -260,13 +268,29 @@ class ActionDetailSerializer(ActionSerializer):
 
     @extend_schema_field(serializers.ListField(child=serializers.ChoiceField(choices=Action.Status.choices)))
     def get_allowed_transitions(self, action) -> list[str]:
-        from .services import MANUAL, PME_ALLOWED
+        return [t["to"] for t in self._transitions(action)]
 
-        allowed = sorted(MANUAL.get(action.status, set()))
+    def _transitions(self, action) -> list[dict]:
+        from pme360.workflows.services import action_workflow
+
+        if "workflow" not in self.context:
+            self.context["workflow"] = action_workflow()
         access = self.context.get("access")
-        if access is not None and access.is_pme_user:
-            allowed = [s for s in allowed if s in PME_ALLOWED]
-        return allowed
+        actor = "PME" if access is not None and access.is_pme_user else "STAFF"
+        return self.context["workflow"].allowed(action.status, actor)
+
+    @extend_schema_field(ActionTransitionOptionSerializer(many=True))
+    def get_transition_options(self, action) -> list[dict]:
+        access = self.context.get("access")
+        pme = access is not None and access.is_pme_user
+        return [
+            {
+                "to": t["to"],
+                "label": (t.get("pme_button") if pme else "") or t["button"],
+                "reason_required": t["reason_required"],
+            }
+            for t in self._transitions(action)
+        ]
 
 
 class ActionUpdateSerializer(serializers.Serializer):

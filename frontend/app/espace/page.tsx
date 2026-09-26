@@ -12,7 +12,7 @@ import { Dumbbell } from "@/components/charts/Charts";
 import { ReportsList } from "@/components/reports/ReportsList";
 import { Alert, ButtonLink, Card, LoadingBlock } from "@/components/ui";
 import { DOCUMENT_STATUS } from "@/lib/documents";
-import { ACTION_STATUS, type ActionStatus } from "@/lib/plans";
+import { useActionStatus } from "@/lib/actionWorkflow";
 import { formatDate } from "@/lib/format";
 import { formatPercent, formatScore } from "@/lib/scoring";
 import { api, errorMessage, unwrap } from "@/lib/api";
@@ -195,6 +195,7 @@ function ScoreSummary({ data }: { data: PmeDashboard }) {
 }
 
 function NextActions({ data }: { data: PmeDashboard }) {
+  const statusOf = useActionStatus();
   const plan = data.next_actions.plan;
   if (!plan)
     return (
@@ -218,7 +219,7 @@ function NextActions({ data }: { data: PmeDashboard }) {
       ) : (
         <ul className="divide-y divide-line">
           {items.map((item) => {
-            const status = ACTION_STATUS[item.status as ActionStatus];
+            const status = statusOf(item.status);
             return (
               <li key={item.id} className="py-2">
                 <Link href={`/espace/plan/${item.id}`} className="flex items-center justify-between gap-3 text-sm hover:text-brand-700">

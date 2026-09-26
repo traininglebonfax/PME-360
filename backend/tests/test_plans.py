@@ -470,3 +470,33 @@ def test_action_comments_internal_and_shared(api, pme_api, pme, diagnosed, org, 
     assert stranger.get(url).status_code == 404
     auditor = client_for(make_user(org, "AUDITEUR"), org)
     assert auditor.post(url, {"body": "x", "visibility": "PARTAGE_PME"}, format="json").status_code == 403
+
+
+def test_configured_workflow_governs_manual_transitions(org, make_user, client_for, api, pme_api, pme, diagnosed):
+    """Workflow activé par l'administrateur : transitions, motifs, libellés et boutons suivent la configuration."""
+    admin = client_for(make_user(org, "ADMIN_ORG"), org)
+    draft = admin.post("/api/v1/config/workflows/action/draft").json()["draft"]
+    transitions = []
+    for t in draft["transitions"]:
+        if (t["from"], t["to"]) == ("NON_COMMENCE", "EN_ATTENTE_PME"):
+            continue  # l'attente PME n'est plus possible avant le démarrage
+        if t["to"] == "EN_COURS":
+            t = {**t, "reason_required": True, "pme_button": "C'est parti"}
+        transitions.append(t)
+    admin.patch("/api/v1/config/workflows/action/draft", {"transitions": transitions}, format="json")
+    assert admin.post("/api/v1/config/workflows/action/draft/activate").status_code == 200
+
+    plan = _live_plan(api, pme_api, pme)
+    rh = next(a for a in plan["actions"] if a["offer_code"] == "OFF-RH-BASE")
+    detail = pme_api.get(f"/api/v1/actions/{rh['id']}").json()
+    start = next(o for o in detail["transition_options"] if o["to"] == "EN_COURS")
+    assert start == {"to": "EN_COURS", "label": "C'est parti", "reason_required": True}
+    assert "EN_ATTENTE_PME" not in api.get(f"/api/v1/actions/{rh['id']}").json()["allowed_transitions"]
+    refused = api.post(f"/api/v1/actions/{rh['id']}/transition", {"to": "EN_ATTENTE_PME"}, format="json")
+    assert refused.status_code == 400 and refused.json()["code"] == "invalid_transition"
+    no_reason = pme_api.post(f"/api/v1/actions/{rh['id']}/transition", {"to": "EN_COURS"}, format="json")
+    assert no_reason.status_code == 400 and "reason" in no_reason.json()["errors"]
+    started = pme_api.post(
+        f"/api/v1/actions/{rh['id']}/transition", {"to": "EN_COURS", "reason": "Réunion faite"}, format="json"
+    )
+    assert started.status_code == 200, started.content
