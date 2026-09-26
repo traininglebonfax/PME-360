@@ -1,0 +1,188 @@
+{% load report_tags %}<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport de diagnostic — {{ d.pme.legal_name }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    {% if engine == "weasyprint" %}
+    @bottom-left { content: "{{ d.pme.legal_name }} · Rapport de diagnostic v{{ version }}"; font-size: 8pt; color: #6b7280; }
+    @bottom-right { content: "Page " counter(page) " / " counter(pages); font-size: 8pt; color: #6b7280; }
+    {% else %}
+    @frame footer { -pdf-frame-content: footer; bottom: 8mm; margin-left: 16mm; margin-right: 16mm; height: 8mm; }
+    {% endif %}
+  }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 9.5pt; color: #1f2937; line-height: 1.4; }
+  h1 { font-size: 20pt; color: #0b4d38; margin: 0 0 4pt 0; }
+  h2 { font-size: 13pt; color: #0b4d38; border-bottom: 1.5pt solid #0f7a55; padding-bottom: 2pt; margin: 16pt 0 6pt 0; }
+  h3 { font-size: 10.5pt; margin: 8pt 0 3pt 0; }
+  p { margin: 0 0 5pt 0; }
+  .muted { color: #6b7280; }
+  .small { font-size: 8pt; }
+  table { width: 100%; border-collapse: collapse; margin: 3pt 0 6pt 0; }
+  th { text-align: left; font-size: 8pt; color: #6b7280; border-bottom: 0.75pt solid #d1d5db; padding: 3pt 4pt; }
+  td { border-bottom: 0.5pt solid #e5e7eb; padding: 3pt 4pt; vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  table.bar { margin: 0; }
+  table.bar td { border: none; padding: 0; height: 7pt; }
+  .kpis td { border: 0.75pt solid #d1d5db; padding: 6pt; width: 25%; }
+  .kpi { font-size: 16pt; font-weight: bold; color: #0b4d38; }
+  .tag { font-size: 7.5pt; color: #6b7280; }
+  .critical { color: #b42318; font-weight: bold; }
+  .note { background-color: #f3f4f6; padding: 6pt; font-size: 8.5pt; }
+  .rule td { background-color: #0f7a55; height: 2pt; padding: 0; border: none; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+<div id="footer" class="small muted">{{ d.pme.legal_name }} · Rapport de diagnostic v{{ version }} · page <pdf:pagenumber/> / <pdf:pagecount/></div>
+
+  <p class="muted small">GUDE-PME 360 · Rapport de diagnostic · version {{ version }} · édité le {{ d.generated_at|frdate }}</p>
+  <h1>{{ d.pme.legal_name }}</h1>
+  <p>{{ d.diagnostic.type }} au {{ d.diagnostic.reference_date|frdate }}{% if d.diagnostic.validated_at %} · validé le {{ d.diagnostic.validated_at|frdate }}{% if d.diagnostic.validated_by %} par {{ d.diagnostic.validated_by }}{% endif %}{% endif %}</p>
+  <p class="small muted">Niveau de confiance du diagnostic : <b>{{ d.score.confidence|pct }}</b> ({{ d.score.confidence_label|lower }}). Plus la part de preuves vérifiées est élevée, plus la confiance est forte.</p>
+<table class="rule"><tr><td>&nbsp;</td></tr></table>
+
+<p class="small muted">Sommaire : {% for s in d.sections %}{{ forloop.counter }}. {{ s }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+
+<h2>1. Présentation de l'entreprise</h2>
+<table>
+  <tr><th style="width:17%">Raison sociale</th><td style="width:33%">{{ d.pme.legal_name }}{% if d.pme.trade_name %} ({{ d.pme.trade_name }}){% endif %}</td><th style="width:17%">Forme juridique</th><td style="width:33%">{{ d.pme.legal_form|default:"—" }}</td></tr>
+  <tr><th>Secteur</th><td>{{ d.pme.sector|default:"—" }}</td><th>Région</th><td>{{ d.pme.region|default:"—" }}{% if d.pme.commune %} · {{ d.pme.commune }}{% endif %}</td></tr>
+  <tr><th>Création</th><td>{{ d.pme.creation_date|frdate }}</td><th>Effectif</th><td>{{ d.pme.headcount|default:"—" }}{% if d.pme.size %} · {{ d.pme.size }}{% endif %}</td></tr>
+  <tr><th>RCCM</th><td>{{ d.pme.rccm|default:"—" }}</td><th>Conseiller</th><td>{{ d.pme.advisor|default:"—" }}</td></tr>
+</table>
+
+<h2>2. Méthodologie</h2>
+<p>Le diagnostic 360° évalue {{ d.diagnostic.criteria_evaluated }} critères sur {{ d.diagnostic.criteria_total }} (référentiel GUDE-360 v{{ d.diagnostic.framework_version }}, moteur v{{ d.diagnostic.engine_version }}), regroupés en 12 dimensions et 3 piliers. Chaque critère est noté de 0 à 4 à partir des réponses de l'entreprise, revues par le conseiller ; un critère exigeant une preuve reste plafonné tant que le justificatif n'est pas vérifié. Les indicateurs financiers sont calculés selon les formules de l'annexe.</p>
+<p class="small muted">Preuves prises en compte à la date du {{ d.diagnostic.evidence_as_of|frdate }}. Les scores de ce rapport sont figés : ils ne changent plus, même si la situation évolue ensuite.</p>
+
+<h2>3. Score global</h2>
+<table class="kpis">
+  <tr>
+    <td><div class="tag">Score global 360</div><div class="kpi">{{ d.score.global|score }}/100</div>{% if d.score.delta is not None %}<div class="small">{% if d.score.delta >= 0 %}+{% endif %}{{ d.score.delta|decimal1 }} pt depuis le {{ d.score.previous_date|frdate }}</div>{% endif %}</td>
+    <td><div class="tag">Niveau de maturité</div><div class="kpi">N{{ d.score.maturity_level|default:"—" }}</div><div class="small">{{ d.score.maturity_label|default:"" }}</div></td>
+    <td><div class="tag">Profil maturité × performance</div><div class="kpi" style="font-size:11pt">{{ d.score.quadrant }}</div><div class="small">IMO {{ d.score.imo|score }} · IPE {{ d.score.ipe|score }}</div></td>
+    <td><div class="tag">Priorité d'intervention</div><div class="kpi">{{ d.score.priority }}</div><div class="small">{{ d.score.priority_label }}</div></td>
+  </tr>
+</table>
+{% if d.score.maturity_message %}<p>{{ d.score.maturity_message }}</p>{% endif %}
+{% if d.score.gates_failed %}<p class="small">Niveau limité par : {{ d.score.gates_failed|join:" ; " }}.</p>{% endif %}
+{% if d.score.current is not None %}<p class="small muted">Score courant à la date d'édition (preuves et actions vérifiées depuis la validation) : {{ d.score.current|score }}/100.</p>{% endif %}
+
+<h2>4. Scores par dimension</h2>
+<table>
+  <tr><th style="width:24%">Dimension</th><th style="width:52%">Score</th><th class="num" style="width:10%">/100</th><th class="num" style="width:14%">Confiance</th></tr>
+  {% for dim in d.dimensions %}
+  <tr>
+    <td>{{ dim.short_name }}</td>
+    <td>{% if dim.score is not None %}<table class="bar"><tr><td style="width:{{ dim.score|bar }}%; background-color:{{ dim.score|tone }}">&nbsp;</td><td style="width:{{ dim.score|rest }}%; background-color:#eef0f3">&nbsp;</td></tr></table>{% else %}<span class="muted small">Non évaluée</span>{% endif %}</td>
+    <td class="num">{{ dim.score|score }}</td>
+    <td class="num">{{ dim.confidence|pct }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="small muted">Couleurs : moins de 50 = fragile · 50 à 69 = intermédiaire · 70 et plus = solide.</p>
+
+<h2>5. Forces</h2>
+{% if d.strengths.dimensions or d.strengths.criteria %}
+{% if d.strengths.dimensions %}<p>Dimensions solides : {% for dim in d.strengths.dimensions %}<b>{{ dim.short_name }}</b> ({{ dim.score|score }}){% if not forloop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+<table>
+  <tr><th style="width:52%">Critère</th><th style="width:18%">Dimension</th><th class="num" style="width:10%">Niveau</th><th style="width:20%">Source</th></tr>
+  {% for c in d.strengths.criteria %}<tr><td>{{ c.code }} · {{ c.name }}</td><td>{{ c.dimension }}</td><td class="num">{{ c.level }}/4</td><td>{{ c.source }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune pratique n'atteint encore le niveau 3.</p>{% endif %}
+
+<h2>6. Faiblesses</h2>
+{% if d.weaknesses.dimensions %}<p>Dimensions sous 50/100 : {% for dim in d.weaknesses.dimensions %}<b>{{ dim.short_name }}</b> ({{ dim.score|score }}){% if not forloop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+{% if d.weaknesses.criteria %}
+<table>
+  <tr><th style="width:66%">Critère au niveau 0 ou 1</th><th style="width:22%">Dimension</th><th class="num" style="width:12%">Niveau</th></tr>
+  {% for c in d.weaknesses.criteria %}<tr><td>{% if c.critical %}<span class="critical">Critique</span> · {% endif %}{{ c.code }} · {{ c.name }}</td><td>{{ c.dimension }}</td><td class="num">{{ c.level }}/4</td></tr>{% endfor %}
+</table>
+{% endif %}
+{% if d.weaknesses.capped %}<p class="small">Critères plafonnés faute de preuve vérifiée : {% for c in d.weaknesses.capped %}{{ c.code }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+{% if not d.weaknesses.dimensions and not d.weaknesses.criteria %}<p class="muted">Aucune faiblesse marquée.</p>{% endif %}
+
+<h2>7. Risques</h2>
+<p>Exposition au risque : <b>{{ d.risks.risk_index|score }}/100</b> (plus elle est élevée, plus la maîtrise des risques est faible).</p>
+{% if d.risks.criteria %}<p>Pratiques de maîtrise des risques au niveau 0 ou 1 : {% for c in d.risks.criteria %}{{ c.code }} ({{ c.name }}){% if not forloop.last %} ; {% endif %}{% endfor %}.</p>{% endif %}
+{% for a in d.risks.alerts %}<p>• <b>{{ a.severity }}</b> — {{ a.title }} : {{ a.message }}</p>{% empty %}<p class="muted small">Aucune alerte de risque élevée ou critique ouverte.</p>{% endfor %}
+
+<h2>8. Anomalies</h2>
+{% for a in d.anomalies %}<p>• <b>{{ a.severity }}</b> — {{ a.title }} : {{ a.message }}</p>{% empty %}<p class="muted">Aucune incohérence ni anomalie documentaire ouverte.</p>{% endfor %}
+
+<h2>9. Documents manquants</h2>
+<p>Taux de conformité documentaire : <b>{{ d.compliance.rate|pct }}</b>.</p>
+{% if d.missing_documents %}
+<table>
+  <tr><th style="width:40%">Document</th><th style="width:22%">Catégorie</th><th style="width:14%">État</th><th style="width:24%">Critères concernés</th></tr>
+  {% for m in d.missing_documents %}<tr><td>{{ m.name }}</td><td>{{ m.category }}</td><td>{{ m.state }}</td><td>{{ m.criteria|join:", "|default:"—" }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucun document exigé manquant ou expiré.</p>{% endif %}
+
+<h2>10. Priorités</h2>
+<p>Critères dont l'amélioration ferait le plus progresser le score global :</p>
+<table>
+  <tr><th style="width:62%">Critère</th><th style="width:20%">Dimension</th><th class="num" style="width:18%">Points gagnables</th></tr>
+  {% for g in d.priorities %}<tr><td>{% if g.critical %}<span class="critical">Critique</span> · {% endif %}{{ g.criterion }} · {{ g.name }}</td><td>{{ g.dimension }}</td><td class="num">{{ g.gain|decimal1 }}</td></tr>{% endfor %}
+</table>
+
+<h2>11. Recommandations</h2>
+{% if d.recommendations %}
+<table>
+  <tr><th style="width:26%">Accompagnement proposé</th><th style="width:50%">Constat et justification</th><th style="width:14%">Notation</th><th class="num" style="width:10%">Priorité</th></tr>
+  {% for r in d.recommendations %}<tr><td><b>{{ r.offer }}</b><br><span class="tag">{{ r.dimension }} · {{ r.status }}</span></td><td>{{ r.problem }}<br><span class="small muted">{{ r.rationale }}</span></td><td class="small">{{ r.axes }}</td><td class="num">{{ r.priority|score }}</td></tr>{% endfor %}
+</table>
+<p class="small muted">Notation : Impact, Urgence, Risque, Effort (1 à 5) ; priorité de 13 à 100.</p>
+{% else %}<p class="muted">Les recommandations n'ont pas encore été établies pour ce diagnostic.</p>{% endif %}
+
+<h2>12. Plan d'accompagnement</h2>
+{% if d.plan.actions %}
+<p>{{ d.plan.title }} (version {{ d.plan.version }}, {{ d.plan.status|lower }}), démarrage le {{ d.plan.horizon_start|frdate }}.</p>
+<table>
+  <tr><th style="width:15%">Réf.</th><th style="width:30%">Action</th><th style="width:13%">Horizon</th><th style="width:14%">Statut</th><th style="width:28%">Documents attendus</th></tr>
+  {% for a in d.plan.actions %}<tr><td class="small">{{ a.ref }}</td><td>{{ a.title }}<br><span class="tag">{{ a.dimension }}</span></td><td>{{ a.phase }}</td><td>{{ a.status }}</td><td class="small">{{ a.deliverables|join:", "|default:"—" }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucun plan d'accompagnement validé à la date d'édition.</p>{% endif %}
+
+<h2>13. Calendrier</h2>
+{% if d.calendar %}
+<table>
+  <tr><th style="width:15%">Date</th><th style="width:15%">Type</th><th style="width:70%">Échéance</th></tr>
+  {% for c in d.calendar %}<tr><td>{{ c.date|frdate }}</td><td>{{ c.kind }}</td><td>{{ c.label }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune échéance dans les 90 prochains jours.</p>{% endif %}
+
+<h2>14. Indicateurs de suivi</h2>
+<table>
+  <tr><th style="width:65%">Indicateur</th><th style="width:35%">Valeur de départ ou cible</th></tr>
+  {% for i in d.indicators %}<tr><td>{{ i.label }}</td><td>{% if i.action %}Cible de l'action {{ i.action }}{% elif i.unit == "%" %}{{ i.baseline|pct }}{% else %}{{ i.baseline|score }}{{ i.unit }}{% endif %}</td></tr>{% endfor %}
+</table>
+
+<h2>15. Conclusion</h2>
+{% for line in d.conclusion %}<p>{{ line }}</p>{% endfor %}
+
+<h2 class="page-break">16. Annexes</h2>
+<h3>A. Indicateurs financiers (formules et sources)</h3>
+<table>
+  <tr><th style="width:22%">Indicateur</th><th style="width:30%">Formule</th><th class="num" style="width:16%">Résultat</th><th style="width:14%">Interprétation</th><th style="width:18%">Source</th></tr>
+  {% for m in d.annexes.metrics %}<tr><td>{{ m.name }}</td><td class="small">{{ m.formula }}</td><td class="num">{{ m.value }}</td><td>{{ m.band|default:"—" }}</td><td class="small">{{ m.sources }}</td></tr>{% endfor %}
+</table>
+<p class="small muted">Seuils d'interprétation indicatifs, à calibrer par secteur avec les experts GUDE-PME.</p>
+<h3>B. Journal de validation</h3>
+{% if d.annexes.assessments %}
+<table>
+  <tr><th style="width:12%">Critère</th><th style="width:14%">Décision</th><th class="num" style="width:10%">Déclaré</th><th class="num" style="width:10%">Retenu</th><th style="width:38%">Justification</th><th style="width:16%">Par</th></tr>
+  {% for a in d.annexes.assessments %}<tr><td>{{ a.criterion }}</td><td>{{ a.status }}</td><td class="num">{{ a.declared|default_if_none:"—" }}</td><td class="num">{{ a.final|default_if_none:"—" }}</td><td class="small">{{ a.comment|default:"—" }}</td><td class="small">{{ a.reviewer }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="small">Tous les critères évalués ont été validés au niveau déclaré.</p>{% endif %}
+<table>
+  <tr><th style="width:15%">Date</th><th style="width:55%">Événement</th><th style="width:30%">Par</th></tr>
+  {% for e in d.annexes.journal %}<tr><td>{{ e.at|frdate }}</td><td class="small">{{ e.action }}</td><td class="small">{{ e.actor }}</td></tr>{% endfor %}
+</table>
+<p class="note">Document généré par GUDE-PME 360 à partir de données figées le {{ d.generated_at|frdate }}{% if d.generated_by %} à la demande de {{ d.generated_by }}{% endif %}. Modèle de rapport v{{ d.template_version }}. Toute correction donne lieu à une nouvelle version du rapport.</p>
+</body>
+</html>

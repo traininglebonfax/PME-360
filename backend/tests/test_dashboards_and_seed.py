@@ -7,6 +7,7 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from pme360.accounts.models import User
+from pme360.analytics.services import refresh as refresh_analytics
 from pme360.core.tenancy import system_context, tenant_context
 from pme360.diagnostic.models import Diagnostic
 from pme360.organizations.models import Organization
@@ -36,6 +37,7 @@ def test_portfolio_dashboard_requires_permission(org, make_user, make_pme, clien
     pme = make_pme(org)
     leader = client_for(make_user(org, "DIRIGEANT_PME", scope_ref_id=pme.id), org)
     assert leader.get("/api/v1/dashboards/portfolio").status_code == 403
+    refresh_analytics()
     data = client_for(make_user(org, "ADMIN_ORG"), org).get("/api/v1/dashboards/portfolio").json()
     assert data["kpis"]["pmes_total"] == 2
     assert data["kpis"]["pmes_without_advisor"] == 2
@@ -91,6 +93,12 @@ def test_seed_demo_is_idempotent_and_fictitious():
         live_boutik = ScoreSnapshot.objects.get(pme__legal_name="Boutik Plus Distribution SARL", is_frozen=False)
         assert live_boutik.global_score > boutik.global_score
         assert Recommendation.objects.filter(pme__legal_name="Délices du Bandama SAS", status="PROPOSEE").exists()
+        # Phase 6 : un rapport de diagnostic par PME diagnostiquée, une seule version malgré deux passages.
+        from pme360.reports.models import Report
+
+        diagnosed = {d.pme_id for d in Diagnostic.objects.filter(status="VALIDE")}
+        assert set(Report.objects.values_list("pme_id", flat=True)) == diagnosed
+        assert not Report.objects.filter(version__gt=1).exists()
     assert all(u.email.endswith("@demo.test") for u in User.objects.all())
 
 

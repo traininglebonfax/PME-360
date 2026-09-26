@@ -8,7 +8,7 @@ import { LifecycleBadge } from "@/components/LifecycleBadge";
 import { Alert, Badge, ButtonLink, Card, EmptyState, Kpi, LoadingBlock, PageHeader } from "@/components/ui";
 import { api, errorMessage, unwrap } from "@/lib/api";
 import type { AdvisorDashboard, PortfolioDashboard, ProgressRow } from "@/lib/dashboards";
-import { formatRelative } from "@/lib/format";
+import { formatDateTime, formatRelative } from "@/lib/format";
 import { LIFECYCLE_LABELS, SIZE_LABELS } from "@/lib/labels";
 import { DIAGNOSTIC_TYPE_LABELS, formatPercent, formatScore, PRIORITY_TONES } from "@/lib/scoring";
 import { hasPermission, useMe } from "@/lib/session";
@@ -132,20 +132,48 @@ export default function DashboardPage() {
 
 function Portfolio({ data }: { data: PortfolioDashboard }) {
   const k = data.kpis;
+  const def = data.definitions;
   return (
     <>
-      <h2 className="mb-3 mt-10 text-lg font-semibold">Vue d'ensemble du portefeuille</h2>
+      <div className="mb-3 mt-10 flex flex-wrap items-baseline justify-between gap-3">
+        <h2 className="text-lg font-semibold">Vue d'ensemble du portefeuille</h2>
+        <p className="text-xs text-muted">
+          {data.refreshed_at && `Données au ${formatDateTime(data.refreshed_at)} · `}
+          <Link href="/analyses" className="font-medium text-brand-700 hover:underline">
+            Analyses détaillées
+          </Link>{" "}
+          ·{" "}
+          <Link href="/portefeuille" className="font-medium text-brand-700 hover:underline">
+            Tableau du portefeuille
+          </Link>
+        </p>
+      </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Kpi label="PME au total" value={k.pmes_total} hint={`${k.pmes_diagnosed} avec un diagnostic validé`} />
+        <Kpi label="PME au total" value={k.pmes_total} hint={`${k.pmes_diagnosed} avec un diagnostic validé`} definition={def.pmes_total} />
+        <Kpi label="PME accompagnées" value={k.pmes_accompanied} hint={`${k.pmes_new_this_month} intégrée(s) ce mois-ci`} definition={def.pmes_accompanied} />
+        <Kpi label="PME en retard" value={k.pmes_late} hint={`${k.actions_overdue} action(s) en retard`} definition={def.pmes_late} />
+        <Kpi label="Actions réalisées" value={k.actions_done} definition={def.actions_done} />
+        <Kpi label="PME actives" value={k.pmes_active} hint={`${k.pmes_inactive} inactive(s)`} definition={def.pmes_active} />
+        <Kpi label="Sans conseiller" value={k.pmes_without_advisor} definition={def.pmes_without_advisor} />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Kpi
+          definition={def.average_score}
           label="Score moyen"
           value={k.average_score === null ? "—" : formatScore(k.average_score)}
           hint={k.average_confidence === null ? undefined : `Médiane ${formatScore(k.median_score)} · confiance ${formatPercent(k.average_confidence)}`}
         />
-        <Kpi label="Progression moyenne" value={k.average_progress === null ? "—" : `${signed(k.average_progress)} pts`} hint="Depuis le diagnostic initial" />
-        <Kpi label="PME à risque" value={k.pmes_at_risk} hint="Exposition au risque ≥ 50" />
-        <Kpi label="Intervention urgente" value={k.pmes_urgent} hint="Priorité P1" />
         <Kpi
+          label="Progression moyenne"
+          value={k.average_progress === null ? "—" : `${signed(k.average_progress)} pts`}
+          hint={`${k.progress_pmes} PME accompagnées depuis 3 mois ou plus`}
+          definition={def.average_progress}
+        />
+        <Kpi label="PME à risque" value={k.pmes_at_risk} hint="Exposition au risque ≥ 50" definition={def.pmes_at_risk} />
+        <Kpi label="Intervention urgente" value={k.pmes_urgent} hint="Priorité P1" definition={def.pmes_urgent} />
+        <Kpi label="Confiance moyenne" value={k.average_confidence === null ? "—" : formatPercent(k.average_confidence)} definition={def.average_confidence} />
+        <Kpi
+          definition={def.average_compliance}
           label="Conformité moyenne"
           value={k.average_compliance.value === null ? "—" : formatPercent(k.average_compliance.value)}
           hint={`${k.average_compliance.pmes} PME avec des éléments exigibles`}

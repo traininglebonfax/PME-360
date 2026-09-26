@@ -22,6 +22,7 @@ from pme360.notifications import views as notifications
 from pme360.organizations import views as organizations
 from pme360.plans import views as plans
 from pme360.pmes import views as pmes
+from pme360.reports import views as reports
 from pme360.scoring import views as scoring
 
 
@@ -72,6 +73,12 @@ urlpatterns = [
     # Tableaux de bord
     path("dashboards/advisor", dashboards.AdvisorDashboardView.as_view()),
     path("dashboards/portfolio", dashboards.PortfolioDashboardView.as_view()),
+    path("dashboards/portfolio/analyses", dashboards.PortfolioAnalysesView.as_view()),
+    path("dashboards/portfolio/pmes", dashboards.PortfolioPmesView.as_view()),
+    # Rapports (Document 9, § 7)
+    path("pmes/<uuid:pme_id>/reports", reports.PmeReportsView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/report", reports.DiagnosticReportView.as_view()),
+    path("reports/<uuid:report_id>/pdf", reports.ReportPdfView.as_view()),
     path("dashboards/pme/<uuid:pme_id>", dashboards.PmeDashboardView.as_view()),
     # Référentiel de diagnostic
     path("framework-versions", diagnostic.FrameworkVersionListView.as_view()),

@@ -19,6 +19,8 @@ select = ["E", "F", "I", "B", "UP", "DJ", "S"]
 ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
+# SQL des vues analytiques : constantes internes, aucune donnée utilisateur interpolée.
+"pme360/analytics/sql.py" = ["S608"]
 "tests/**" = ["S105", "S106"]
 "pme360/core/management/commands/seed_demo.py" = ["S105", "S106"]
 "pme360/diagnostic/gude360_v1.py" = ["E501"]  # contenu du référentiel : textes des questions et ancres

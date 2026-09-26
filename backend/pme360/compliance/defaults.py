@@ -606,6 +606,10 @@ NOTIFICATION_TEMPLATES = {
         "Le document déposé pour « {action} » doit être repris : {reason}",
     ),
     "ACTION_UNBLOCKED": ("Nouvelle action disponible", "L'action « {action} » peut maintenant démarrer."),
+    "REPORT_READY": (
+        "Rapport de diagnostic disponible : {pme}",
+        "La version {version} du rapport de diagnostic de {pme} est disponible au téléchargement.",
+    ),
 }
 # Messages toujours envoyés, quelles que soient les préférences (Document 7, § 8.3).
 MANDATORY_EVENTS = {"DEADLINE_ESCALATION", "DOCUMENT_REJECTED_SECURITY"}

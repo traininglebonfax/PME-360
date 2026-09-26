@@ -178,10 +178,23 @@ export function Alert({ tone = "danger", title, children }: { tone?: "danger" | 
   );
 }
 
-export function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: ReactNode }) {
+export function Kpi({ label, value, hint, definition }: { label: string; value: ReactNode; hint?: ReactNode; definition?: string }) {
   return (
     <div className="rounded-xl border border-line bg-surface p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
+      <p className="flex items-start justify-between gap-2 text-xs font-medium uppercase tracking-wide text-muted">
+        <span>{label}</span>
+        {definition && (
+          <span
+            tabIndex={0}
+            role="img"
+            aria-label={`Définition : ${definition}`}
+            title={definition}
+            className="inline-flex h-4 w-4 shrink-0 cursor-help items-center justify-center rounded-full border border-line text-[10px] normal-case text-muted"
+          >
+            i
+          </span>
+        )}
+      </p>
       <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     </div>

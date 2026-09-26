@@ -8,6 +8,7 @@ import { type FormEvent, useState } from "react";
 import { LifecycleBadge } from "@/components/LifecycleBadge";
 import { FinancialTab } from "@/components/ai/FinancialTab";
 import { PlanTab } from "@/components/plans/PlanTab";
+import { ReportsList } from "@/components/reports/ReportsList";
 import { AlertList } from "@/components/alerts/AlertList";
 import { DocumentsTab } from "@/components/documents/DocumentsTab";
 import { DiagnosticTab } from "@/components/scoring/DiagnosticTab";
@@ -32,6 +33,7 @@ const TABS = [
   { key: "finances", label: "Finances" },
   { key: "alertes", label: "Alertes" },
   { key: "plan", label: "Plan & actions" },
+  { key: "rapports", label: "Rapports" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -106,6 +108,7 @@ export default function PmeDetailPage() {
       {tab === "finances" && <FinancialTab pmeId={data.id} />}
       {tab === "alertes" && <AlertList pmeId={data.id} scope="all" />}
       {tab === "plan" && <PlanTab pmeId={data.id} />}
+      {tab === "rapports" && <ReportsList pmeId={data.id} />}
     </>
   );
 }

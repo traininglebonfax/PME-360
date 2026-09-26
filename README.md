@@ -24,7 +24,15 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 3 — Documents & conformité | ✅ Livrée (voir ci-dessous) ; règles réglementaires CNPS / fiscales / états financiers **à vérifier** avant activation (RM-08) |
 | 4 — IA | ✅ Livrée (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
 | 5 — Accompagnement | ✅ Livrée (voir ci-dessous) ; catalogue d'offres, règles et modèles de livrables **à valider** par GUDE-PME |
-| 6 — Reporting | À venir |
+| 6 — Reporting | ✅ Livrée sur la branche `phase-6-reporting` (voir ci-dessous) ; rapport PDF à relire par GUDE-PME ; analyse d'effet des accompagnements descriptive uniquement (RM-09) |
+
+### Contenu de la phase 6
+
+- **Vues analytiques** (Document 3, § 6) : `mv_pme_current_state`, `mv_portfolio_weaknesses`, `mv_score_trajectories`, rafraîchies après chaque fait métier (au plus toutes les 30 s) et toutes les 15 minutes. Une vue matérialisée ignorant la RLS, elles ne sont **jamais lues directement** : l'application passe par des vues filtrées (`v_*`, `security_barrier`) qui appliquent le prédicat de tenant, puis par le périmètre de l'utilisateur ; un test vérifie qu'aucun code ne lit une `mv_*`.
+- **Tableaux de bord** (Document 9) : KPI de la vue d'ensemble selon leurs définitions exactes, avec **info-bulle de définition** et date de fraîcheur (PME accompagnées, en retard, actions réalisées, score moyen courant, progression, conformité…) ; **tableau du portefeuille** filtrable (score et tendance 6 mois, confiance, conformité, risque, priorité, retards) avec **export CSV** et **nuage maturité × performance** ; côté PME, « Mon évolution » (initial → aujourd'hui par dimension) et compteurs d'actions.
+- **Analyses de portefeuille** : problèmes les plus fréquents (dimensions et critères), accompagnements les plus demandés, **heatmap secteur × dimension** (cellules masquées si moins de 5 PME), progression et stagnation, PME à accompagnement renforcé, évolutions observées par offre comparées aux PME éligibles non accompagnées, avec l'avertissement RM-09 (corrélation n'est pas causalité).
+- **Rapport PDF de diagnostic en 16 sections** (présentation, méthodologie, score global, dimensions, forces, faiblesses, risques, anomalies, documents manquants, priorités, recommandations, plan, calendrier, indicateurs, conclusion, annexes avec formules financières, sources et journal de validation) : **généré automatiquement à la validation**, données figées, PDF archivé avec empreinte SHA-256 vérifiée au téléchargement, table en ajout seul, nouvelle version à chaque réédition ; téléchargeable par la PME et l'équipe. Rendu **WeasyPrint** en production (bibliothèques ajoutées à l'image Docker) et **xhtml2pdf** en repli sur un poste sans Pango (`PME360_PDF_ENGINE`).
+- **Qualité** : 290 tests backend, 20 tests unitaires frontend, 22 tests E2E.
 
 ### Contenu de la phase 5
 

@@ -140,4 +140,5 @@ EVENT_LABELS = {
     "ACTION_DOCUMENT_REQUESTED": "Document attendu pour une action",
     "ACTION_DELIVERABLE_REJECTED": "Livrable à reprendre",
     "ACTION_UNBLOCKED": "Action débloquée",
+    "REPORT_READY": "Rapport disponible",
 }
