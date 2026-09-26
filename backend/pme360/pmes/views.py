@@ -1,9 +1,10 @@
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -239,3 +240,102 @@ class ReferenceListView(APIView):
         if model is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(RefItemSerializer(model.objects.filter(is_active=True), many=True).data)
+
+
+# --- Import en masse (CSV) ------------------------------------------------------------------------------------
+
+
+class ImportFileSerializer(serializers.Serializer):
+    file = serializers.FileField()
+    confirm_similar = serializers.BooleanField(required=False, default=False)
+    cohort_id = serializers.UUIDField(required=False, allow_null=True)
+    start_onboarding = serializers.BooleanField(required=False, default=True)
+
+
+class ImportRowSerializer(serializers.Serializer):
+    line = serializers.IntegerField()
+    legal_name = serializers.CharField()
+    status = serializers.ChoiceField(choices=["VALIDE", "DOUBLON_PROBABLE", "ERREUR", "CREEE", "IGNOREE"])
+    errors = serializers.DictField(child=serializers.CharField())
+    warnings = serializers.ListField(child=serializers.CharField())
+    duplicates = serializers.ListField(child=serializers.DictField())
+    pme_id = serializers.CharField(allow_null=True)
+
+
+class ImportReportSerializer(serializers.Serializer):
+    columns = serializers.ListField(child=serializers.CharField())
+    rows = ImportRowSerializer(many=True)
+    summary = serializers.DictField(child=serializers.IntegerField())
+
+
+def _import_report(columns, results) -> dict:
+    summary: dict[str, int] = {"total": len(results)}
+    for result in results:
+        summary[result.status] = summary.get(result.status, 0) + 1
+    return {"columns": columns, "rows": results, "summary": summary}
+
+
+def _import_access(request):
+    from rest_framework.exceptions import PermissionDenied
+
+    access = get_access(request)
+    if access.is_pme_user:
+        raise PermissionDenied()
+    return access
+
+
+class PmeImportTemplateView(APIView):
+    required_permissions = "pme.create"
+
+    @extend_schema(responses={(200, "text/csv"): str})
+    def get(self, request):
+        from django.http import HttpResponse
+
+        from .imports import template_csv
+
+        _import_access(request)
+        response = HttpResponse(template_csv(), content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="modele-import-pme.csv"'
+        return response
+
+
+class PmeImportPreviewView(APIView):
+    """Aperçu : chaque ligne est validée et comparée aux PME existantes ; rien n'est créé."""
+
+    required_permissions = "pme.create"
+    parser_classes = [MultiPartParser]
+
+    @extend_schema(request={"multipart/form-data": ImportFileSerializer}, responses=ImportReportSerializer)
+    def post(self, request):
+        from .imports import analyze
+
+        access = _import_access(request)
+        serializer = ImportFileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        columns, results = analyze(access, serializer.validated_data["file"].read())
+        return Response(ImportReportSerializer(_import_report(columns, results)).data)
+
+
+class PmeImportView(APIView):
+    """Import : crée les lignes valides (et les doublons probables si confirmés) ; bilan ligne par ligne."""
+
+    required_permissions = "pme.create"
+    parser_classes = [MultiPartParser]
+
+    @extend_schema(request={"multipart/form-data": ImportFileSerializer}, responses=ImportReportSerializer)
+    def post(self, request):
+        from .imports import read_rows, run_import
+
+        access = _import_access(request)
+        serializer = ImportFileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        content = serializer.validated_data["file"].read()
+        columns, _ = read_rows(content)
+        results = run_import(
+            access,
+            content,
+            confirm_similar=serializer.validated_data["confirm_similar"],
+            cohort_id=serializer.validated_data.get("cohort_id"),
+            start_onboarding=serializer.validated_data["start_onboarding"],
+        )
+        return Response(ImportReportSerializer(_import_report(columns, results)).data)

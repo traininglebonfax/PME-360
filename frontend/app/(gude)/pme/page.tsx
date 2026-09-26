@@ -60,7 +60,16 @@ export default function PmeListPage() {
       <PageHeader
         title="PME"
         subtitle="Entreprises de votre périmètre"
-        actions={hasPermission(me, "pme.create") && <ButtonLink href="/pme/nouvelle">Nouvelle PME</ButtonLink>}
+        actions={
+          hasPermission(me, "pme.create") && (
+            <div className="flex gap-2">
+              <ButtonLink href="/pme/import" variant="secondary">
+                Importer (CSV)
+              </ButtonLink>
+              <ButtonLink href="/pme/nouvelle">Nouvelle PME</ButtonLink>
+            </div>
+          )
+        }
       />
       <div className="mb-4 grid gap-3 rounded-xl border border-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-6">
         <div className="lg:col-span-2">

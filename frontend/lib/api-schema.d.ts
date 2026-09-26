@@ -1268,6 +1268,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pme-import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Import : crée les lignes valides (et les doublons probables si confirmés) ; bilan ligne par ligne. */
+        post: operations["pme_import_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pme-import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Aperçu : chaque ligne est validée et comparée aux PME existantes ; rien n'est créé. */
+        post: operations["pme_import_preview_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pme-import/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pme_import_template_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pmes": {
         parameters: {
             query?: never;
@@ -3081,6 +3131,45 @@ export interface components {
             live: components["schemas"]["SnapshotDetail"] | null;
             open_diagnostic: unknown;
         };
+        ImportFileRequest: {
+            /** Format: binary */
+            file: string;
+            /** @default false */
+            confirm_similar: boolean;
+            /** Format: uuid */
+            cohort_id?: string | null;
+            /** @default true */
+            start_onboarding: boolean;
+        };
+        ImportReport: {
+            columns: string[];
+            rows: components["schemas"]["ImportRow"][];
+            summary: {
+                [key: string]: number;
+            };
+        };
+        ImportRow: {
+            line: number;
+            legal_name: string;
+            status: components["schemas"]["ImportRowStatusEnum"];
+            errors: {
+                [key: string]: string;
+            };
+            warnings: string[];
+            duplicates: {
+                [key: string]: unknown;
+            }[];
+            pme_id: string | null;
+        };
+        /**
+         * @description * `VALIDE` - VALIDE
+         *     * `DOUBLON_PROBABLE` - DOUBLON_PROBABLE
+         *     * `ERREUR` - ERREUR
+         *     * `CREEE` - CREEE
+         *     * `IGNOREE` - IGNOREE
+         * @enum {string}
+         */
+        ImportRowStatusEnum: "VALIDE" | "DOUBLON_PROBABLE" | "ERREUR" | "CREEE" | "IGNOREE";
         /**
          * @description * `EN_SCAN` - Analyse de sécurité en cours
          *     * `SAIN` - Sain
@@ -6406,6 +6495,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlatformOrganization"];
+                };
+            };
+        };
+    };
+    pme_import_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["ImportFileRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportReport"];
+                };
+            };
+        };
+    };
+    pme_import_preview_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["ImportFileRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportReport"];
+                };
+            };
+        };
+    };
+    pme_import_template_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
         };
