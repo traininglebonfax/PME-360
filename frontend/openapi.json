@@ -5267,6 +5267,68 @@
                 }
             }
         },
+        "/api/v1/reports/portfolio": {
+            "get": {
+                "operationId": "reports_portfolio_list",
+                "description": "Rapports trimestriels de portefeuille visibles par l'utilisateur ; génération d'une nouvelle édition.",
+                "tags": [
+                    "reports"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PortfolioReport"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "reports_portfolio_create",
+                "description": "Rapports trimestriels de portefeuille visibles par l'utilisateur ; génération d'une nouvelle édition.",
+                "tags": [
+                    "reports"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PortfolioReportRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PortfolioReport"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/roles": {
             "get": {
                 "operationId": "roles_list",
@@ -11708,6 +11770,144 @@
                 ],
                 "type": "string",
                 "description": "* `gude` - gude\n* `pme` - pme\n* `platform` - platform\n* `none` - none"
+            },
+            "PortfolioReport": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ReportTypeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "diagnostic": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "version": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "default": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "period": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "template_version": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "size_bytes": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "sha256": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "engine": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Moteur de rendu PDF utilisé."
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "generated_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "generated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "scope_label": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "include_names": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "pme_count": {
+                        "type": "integer",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "confidence",
+                    "diagnostic",
+                    "engine",
+                    "generated_at",
+                    "generated_by_name",
+                    "id",
+                    "include_names",
+                    "period",
+                    "pme",
+                    "pme_count",
+                    "scope_label",
+                    "sha256",
+                    "size_bytes",
+                    "template_version",
+                    "title",
+                    "type",
+                    "version"
+                ]
+            },
+            "PortfolioReportRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "default": "",
+                                "pattern": "^\\d{4}-T[1-4]$"
+                            },
+                            {
+                                "type": "string",
+                                "maxLength": 0
+                            }
+                        ]
+                    },
+                    "programme_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "cohort_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "include_names": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
             },
             "Preference": {
                 "type": "object",

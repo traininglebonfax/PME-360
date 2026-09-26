@@ -168,3 +168,61 @@ def test_portfolio_table_and_csv_export(api, pme, validated, org, make_user, cli
     assert lines[0].startswith("PME;Secteur;Région") and lines[1].startswith("Rapport Test SARL;")
     leader = client_for(make_user(org, "DIRIGEANT_PME", scope_ref_id=pme.id), org)
     assert leader.get("/api/v1/dashboards/portfolio/pmes").status_code == 403
+
+
+# --- Rapport trimestriel de portefeuille ----------------------------------------------------------------------------
+
+
+def test_portfolio_report_is_anonymised_by_default_and_complete(api, pme, validated, org, make_user, client_for):
+    from pme360.reports.portfolio_builder import SECTIONS as PORTFOLIO_SECTIONS
+
+    admin = client_for(make_user(org, "ADMIN_ORG"), org)
+    analytics.refresh()
+    response = admin.post("/api/v1/reports/portfolio", {"period": "2026-T3"}, format="json")
+    assert response.status_code == 201, response.content
+    report = response.json()
+    assert report["type"] == "PORTEFEUILLE" and report["period"] == "2026-T3" and report["pme_count"] == 1
+    assert not report["include_names"] and report["scope_label"] == "Toute l'organisation"
+    text = _pdf_text(admin.get(f"/api/v1/reports/{report['id']}/pdf").content)
+    for number, title in enumerate(PORTFOLIO_SECTIONS, start=1):
+        assert f"{number}. {title}" in text, title
+    assert "Rapport Test SARL" not in text and "anonymisé" in text  # aucun nom de PME par défaut
+    assert "ne prouvent pas" in text  # RM-09
+    named = admin.post("/api/v1/reports/portfolio", {"period": "2026-T3", "include_names": True}, format="json").json()
+    assert named["version"] == 2 and named["include_names"]
+    assert [r["version"] for r in admin.get("/api/v1/reports/portfolio").json()] == [2, 1]
+
+
+def test_portfolio_report_access_follows_perimeter(api, pme, validated, org, make_user, make_pme, client_for):
+    admin = client_for(make_user(org, "ADMIN_ORG"), org)
+    make_pme(org, legal_name="Hors Portefeuille SARL")  # le conseiller ne suit pas cette PME
+    analytics.refresh()
+    report = admin.post("/api/v1/reports/portfolio", {"period": "2026-T3"}, format="json").json()
+    assert report["pme_count"] == 2
+    # Le conseiller ne voit pas un rapport couvrant des PME hors de son portefeuille.
+    assert api.get(f"/api/v1/reports/{report['id']}/pdf").status_code == 404
+    assert api.get("/api/v1/reports/portfolio").json() == []
+    own = api.post("/api/v1/reports/portfolio", {"period": "2026-T3"}, format="json")
+    assert own.status_code == 201 and own.json()["pme_count"] == 1
+    assert api.get(f"/api/v1/reports/{own.json()['id']}/pdf").status_code == 200
+    leader = client_for(make_user(org, "DIRIGEANT_PME", scope_ref_id=pme.id), org)
+    assert leader.post("/api/v1/reports/portfolio", {}, format="json").status_code == 403
+
+
+def test_portfolio_report_period_validation(org, make_user, client_for, make_pme):
+    make_pme(org)
+    admin = client_for(make_user(org, "ADMIN_ORG"), org)
+    assert admin.post("/api/v1/reports/portfolio", {"period": "2026-Q3"}, format="json").status_code == 400
+    future = admin.post("/api/v1/reports/portfolio", {"period": "2099-T1"}, format="json")
+    assert future.status_code == 400 and future.json()["code"] == "future_period"
+
+
+def test_quarterly_task_generates_an_anonymised_report_per_organisation(org, make_pme):
+    from pme360.reports.tasks import generate_quarterly_portfolio_reports
+
+    make_pme(org)
+    analytics.refresh()
+    assert generate_quarterly_portfolio_reports() >= 1
+    with tenant_context(org.id):
+        report = Report.objects.get(type="PORTEFEUILLE")
+        assert report.generated_by is None and not report.scope["include_names"]

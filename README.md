@@ -25,12 +25,13 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 4 — IA | ✅ Livrée (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
 | 5 — Accompagnement | ✅ Livrée (voir ci-dessous) ; catalogue d'offres, règles et modèles de livrables **à valider** par GUDE-PME |
 | 6 — Reporting | ✅ Livrée (voir ci-dessous) ; rapport PDF à relire par GUDE-PME ; analyse d'effet des accompagnements descriptive uniquement (RM-09) |
-| V1 — en cours | ✅ Import en masse des PME par CSV (aperçu sans écriture, contrôle des doublons, bilan) |
+| V1 — en cours | ✅ Import en masse des PME par CSV ; ✅ rapport trimestriel de portefeuille (PDF, anonymisé par défaut) |
 | Compléments MVP | ✅ Échanges sur les actions (internes ou partagés), sauvegardes chiffrées avec test de restauration ([runbook](infra/backup/README.md)) |
 
 ### V1 — généralisation (en cours)
 
 - **Import en masse des PME (CSV)** : modèle téléchargeable ; séparateur `;` ou `,`, fichiers UTF-8 ou Excel Windows, dates JJ/MM/AAAA ; secteur, région et forme juridique par code ou libellé ; dirigeant, conseiller (par e-mail) et cohorte. L'**aperçu ne crée rien** : chaque ligne passe par les règles de la saisie manuelle et par la détection de doublons (base et fichier). L'import crée les lignes valides ; les doublons de RCCM ou NCC sont toujours écartés, les raisons sociales proches seulement sur confirmation ; bilan ligne par ligne, tracé au journal. 2 000 lignes par fichier.
+- **Rapport trimestriel de portefeuille** (Document 9, § 7) : PDF en 11 sections (synthèse, activité du trimestre, évolution des scores, principaux problèmes, besoins, actions réalisées ou en retard, progression par secteur et par région, conformité, accompagnement renforcé, **recommandations de pilotage** déduites des chiffres, méthodologie et définitions). Périmètre : organisation, programme ou cohorte, limité au portefeuille de l'utilisateur ; **anonymisé par défaut** (diffusable aux bailleurs), nominatif en option pour la direction ; évolutions présentées sans attribution causale (RM-09), cellules masquées sous 5 PME, part de données vérifiées affichée. Données figées et versionnées ; édition automatique anonymisée le 1er jour de chaque trimestre ; lisible seulement par qui voit toutes les PME du rapport.
 
 ### Compléments du MVP
 

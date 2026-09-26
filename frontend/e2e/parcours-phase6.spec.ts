@@ -63,3 +63,18 @@ test("la dirigeante voit son évolution et récupère son rapport", async ({ pag
   await page.getByRole("link", { name: "Télécharger le PDF" }).first().click();
   expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
 });
+
+test("l'administrateur édite le rapport trimestriel de portefeuille, anonymisé par défaut", async ({ page }) => {
+  await loginStaff(page, "admin@demo.test");
+  await page.getByRole("link", { name: "Rapports", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Rapports de portefeuille" })).toBeVisible();
+  const list = page.getByRole("list", { name: "Rapports de portefeuille" });
+  const before = await list.getByRole("listitem").count().catch(() => 0);
+  await page.getByRole("button", { name: "Éditer le rapport" }).click();
+  await expect(list.getByRole("listitem")).toHaveCount(before + 1, { timeout: 30_000 });
+  const first = list.getByRole("listitem").first();
+  await expect(first.getByText("Anonymisé")).toBeVisible();
+  const download = page.waitForEvent("download");
+  await first.getByRole("link", { name: "Télécharger le PDF" }).click();
+  expect((await download).suggestedFilename()).toMatch(/^rapport-portefeuille-v\d+-\d{4}-T\d\.pdf$/);
+});

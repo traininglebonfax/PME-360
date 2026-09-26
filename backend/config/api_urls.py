@@ -83,6 +83,7 @@ urlpatterns = [
     path("pmes/<uuid:pme_id>/reports", reports.PmeReportsView.as_view()),
     path("diagnostics/<uuid:diagnostic_id>/report", reports.DiagnosticReportView.as_view()),
     path("reports/<uuid:report_id>/pdf", reports.ReportPdfView.as_view()),
+    path("reports/portfolio", reports.PortfolioReportsView.as_view()),
     path("dashboards/pme/<uuid:pme_id>", dashboards.PmeDashboardView.as_view()),
     # Référentiel de diagnostic
     path("framework-versions", diagnostic.FrameworkVersionListView.as_view()),

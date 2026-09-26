@@ -22,6 +22,9 @@ class Report(TenantModel):
     version = models.PositiveIntegerField(default=1)
     title = models.CharField(max_length=250)
     period = models.CharField(max_length=60, blank=True)
+    scope = models.JSONField(
+        default=dict, blank=True, help_text="Périmètre d'un rapport de portefeuille (PME incluses)."
+    )
     template_version = models.CharField(max_length=20)
     data_snapshot = models.JSONField(help_text="Données figées au moment de la génération.")
     storage_key = models.CharField(max_length=300)

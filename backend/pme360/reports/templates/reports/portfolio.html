@@ -1,0 +1,162 @@
+{% load report_tags %}<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport trimestriel de portefeuille — {{ d.period.label }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    {% if engine == "weasyprint" %}
+    @bottom-left { content: "Rapport de portefeuille {{ d.period.label }} · v{{ version }}"; font-size: 8pt; color: #6b7280; }
+    @bottom-right { content: "Page " counter(page) " / " counter(pages); font-size: 8pt; color: #6b7280; }
+    {% else %}
+    @frame footer { -pdf-frame-content: footer; bottom: 8mm; margin-left: 16mm; margin-right: 16mm; height: 8mm; }
+    {% endif %}
+  }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 9.5pt; color: #1f2937; line-height: 1.4; }
+  h1 { font-size: 20pt; color: #0b4d38; margin: 0 0 4pt 0; }
+  h2 { font-size: 13pt; color: #0b4d38; border-bottom: 1.5pt solid #0f7a55; padding-bottom: 2pt; margin: 16pt 0 6pt 0; }
+  h3 { font-size: 10.5pt; margin: 8pt 0 3pt 0; }
+  p { margin: 0 0 5pt 0; }
+  .muted { color: #6b7280; }
+  .small { font-size: 8pt; }
+  table { width: 100%; margin: 3pt 0 6pt 0; }
+  th { text-align: left; font-size: 8pt; color: #6b7280; border-bottom: 0.75pt solid #d1d5db; padding: 3pt 4pt; }
+  td { border-bottom: 0.5pt solid #e5e7eb; padding: 3pt 4pt; vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  .kpis td { border: 0.75pt solid #d1d5db; padding: 6pt; width: 25%; }
+  .kpi { font-size: 15pt; font-weight: bold; color: #0b4d38; }
+  .tag { font-size: 7.5pt; color: #6b7280; }
+  .note { background-color: #f3f4f6; padding: 6pt; font-size: 8.5pt; }
+  .rule td { background-color: #0f7a55; height: 2pt; padding: 0; border: none; }
+  table.bar { margin: 0; }
+  table.bar td { border: none; padding: 0; height: 7pt; }
+</style>
+</head>
+<body>
+<div id="footer" class="small muted">Rapport de portefeuille {{ d.period.label }} · v{{ version }} · page <pdf:pagenumber/> / <pdf:pagecount/></div>
+
+<p class="muted small">GUDE-PME 360 · Rapport trimestriel de portefeuille · version {{ version }} · édité le {{ d.generated_at|frdate }}</p>
+<h1>Portefeuille — {{ d.period.label }}</h1>
+<p>Période du {{ d.period.start|frdate }} au {{ d.period.end|frdate }}{% if d.period.partial %} (trimestre en cours : données au {{ d.period.as_of|frdate }}){% endif %} · {{ d.scope.label }} · {{ d.kpis.pmes_total }} PME.</p>
+<p class="small muted">{% if d.scope.include_names %}Diffusion interne : ce rapport cite des PME nommément.{% else %}Rapport anonymisé : aucune PME n'est citée nommément ; diffusable aux partenaires.{% endif %}</p>
+<table class="rule"><tr><td>&nbsp;</td></tr></table>
+<p class="small muted">Sommaire : {% for s in d.sections %}{{ forloop.counter }}. {{ s }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+
+<h2>1. Synthèse</h2>
+<table class="kpis">
+  <tr>
+    <td><div class="tag">PME accompagnées</div><div class="kpi">{{ d.kpis.pmes_accompanied }}</div><div class="small">sur {{ d.kpis.pmes_total }} PME</div></td>
+    <td><div class="tag">Score moyen</div><div class="kpi">{{ d.kpis.average_score|score }}/100</div><div class="small">médiane {{ d.kpis.median_score|score }} · {{ d.kpis.pmes_diagnosed }} PME diagnostiquées</div></td>
+    <td><div class="tag">Évolution moyenne (trimestre)</div><div class="kpi">{% if d.scores.quarter_delta is not None %}{% if d.scores.quarter_delta >= 0 %}+{% endif %}{{ d.scores.quarter_delta|decimal1 }}{% else %}—{% endif %}</div><div class="small">sur {{ d.scores.quarter_n }} PME mesurables</div></td>
+    <td><div class="tag">Conformité moyenne</div><div class="kpi">{{ d.compliance.average.value|pct }}</div><div class="small">{{ d.compliance.average.pmes }} PME concernées</div></td>
+  </tr>
+  <tr>
+    <td><div class="tag">Actions réalisées (trimestre)</div><div class="kpi">{{ d.activity.actions_completed }}</div></td>
+    <td><div class="tag">Actions en retard</div><div class="kpi">{{ d.actions.overdue }}</div><div class="small">sur {{ d.actions.open }} en cours</div></td>
+    <td><div class="tag">PME à risque</div><div class="kpi">{{ d.kpis.pmes_at_risk }}</div><div class="small">exposition ≥ 50</div></td>
+    <td><div class="tag">Intervention urgente</div><div class="kpi">{{ d.kpis.pmes_urgent }}</div><div class="small">priorité P1</div></td>
+  </tr>
+</table>
+<p class="small muted">Fiabilité : {{ d.scores.evidence_share|pct }} des critères évalués sont prouvés par un document vérifié ({{ d.scores.criteria_evaluated }} critères) ; le reste est déclaratif.</p>
+
+<h2>2. Activité du trimestre</h2>
+<table>
+  <tr><th style="width:70%">Indicateur</th><th class="num" style="width:30%">Trimestre</th></tr>
+  <tr><td>PME nouvellement intégrées</td><td class="num">{{ d.activity.new_pmes }}</td></tr>
+  <tr><td>Diagnostics validés</td><td class="num">{{ d.activity.diagnostics_validated }}</td></tr>
+  <tr><td>Plans d'accompagnement acceptés</td><td class="num">{{ d.activity.plans_accepted }}</td></tr>
+  <tr><td>Actions terminées (livrables vérifiés)</td><td class="num">{{ d.activity.actions_completed }}</td></tr>
+</table>
+
+<h2>3. Évolution des scores</h2>
+<p class="note">{{ d.notice }}</p>
+<p>Écart entre le diagnostic initial et le dernier diagnostic validé : {{ d.scores.measured }} PME avec au moins deux diagnostics.</p>
+<table>
+  <tr><th style="width:70%">Évolution depuis le diagnostic initial</th><th class="num" style="width:30%">PME</th></tr>
+  {% for b in d.scores.distribution %}<tr><td>{{ b.label }}</td><td class="num">{{ b.count }}</td></tr>{% endfor %}
+</table>
+{% if d.scores.top %}
+<table>
+  <tr><th style="width:52%">Plus fortes progressions</th><th class="num" style="width:16%">Départ</th><th class="num" style="width:16%">Dernier</th><th class="num" style="width:16%">Écart</th></tr>
+  {% for t in d.scores.top %}<tr><td>{% if t.pme_name %}{{ t.pme_name }}{% else %}PME n°{{ forloop.counter }}{% endif %} <span class="tag">({{ t.months|decimal1 }} mois)</span></td><td class="num">{{ t.from|score }}</td><td class="num">{{ t.to|score }}</td><td class="num">+{{ t.delta|decimal1 }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+<p>PME en stagnation (moins de +2 points en 6 mois) : <b>{{ d.scores.stagnating }}</b>{% if d.scores.stagnating_names %} — {{ d.scores.stagnating_names|join:", " }}{% endif %}.</p>
+
+<h2>4. Principaux problèmes</h2>
+<p>Part des PME diagnostiquées dont la dimension est sous {{ d.problems.threshold }}/100 :</p>
+<table>
+  <tr><th style="width:26%">Dimension</th><th style="width:50%">&nbsp;</th><th class="num" style="width:12%">Part</th><th class="num" style="width:12%">PME</th></tr>
+  {% for dim in d.problems.dimensions %}
+  <tr>
+    <td>{{ dim.name }}</td>
+    <td><table class="bar"><tr><td style="width:{{ dim.share|pct_width }}%; background-color:#0f7a55">&nbsp;</td><td style="width:{{ dim.share|pct_rest }}%; background-color:#eef0f3">&nbsp;</td></tr></table></td>
+    <td class="num">{{ dim.share|pct }}</td>
+    <td class="num">{{ dim.weak }}/{{ dim.evaluated }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% if d.problems.criteria %}
+<h3>Critères le plus souvent au niveau 0 ou 1</h3>
+<table>
+  <tr><th style="width:80%">Critère</th><th class="num" style="width:20%">PME</th></tr>
+  {% for c in d.problems.criteria %}<tr><td>{{ c.code }} · {{ c.name }}</td><td class="num">{{ c.weak }}/{{ c.evaluated }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+<h2>5. Besoins d'accompagnement</h2>
+{% if d.needs %}
+<table>
+  <tr><th style="width:80%">Accompagnement retenu (recommandations acceptées ou au plan)</th><th class="num" style="width:20%">PME</th></tr>
+  {% for n in d.needs %}<tr><td>{{ n.title }}</td><td class="num">{{ n.pmes }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune recommandation retenue pour l'instant.</p>{% endif %}
+
+<h2>6. Actions réalisées et en retard</h2>
+<p>{{ d.activity.actions_completed }} action(s) terminée(s) au cours du trimestre ; {{ d.actions.overdue }} action(s) en retard à la date d'édition ({{ d.actions.overdue_waiting_gude }} en attente de GUDE-PME, {{ d.actions.overdue_waiting_pme }} en attente des PME).</p>
+{% if d.activity.actions_completed_by_offer %}
+<table>
+  <tr><th style="width:80%">Actions terminées, par accompagnement</th><th class="num" style="width:20%">Nombre</th></tr>
+  {% for a in d.activity.actions_completed_by_offer %}<tr><td>{{ a.offer }}</td><td class="num">{{ a.count }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+<h2>7. Progression par secteur et par région</h2>
+<p class="small muted">Score moyen actuel et évolution moyenne depuis le diagnostic initial ; valeurs masquées quand moins de {{ d.min_cell }} PME sont concernées.</p>
+{% for title, rows in d.groups %}
+<h3>{{ title }}</h3>
+<table>
+  <tr><th style="width:36%">{{ title }}</th><th class="num" style="width:12%">PME</th><th class="num" style="width:14%">Diagnostiquées</th><th class="num" style="width:18%">Score moyen</th><th class="num" style="width:20%">Évolution moyenne</th></tr>
+  {% for r in rows %}<tr><td>{{ r.label }}</td><td class="num">{{ r.pmes }}</td><td class="num">{{ r.n }}</td><td class="num">{% if r.score is not None %}{{ r.score|decimal1 }}{% else %}<span class="muted">masqué</span>{% endif %}</td><td class="num">{% if r.delta is not None %}{% if r.delta >= 0 %}+{% endif %}{{ r.delta|decimal1 }}{% else %}<span class="muted">masqué</span>{% endif %}</td></tr>{% endfor %}
+</table>
+{% endfor %}
+
+<h2>8. Conformité documentaire</h2>
+<p>Taux de conformité moyen : <b>{{ d.compliance.average.value|pct }}</b> ({{ d.compliance.average.pmes }} PME avec des éléments exigibles). Obligations en retard à la date d'édition : <b>{{ d.compliance.obligations_overdue }}</b>.</p>
+
+<h2>9. PME nécessitant un accompagnement renforcé</h2>
+<p>{{ d.reinforced.p1 }} PME en intervention urgente (P1) et {{ d.reinforced.p2 }} en accompagnement renforcé (P2).</p>
+{% if d.reinforced.items %}
+<table>
+  <tr><th style="width:40%">PME</th><th style="width:12%">Priorité</th><th style="width:48%">Motif</th></tr>
+  {% for r in d.reinforced.items %}<tr><td>{{ r.pme_name }}</td><td>{{ r.priority }}</td><td>{{ r.reason|default:"—" }}</td></tr>{% endfor %}
+</table>
+{% elif d.reinforced.reasons %}<p class="small">Règles de priorité appliquées : {{ d.reinforced.reasons|join:" ; " }}.</p>{% endif %}
+
+<h2>10. Recommandations de pilotage</h2>
+{% for r in d.recommendations %}
+<p><b>{{ forloop.counter }}. {{ r.topic }}</b><br><span class="small">Constat : {{ r.basis }}</span></p>
+{% empty %}<p class="muted">Aucun point d'attention particulier ce trimestre.</p>{% endfor %}
+<p class="small muted">Ces pistes sont déduites des chiffres de ce rapport ; elles appellent une décision de la direction.</p>
+
+<h2>11. Méthodologie et définitions</h2>
+<table>
+  <tr><th style="width:30%">Indicateur</th><th style="width:70%">Définition</th></tr>
+  {% for key, text in d.definitions.items %}<tr><td class="small">{{ key|kpi_label }}</td><td class="small">{{ text }}</td></tr>{% endfor %}
+</table>
+<p class="small">Les scores proviennent des diagnostics validés par les conseillers et des preuves vérifiées depuis ; les indicateurs d'actions, d'alertes et de conformité sont arrêtés à la date d'édition. Une cellule portant sur moins de {{ d.min_cell }} PME est masquée pour préserver la confidentialité et la fiabilité.</p>
+<p class="note">Document généré par GUDE-PME 360 à partir de données figées le {{ d.generated_at|frdate }}{% if d.generated_by %} à la demande de {{ d.generated_by }}{% endif %}. Modèle v{{ d.template_version }}. Toute correction donne lieu à une nouvelle version.</p>
+</body>
+</html>

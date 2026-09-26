@@ -1917,6 +1917,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Rapports trimestriels de portefeuille visibles par l'utilisateur ; génération d'une nouvelle édition. */
+        get: operations["reports_portfolio_list"];
+        put?: never;
+        /** @description Rapports trimestriels de portefeuille visibles par l'utilisateur ; génération d'une nouvelle édition. */
+        post: operations["reports_portfolio_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/roles": {
         parameters: {
             query?: never;
@@ -3851,6 +3869,41 @@ export interface components {
          * @enum {string}
          */
         PortalEnum: "gude" | "pme" | "platform" | "none";
+        PortfolioReport: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly type: components["schemas"]["ReportTypeEnum"];
+            /** Format: uuid */
+            readonly pme: string | null;
+            /** Format: uuid */
+            readonly diagnostic: string | null;
+            /** @default 1 */
+            readonly version: number;
+            readonly title: string;
+            readonly period: string;
+            readonly template_version: string;
+            readonly size_bytes: number;
+            readonly sha256: string;
+            /** @description Moteur de rendu PDF utilisé. */
+            readonly engine: string;
+            /** Format: double */
+            readonly confidence: number | null;
+            readonly generated_by_name: string;
+            /** Format: date-time */
+            readonly generated_at: string;
+            readonly scope_label: string;
+            readonly include_names: boolean;
+            readonly pme_count: number;
+        };
+        PortfolioReportRequestRequest: {
+            period?: string;
+            /** Format: uuid */
+            programme_id?: string | null;
+            /** Format: uuid */
+            cohort_id?: string | null;
+            /** @default false */
+            include_names: boolean;
+        };
         Preference: {
             event_code: components["schemas"]["EventCodeEnum"];
             readonly label: string;
@@ -7659,6 +7712,48 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    reports_portfolio_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioReport"][];
+                };
+            };
+        };
+    };
+    reports_portfolio_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PortfolioReportRequestRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioReport"];
+                };
             };
         };
     };
