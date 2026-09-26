@@ -22,7 +22,7 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 1 — Socle | ✅ Livrée (voir ci-dessous) |
 | 2 — Diagnostic | ✅ Livrée (voir ci-dessous) ; référentiel GUDE-360 v1 **à valider en atelier** (D-04) |
 | 3 — Documents & conformité | ✅ Livrée (voir ci-dessous) ; règles réglementaires CNPS / fiscales / états financiers **à vérifier** avant activation (RM-08) |
-| 4 — IA | ✅ Livrée sur la branche `phase-4-ia` (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
+| 4 — IA | ✅ Livrée (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
 | 5 — Accompagnement | À venir |
 
 ### Contenu de la phase 4
