@@ -78,3 +78,14 @@ def test_request_metadata_is_recorded(org, make_user, make_pme, client_for):
     with tenant_context(org.id):
         entry = AuditLog.objects.get(action="pme.updated")
     assert entry.actor_id == admin.id and entry.request_id == "req-test-12345" and entry.pme_id == pme.id
+
+
+def test_verify_audit_command_checks_every_chain(org, make_user, client_for):
+    from io import StringIO
+
+    from django.core.management import call_command
+
+    client_for(make_user(org, "ADMIN_ORG"), org).get("/api/v1/auth/me")
+    out = StringIO()
+    call_command("verify_audit", stdout=out)
+    assert "plateforme" in out.getvalue() and "Journal d'audit intègre." in out.getvalue()

@@ -138,6 +138,91 @@
                 }
             }
         },
+        "/api/v1/actions/{action_id}/comments": {
+            "get": {
+                "operationId": "actions_comments_list",
+                "description": "Échanges sur une action : la PME ne voit que les commentaires partagés.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "action_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "actions"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Comment"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "actions_comments_create",
+                "description": "Échanges sur une action : la PME ne voit que les commentaires partagés.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "action_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "actions"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommentWriteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Comment"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/actions/{action_id}/dependencies": {
             "post": {
                 "operationId": "actions_dependencies_create",
@@ -6960,6 +7045,70 @@
                     "name"
                 ]
             },
+            "Comment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "body": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "visibility": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VisibilityEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "author_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "author_is_pme": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "author_is_pme",
+                    "author_name",
+                    "body",
+                    "created_at",
+                    "id",
+                    "visibility"
+                ]
+            },
+            "CommentWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "body": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4000
+                    },
+                    "visibility": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VisibilityEnum"
+                            }
+                        ],
+                        "default": "INTERNE_GUDE"
+                    }
+                },
+                "required": [
+                    "body"
+                ]
+            },
             "ComplianceFolder": {
                 "type": "object",
                 "properties": {
@@ -8425,10 +8574,11 @@
                     "ACTION_DOCUMENT_REQUESTED",
                     "ACTION_DELIVERABLE_REJECTED",
                     "ACTION_UNBLOCKED",
+                    "ACTION_COMMENTED",
                     "REPORT_READY"
                 ],
                 "type": "string",
-                "description": "* `AI_BUDGET_WARNING` - AI_BUDGET_WARNING\n* `PREDIAGNOSTIC_READY` - PREDIAGNOSTIC_READY\n* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED\n* `PLAN_TO_ACCEPT` - PLAN_TO_ACCEPT\n* `PLAN_ACCEPTED` - PLAN_ACCEPTED\n* `ACTION_DOCUMENT_REQUESTED` - ACTION_DOCUMENT_REQUESTED\n* `ACTION_DELIVERABLE_REJECTED` - ACTION_DELIVERABLE_REJECTED\n* `ACTION_UNBLOCKED` - ACTION_UNBLOCKED\n* `REPORT_READY` - REPORT_READY"
+                "description": "* `AI_BUDGET_WARNING` - AI_BUDGET_WARNING\n* `PREDIAGNOSTIC_READY` - PREDIAGNOSTIC_READY\n* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED\n* `PLAN_TO_ACCEPT` - PLAN_TO_ACCEPT\n* `PLAN_ACCEPTED` - PLAN_ACCEPTED\n* `ACTION_DOCUMENT_REQUESTED` - ACTION_DOCUMENT_REQUESTED\n* `ACTION_DELIVERABLE_REJECTED` - ACTION_DELIVERABLE_REJECTED\n* `ACTION_UNBLOCKED` - ACTION_UNBLOCKED\n* `ACTION_COMMENTED` - ACTION_COMMENTED\n* `REPORT_READY` - REPORT_READY"
             },
             "EvidencePolicyEnum": {
                 "enum": [
@@ -13684,6 +13834,14 @@
                     "source_reference",
                     "verified_at"
                 ]
+            },
+            "VisibilityEnum": {
+                "enum": [
+                    "INTERNE_GUDE",
+                    "PARTAGE_PME"
+                ],
+                "type": "string",
+                "description": "* `INTERNE_GUDE` - Interne GUDE-PME\n* `PARTAGE_PME` - Partagé avec la PME"
             },
             "WaiveRequest": {
                 "type": "object",

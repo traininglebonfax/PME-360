@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { UploadButton } from "@/components/documents/UploadButton";
+import { ActionComments } from "@/components/plans/ActionComments";
 import { Alert, Badge, Button, Card, LoadingBlock, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -97,6 +98,7 @@ export function ActionDetail({ actionId, pmeView = false }: { actionId: string; 
               </ul>
             )}
           </Card>
+          <ActionComments actionId={data.id} pmeView={pmeView} />
         </div>
 
         <aside className="space-y-4">

@@ -5,6 +5,7 @@ from .models import (
     Action,
     ActionPlan,
     ActionTransition,
+    Comment,
     Deliverable,
     DeliverableTemplate,
     Recommendation,
@@ -204,6 +205,25 @@ class ActionSerializer(serializers.ModelSerializer):
     def get_overdue(self, action) -> bool:
         today = self.context.get("today")
         return bool(today and action.due_date < today and action.status not in (*Action.TERMINAL, Action.Status.BLOQUE))
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source="author.full_name", read_only=True)
+    author_is_pme = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = ["id", "body", "visibility", "author_name", "author_is_pme", "created_at"]
+        read_only_fields = fields
+
+    @staticmethod
+    def get_author_is_pme(comment) -> bool:
+        return comment.author.memberships.filter(role__is_pme_role=True).exists()
+
+
+class CommentWriteSerializer(serializers.Serializer):
+    body = serializers.CharField(max_length=4000)
+    visibility = serializers.ChoiceField(choices=Comment.Visibility.choices, required=False, default="INTERNE_GUDE")
 
 
 class TransitionSerializer(serializers.ModelSerializer):

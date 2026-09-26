@@ -606,6 +606,10 @@ NOTIFICATION_TEMPLATES = {
         "Le document déposé pour « {action} » doit être repris : {reason}",
     ),
     "ACTION_UNBLOCKED": ("Nouvelle action disponible", "L'action « {action} » peut maintenant démarrer."),
+    "ACTION_COMMENTED": (
+        "Nouveau message : {action}",
+        "{author} a écrit au sujet de « {action} » : {excerpt}",
+    ),
     "REPORT_READY": (
         "Rapport de diagnostic disponible : {pme}",
         "La version {version} du rapport de diagnostic de {pme} est disponible au téléchargement.",

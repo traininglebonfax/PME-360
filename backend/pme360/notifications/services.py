@@ -141,4 +141,5 @@ EVENT_LABELS = {
     "ACTION_DELIVERABLE_REJECTED": "Livrable à reprendre",
     "ACTION_UNBLOCKED": "Action débloquée",
     "REPORT_READY": "Rapport disponible",
+    "ACTION_COMMENTED": "Message sur une action",
 }
