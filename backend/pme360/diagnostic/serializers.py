@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from rest_framework import serializers
 
 from pme360.scoring.models import ScoreSnapshot
@@ -281,3 +282,217 @@ class ReviewPayloadSerializer(serializers.Serializer):
 
 class AcceptResultSerializer(serializers.Serializer):
     accepted = serializers.IntegerField()
+
+
+# --- Éditeur de référentiel (V1) -------------------------------------------------------------------------------
+
+
+class EditorQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = [
+            "id",
+            "code",
+            "text",
+            "help_text",
+            "why_text",
+            "type",
+            "options",
+            "visibility",
+            "target_audience",
+            "is_required",
+            "feeds",
+            "evidence_hint",
+            "order",
+        ]
+        read_only_fields = fields
+
+
+class EditorCriterionSerializer(serializers.ModelSerializer):
+    rubric = serializers.ListField(child=serializers.CharField(), read_only=True)
+    evidence_document_types = serializers.ListField(child=serializers.CharField(), read_only=True)
+    questions = EditorQuestionSerializer(many=True, read_only=True)
+    metrics = MetricDefinitionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Criterion
+        fields = [
+            "id",
+            "code",
+            "name",
+            "lens",
+            "weight",
+            "is_critical",
+            "rubric",
+            "declarative_cap_level",
+            "applicability",
+            "evidence_policy",
+            "evidence_document_types",
+            "sector_module",
+            "order",
+            "questions",
+            "metrics",
+        ]
+        read_only_fields = fields
+
+
+class EditorDimensionSerializer(serializers.ModelSerializer):
+    pillar = serializers.CharField(source="pillar.code", read_only=True)
+    criteria = EditorCriterionSerializer(many=True, read_only=True)
+    questions = EditorQuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Dimension
+        fields = [
+            "id",
+            "code",
+            "name",
+            "short_name",
+            "description",
+            "pillar",
+            "weight",
+            "sector_module_share",
+            "order",
+            "criteria",
+            "questions",
+        ]
+        read_only_fields = fields
+
+
+class EditorPillarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pillar
+        fields = ["id", "code", "name", "weight", "order"]
+        read_only_fields = fields
+
+
+class PillarBalanceSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    expected = serializers.CharField()
+    actual = serializers.CharField()
+
+
+class ModuleBalanceSerializer(serializers.Serializer):
+    sector = serializers.CharField()
+    expected = serializers.CharField()
+    actual = serializers.CharField()
+
+
+class DimensionBalanceSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    expected = serializers.CharField()
+    actual = serializers.CharField()
+    modules = ModuleBalanceSerializer(many=True)
+
+
+class BalanceSerializer(serializers.Serializer):
+    pillars_total = serializers.CharField()
+    pillars = PillarBalanceSerializer(many=True)
+    dimensions = DimensionBalanceSerializer(many=True)
+
+
+class IssuesSerializer(serializers.Serializer):
+    errors = serializers.ListField(child=serializers.CharField())
+    warnings = serializers.ListField(child=serializers.CharField())
+    balance = BalanceSerializer()
+
+
+class FrameworkEditorSerializer(FrameworkVersionSerializer):
+    editable = serializers.SerializerMethodField()
+    pillars = serializers.SerializerMethodField()
+    dimensions = serializers.SerializerMethodField()
+    issues = serializers.SerializerMethodField()
+
+    class Meta(FrameworkVersionSerializer.Meta):
+        fields = [*FrameworkVersionSerializer.Meta.fields, "editable", "pillars", "dimensions", "issues"]
+        read_only_fields = fields
+
+    def get_editable(self, obj) -> bool:
+        return obj.status == FrameworkVersion.Status.DRAFT
+
+    def get_pillars(self, obj) -> EditorPillarSerializer(many=True):
+        return EditorPillarSerializer(Pillar.objects.filter(framework_version=obj).order_by("order"), many=True).data
+
+    def get_dimensions(self, obj) -> EditorDimensionSerializer(many=True):
+        questions = Question.objects.order_by("order")
+        dimensions = (
+            Dimension.objects.filter(framework_version=obj)
+            .select_related("pillar")
+            .prefetch_related(
+                Prefetch("questions", queryset=questions),
+                Prefetch(
+                    "criteria",
+                    queryset=Criterion.objects.order_by("order").prefetch_related(
+                        Prefetch("questions", queryset=questions), "metrics"
+                    ),
+                ),
+            )
+            .order_by("order")
+        )
+        return EditorDimensionSerializer(dimensions, many=True).data
+
+    def get_issues(self, obj) -> IssuesSerializer:
+        from .editor import issues
+
+        return issues(obj)
+
+
+class PillarWriteSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=200, required=False)
+    weight = serializers.DecimalField(max_digits=6, decimal_places=2, required=False)
+
+
+class DimensionWriteSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=40, required=False)
+    pillar = serializers.CharField(max_length=40, required=False)
+    name = serializers.CharField(max_length=200, required=False)
+    short_name = serializers.CharField(max_length=60, required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    weight = serializers.DecimalField(max_digits=6, decimal_places=2, required=False)
+    sector_module_share = serializers.DecimalField(max_digits=5, decimal_places=2, required=False)
+    order = serializers.IntegerField(min_value=0, required=False)
+
+
+class CriterionWriteSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=40, required=False)
+    dimension = serializers.CharField(max_length=40, required=False)
+    name = serializers.CharField(max_length=300, required=False)
+    lens = serializers.ChoiceField(choices=Criterion.Lens.choices, required=False)
+    weight = serializers.DecimalField(max_digits=6, decimal_places=2, required=False)
+    is_critical = serializers.BooleanField(required=False)
+    rubric = serializers.ListField(child=serializers.CharField(allow_blank=True), required=False)
+    declarative_cap_level = serializers.IntegerField(min_value=0, max_value=4, required=False)
+    applicability = serializers.JSONField(required=False, allow_null=True)
+    evidence_policy = serializers.ChoiceField(choices=Criterion.EvidencePolicy.choices, required=False)
+    evidence_document_types = serializers.ListField(child=serializers.CharField(), required=False)
+    sector_module = serializers.CharField(max_length=40, required=False, allow_blank=True)
+    order = serializers.IntegerField(min_value=0, required=False)
+    question = serializers.CharField(
+        max_length=500, required=False, allow_blank=True, help_text="Question principale (création seulement)."
+    )
+
+
+class QuestionOptionSerializer(serializers.Serializer):
+    value = serializers.CharField(required=False, allow_blank=True)
+    label = serializers.CharField()
+    level = serializers.IntegerField(min_value=0, max_value=4)
+
+
+class QuestionWriteSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=40, required=False)
+    criterion = serializers.CharField(max_length=40, required=False)
+    dimension = serializers.CharField(max_length=40, required=False)
+    text = serializers.CharField(max_length=500, required=False)
+    help_text = serializers.CharField(required=False, allow_blank=True)
+    why_text = serializers.CharField(required=False, allow_blank=True)
+    type = serializers.ChoiceField(choices=Question.Type.choices, required=False)
+    options = QuestionOptionSerializer(many=True, required=False)
+    visibility = serializers.JSONField(required=False, allow_null=True)
+    target_audience = serializers.ChoiceField(choices=Question.Audience.choices, required=False)
+    is_required = serializers.BooleanField(required=False)
+    evidence_hint = serializers.CharField(max_length=300, required=False, allow_blank=True)
+    order = serializers.IntegerField(min_value=0, required=False)
+
+
+class VersionNotesSerializer(serializers.Serializer):
+    notes = serializers.CharField(allow_blank=True)
