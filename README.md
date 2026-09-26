@@ -25,7 +25,12 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 4 — IA | ✅ Livrée (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
 | 5 — Accompagnement | ✅ Livrée (voir ci-dessous) ; catalogue d'offres, règles et modèles de livrables **à valider** par GUDE-PME |
 | 6 — Reporting | ✅ Livrée (voir ci-dessous) ; rapport PDF à relire par GUDE-PME ; analyse d'effet des accompagnements descriptive uniquement (RM-09) |
+| V1 — en cours | ✅ Import en masse des PME par CSV (aperçu sans écriture, contrôle des doublons, bilan) |
 | Compléments MVP | ✅ Échanges sur les actions (internes ou partagés), sauvegardes chiffrées avec test de restauration ([runbook](infra/backup/README.md)) |
+
+### V1 — généralisation (en cours)
+
+- **Import en masse des PME (CSV)** : modèle téléchargeable ; séparateur `;` ou `,`, fichiers UTF-8 ou Excel Windows, dates JJ/MM/AAAA ; secteur, région et forme juridique par code ou libellé ; dirigeant, conseiller (par e-mail) et cohorte. L'**aperçu ne crée rien** : chaque ligne passe par les règles de la saisie manuelle et par la détection de doublons (base et fichier). L'import crée les lignes valides ; les doublons de RCCM ou NCC sont toujours écartés, les raisons sociales proches seulement sur confirmation ; bilan ligne par ligne, tracé au journal. 2 000 lignes par fichier.
 
 ### Compléments du MVP
 

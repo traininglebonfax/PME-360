@@ -3157,6 +3157,103 @@
                 }
             }
         },
+        "/api/v1/pme-import": {
+            "post": {
+                "operationId": "pme_import_create",
+                "description": "Import : crée les lignes valides (et les doublons probables si confirmés) ; bilan ligne par ligne.",
+                "tags": [
+                    "pme-import"
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportFileRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ImportReport"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/pme-import/preview": {
+            "post": {
+                "operationId": "pme_import_preview_create",
+                "description": "Aperçu : chaque ligne est validée et comparée aux PME existantes ; rien n'est créé.",
+                "tags": [
+                    "pme-import"
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportFileRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ImportReport"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/pme-import/template": {
+            "get": {
+                "operationId": "pme_import_template_retrieve",
+                "tags": [
+                    "pme-import"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/pmes": {
             "get": {
                 "operationId": "pmes_list",
@@ -9224,6 +9321,116 @@
                     "open_diagnostic",
                     "snapshot"
                 ]
+            },
+            "ImportFileRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "confirm_similar": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "cohort_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "start_onboarding": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                },
+                "required": [
+                    "file"
+                ]
+            },
+            "ImportReport": {
+                "type": "object",
+                "properties": {
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ImportRow"
+                        }
+                    },
+                    "summary": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "required": [
+                    "columns",
+                    "rows",
+                    "summary"
+                ]
+            },
+            "ImportRow": {
+                "type": "object",
+                "properties": {
+                    "line": {
+                        "type": "integer"
+                    },
+                    "legal_name": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ImportRowStatusEnum"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "warnings": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "duplicates": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        }
+                    },
+                    "pme_id": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "duplicates",
+                    "errors",
+                    "legal_name",
+                    "line",
+                    "pme_id",
+                    "status",
+                    "warnings"
+                ]
+            },
+            "ImportRowStatusEnum": {
+                "enum": [
+                    "VALIDE",
+                    "DOUBLON_PROBABLE",
+                    "ERREUR",
+                    "CREEE",
+                    "IGNOREE"
+                ],
+                "type": "string",
+                "description": "* `VALIDE` - VALIDE\n* `DOUBLON_PROBABLE` - DOUBLON_PROBABLE\n* `ERREUR` - ERREUR\n* `CREEE` - CREEE\n* `IGNOREE` - IGNOREE"
             },
             "IntegrityStatusEnum": {
                 "enum": [

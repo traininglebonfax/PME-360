@@ -76,6 +76,10 @@ urlpatterns = [
     path("dashboards/portfolio/analyses", dashboards.PortfolioAnalysesView.as_view()),
     path("dashboards/portfolio/pmes", dashboards.PortfolioPmesView.as_view()),
     # Rapports (Document 9, § 7)
+    # Import en masse des PME (CSV, V1)
+    path("pme-import/template", pmes.PmeImportTemplateView.as_view()),
+    path("pme-import/preview", pmes.PmeImportPreviewView.as_view()),
+    path("pme-import", pmes.PmeImportView.as_view()),
     path("pmes/<uuid:pme_id>/reports", reports.PmeReportsView.as_view()),
     path("diagnostics/<uuid:diagnostic_id>/report", reports.DiagnosticReportView.as_view()),
     path("reports/<uuid:report_id>/pdf", reports.ReportPdfView.as_view()),
