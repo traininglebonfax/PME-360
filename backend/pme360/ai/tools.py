@@ -330,7 +330,41 @@ def search_knowledge(ctx: ToolContext, query: str, pme_id: str | None = None) ->
 
 
 def list_actions(ctx: ToolContext, pme_id: str | None = None) -> dict:
-    return {"data": None, "sources": [], "limits": ["Les plans et actions d'accompagnement arrivent en phase 5."]}
+    """Plan d'accompagnement courant : actions priorisées, horizon, statut, retards (lecture seule)."""
+    from pme360.plans.models import ActionPlan
+    from pme360.plans.services import OPEN_PLAN, plan_visible_to_pme
+
+    pme = _pme(ctx, pme_id)
+    plan = ActionPlan.objects.filter(pme=pme, status__in=OPEN_PLAN).first()
+    if plan is None or (ctx.access.is_pme_user and not plan_visible_to_pme(plan)):
+        return {"data": None, "sources": [], "limits": ["Aucun plan d'accompagnement en cours pour cette PME."]}
+    today = timezone.localdate()
+    actions = []
+    for action in plan.actions.prefetch_related("deliverables").order_by("-priority_score"):
+        deliverables = list(action.deliverables.all())
+        actions.append(
+            {
+                "reference": action.human_ref,
+                "action": action.title,
+                "horizon": action.get_phase_display(),
+                "statut": action.get_status_display(),
+                "priorite": float(action.priority_score),
+                "echeance": action.due_date.isoformat(),
+                "en_retard_de_jours": (today - action.due_date).days
+                if action.due_date < today and action.status not in ("TERMINE", "ABANDONNE", "BLOQUE")
+                else 0,
+                "livrables_conformes": f"{sum(d.status == 'CONFORME' for d in deliverables)}/{len(deliverables)}",
+            }
+        )
+    return {
+        "data": {"plan": f"{plan.title} (v{plan.version})", "statut": plan.get_status_display(), "actions": actions},
+        "sources": [
+            _src(
+                f"Plan d'accompagnement — {pme.legal_name}",
+                f"version {plan.version}, {plan.get_status_display().lower()}",
+            )
+        ],
+    }
 
 
 def draft_report(ctx: ToolContext, report_type: str = "diagnostic") -> dict:
@@ -359,7 +393,7 @@ TOOLS = {
         "Échéances ouvertes de la PME.",
         {**_PME, "days": {"type": "integer", "minimum": 1, "maximum": 365}},
     ),
-    "list_actions": (list_actions, "Actions du plan d'accompagnement (phase 5).", _PME),
+    "list_actions": (list_actions, "Actions du plan d'accompagnement : priorité, horizon, statut, retards.", _PME),
     "list_alerts": (
         list_alerts,
         "Alertes ouvertes d'une PME ou du portefeuille.",

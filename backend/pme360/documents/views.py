@@ -81,6 +81,18 @@ class PmeDocumentsView(APIView):
             else None
         )
         document_type = None
+        deliverable = None
+        if data.get("deliverable_id"):
+            from pme360.plans import services as plans
+            from pme360.plans.models import Deliverable
+
+            deliverable = get_object_or_404(
+                Deliverable.objects.select_related("action__plan", "document").filter(action__pme=pme),
+                pk=data["deliverable_id"],
+            )
+            plans.deliverable_for_upload(deliverable, get_access(request), data.get("document_type") or None)
+            document = document or deliverable.document  # nouveau dépôt après refus : nouvelle version
+            data["document_type"] = deliverable.document_type_code
         if data.get("document_type"):
             document_type = get_object_or_404(DocumentType.objects.filter(is_active=True), code=data["document_type"])
         try:
@@ -110,6 +122,8 @@ class PmeDocumentsView(APIView):
                 request,
                 document_id=str(result.document.pk),
             )
+        if deliverable is not None:
+            plans.on_deliverable_uploaded(deliverable, result.document, request.user)
         document = scoped_documents(request).prefetch_related("versions__checks").get(pk=result.document.pk)
         return Response(DocumentDetailSerializer(document).data, status=status.HTTP_201_CREATED)
 

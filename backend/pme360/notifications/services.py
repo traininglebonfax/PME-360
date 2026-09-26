@@ -135,4 +135,9 @@ EVENT_LABELS = {
     "ALERT_RAISED": "Nouvelle alerte",
     "AI_BUDGET_WARNING": "Budget IA (80 %)",
     "PREDIAGNOSTIC_READY": "Pré-diagnostic IA prêt",
+    "PLAN_TO_ACCEPT": "Plan d'accompagnement à accepter",
+    "PLAN_ACCEPTED": "Plan accepté par la PME",
+    "ACTION_DOCUMENT_REQUESTED": "Document attendu pour une action",
+    "ACTION_DELIVERABLE_REJECTED": "Livrable à reprendre",
+    "ACTION_UNBLOCKED": "Action débloquée",
 }

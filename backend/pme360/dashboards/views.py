@@ -26,7 +26,7 @@ from pme360.organizations.models import Organization
 from pme360.pmes.models import Pme, PmeAssignment
 from pme360.scoring.models import ScoreSnapshot
 
-PENDING = {"actions_overdue": 5}
+PENDING: dict[str, int] = {}  # tous les indicateurs des phases 1 à 5 sont disponibles
 WEAKNESS_THRESHOLD = 50  # « problème » = dimension sous 50/100 (paramètre d'affichage, Document 9, § 4.2)
 STAGNATION_POINTS = 2  # < +2 points en 6 mois (Document 6, § 6)
 MIN_CELL = 5  # cellules masquées si n < 5 (Document 9, § 4.2)
@@ -48,6 +48,39 @@ def _breakdown(queryset, field: str, label_field: str | None = None) -> list[dic
 
 def _placeholders() -> dict:
     return {key: {"value": None, "available_in_phase": phase} for key, phase in PENDING.items()}
+
+
+def next_actions(pme) -> dict:
+    """Plan de la PME : prochaines actions ouvertes (échéance la plus proche d'abord) et plan à accepter."""
+    from pme360.plans.models import Action, ActionPlan
+    from pme360.plans.services import OPEN_PLAN, plan_visible_to_pme
+
+    plan = ActionPlan.objects.filter(pme=pme, status__in=OPEN_PLAN).first()
+    if plan is None or not plan_visible_to_pme(plan):
+        return {"plan": None, "items": []}
+    today = timezone.localdate()
+    actions = plan.actions.exclude(status__in=Action.TERMINAL).order_by("due_date")[:5]
+    statuses = list(plan.actions.values_list("status", flat=True))
+    return {
+        "plan": {
+            "id": plan.pk,
+            "status": plan.status,
+            "to_accept": plan.status == ActionPlan.Status.EN_VALIDATION,
+            "done": statuses.count(Action.Status.TERMINE),
+            "total": len(statuses),
+        },
+        "items": [
+            {
+                "id": a.pk,
+                "human_ref": a.human_ref,
+                "title": a.title,
+                "status": a.status,
+                "due_date": a.due_date,
+                "overdue": a.due_date < today and a.status != Action.Status.BLOQUE,
+            }
+            for a in actions
+        ],
+    }
 
 
 def latest_snapshots(pmes) -> dict:
@@ -137,6 +170,17 @@ class AdvisorDashboardView(APIView):
                 :20
             ]
         )
+        from pme360.plans.models import Action, ActionPlan
+
+        live_actions = Action.objects.filter(
+            pme__in=pmes, plan__status__in=[ActionPlan.Status.VALIDE, ActionPlan.Status.EN_COURS]
+        )
+        overdue_actions = list(
+            live_actions.filter(due_date__lt=today)
+            .exclude(status__in=[*Action.TERMINAL, Action.Status.BLOQUE])
+            .order_by("due_date")
+            .values("id", "pme_id", "pme__legal_name", "human_ref", "title", "due_date")[:20]
+        )
         to_validate = list(
             diagnostics.filter(status=Diagnostic.Status.EN_REVUE)
             .select_related("pme")
@@ -164,6 +208,10 @@ class AdvisorDashboardView(APIView):
                     "deadlines_overdue": Deadline.objects.filter(
                         pme__in=pmes, status=Deadline.Status.EN_RETARD
                     ).count(),
+                    "actions_overdue": live_actions.filter(due_date__lt=today)
+                    .exclude(status__in=[*Action.TERMINAL, Action.Status.BLOQUE])
+                    .count(),
+                    "actions_to_verify": live_actions.filter(status=Action.Status.A_VERIFIER).count(),
                     **_placeholders(),
                 },
                 "by_lifecycle": _breakdown(pmes, "lifecycle_status"),
@@ -220,8 +268,18 @@ class AdvisorDashboardView(APIView):
                             }
                             for d in overdue
                         ],
+                        *[
+                            {
+                                "kind": "ACTION_EN_RETARD",
+                                "id": a["id"],
+                                "pme_id": a["pme_id"],
+                                "pme_name": a["pme__legal_name"],
+                                "label": f"{a['human_ref']} — {a['title']}",
+                                "since": a["due_date"],
+                            }
+                            for a in overdue_actions
+                        ],
                     ],
-                    "available_in_phase": 5,  # les actions en retard rejoignent la file en phase 5
                 },
                 "inactivity_days": inactivity_days,
             }
@@ -244,7 +302,12 @@ def portfolio_overview(access) -> dict:
     inactivity_days = organization.setting("inactivity_days")
     pmes = access.pme_queryset(Pme.objects.all())
     month_start = timezone.localdate().replace(day=1)
-    accompanied = pmes.filter(lifecycle_status=Pme.LifecycleStatus.ACCOMPAGNEMENT_ACTIF)
+    from pme360.plans.models import ActionPlan
+
+    # PME accompagnée : plan d'accompagnement validé ou en cours (Document 9, § 4.1).
+    accompanied = pmes.filter(
+        action_plans__status__in=[ActionPlan.Status.VALIDE, ActionPlan.Status.EN_COURS]
+    ).distinct()
     latest = latest_snapshots(pmes)
     starts = baselines(pmes)
     names = dict(pmes.values_list("id", "legal_name"))
@@ -291,7 +354,6 @@ def portfolio_overview(access) -> dict:
         "kpis": {
             "pmes_total": pmes.count(),
             "pmes_new_this_month": pmes.filter(onboarding_started_at__date__gte=month_start).count(),
-            # Provisoire : défini par le plan VALIDÉ/EN_COURS à partir de la phase 5 (Document 9, § 4.1).
             "pmes_accompanied": accompanied.count(),
             "pmes_active": pmes.exclude(_inactive_q(inactivity_days)).count(),
             "pmes_inactive": pmes.filter(_inactive_q(inactivity_days)).count(),
@@ -389,7 +451,7 @@ class PmeDashboardView(APIView):
                 ),
                 "score": score_summary(snapshot, baseline),
                 "open_diagnostic": open_diagnostic,
-                "next_actions": {"items": [], "available_in_phase": 5},
+                "next_actions": next_actions(pme),
                 "compliance": compliance.compliance_rate(pme),
                 "feedback": [
                     {

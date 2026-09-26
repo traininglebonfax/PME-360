@@ -18,6 +18,7 @@ from pme360.diagnostic import services as diagnostic_services
 from pme360.diagnostic.models import Answer, Diagnostic, Question
 from pme360.diagnostic.referential import install_gude360
 from pme360.organizations.models import Cohort, Organization, Programme
+from pme360.plans.services import install_plans
 from pme360.pmes import services as pme_services
 from pme360.pmes.defaults import install_defaults
 from pme360.pmes.models import LegalForm, Pme, PmeAssignment, Region, Sector
@@ -46,13 +47,75 @@ class Command(BaseCommand):
                 install_defaults(organization)
                 install_gude360(organization)
                 install_compliance(organization)
+                install_plans(organization)
                 programme = self._programme(organization) if slug == "gude-pme-demo" else None
                 pmes = self._pmes(slug, users, programme)
                 self._memberships(slug, users, programme, pmes)
                 self._pme_setup(slug, organization, users, programme, pmes)
                 self._diagnostics(slug, organization, users, pmes)
                 self._documents(slug, organization, users, pmes)
+                self._plans(slug, organization, users, pmes)
         self._report()
+
+    def _plans(self, slug: str, organization: Organization, users: dict, pmes: dict[str, Pme]) -> None:
+        """Accompagnement (phase 5) : recommandations ; plan de Boutik Plus accepté, une action menée à terme."""
+        from datetime import timedelta
+
+        from pme360.documents import pipeline
+        from pme360.documents import services as documents
+        from pme360.documents.models import DocumentType
+        from pme360.plans import services as plans
+        from pme360.plans.models import ActionPlan, Recommendation
+        from seeds.pdfkit import text_pdf
+
+        if slug != "gude-pme-demo":
+            return
+        for key in ("BOUTIK", "DELICES"):
+            pme = pmes.get(key)
+            if pme is None or Recommendation.objects.filter(pme=pme).exists():
+                continue
+            diagnostic = Diagnostic.objects.filter(pme=pme, status=Diagnostic.Status.VALIDE).order_by("-reference_date")
+            if diagnostic.exists():
+                plans.generate_recommendations(diagnostic.first())
+        boutik = pmes.get("BOUTIK")
+        if boutik is None or ActionPlan.objects.filter(pme=boutik).exists():
+            return
+        advisor = build_access(users["konan.conseiller@demo.test"], organization.id)
+        leader = build_access(users["aya.dirigeante@demo.test"], organization.id)
+        proposed = Recommendation.objects.filter(pme=boutik, status=Recommendation.Status.PROPOSEE)
+        for recommendation in proposed.order_by("-priority_final")[:5]:
+            plans.decide_recommendation(recommendation, advisor, status=Recommendation.Status.ACCEPTEE)
+        plan = plans.generate_plan(boutik, advisor, horizon_start=timezone.localdate() - timedelta(days=20))
+        plans.transition_plan(plan, advisor, "submit")
+        plans.transition_plan(plan, advisor, "validate")
+        plans.transition_plan(plan, leader, "accept")
+        startable = [a for a in plan.actions.order_by("position") if a.status == "NON_COMMENCE"]
+        if not startable:
+            return
+        first = startable[0]
+        plans.transition_action(first, leader, "EN_COURS")
+        for deliverable in first.deliverables.all():
+            lines = [
+                "DOCUMENT DE DEMONSTRATION - FICTIF",
+                deliverable.title.upper(),
+                f"Entreprise : {boutik.legal_name}",
+                f"Etabli le {timezone.localdate():%d/%m/%Y} dans le cadre de l'action {first.human_ref}.",
+            ]
+            result = documents.upload(
+                leader,
+                boutik,
+                filename=f"{deliverable.document_type_code.lower()}-demo.pdf",
+                content=text_pdf(lines),
+                document_type=DocumentType.objects.get(code=deliverable.document_type_code),
+                title=f"{deliverable.title} (démonstration)",
+            )
+            plans.on_deliverable_uploaded(deliverable, result.document, leader.user)
+            pipeline.process(str(result.version.pk))
+            result.document.refresh_from_db()
+            documents.verify(advisor, result.document, decision="CONFORME")
+        for action in startable[1:2]:
+            plans.transition_action(action, leader, "EN_COURS")
+            plans.transition_action(action, advisor, "DOCUMENT_DEMANDE")
 
     def _documents(self, slug: str, organization: Organization, users: dict, pmes: dict[str, Pme]) -> None:
         """Documents fictifs déposés, analysés par l'IA (moteur local), vérifiés ; échéances et alertes (phases 3-4)."""

@@ -224,9 +224,34 @@ def build_input(
         inputs=inputs,
         reviews=reviews,
         evidence=evidence,
+        progress=progress_for(diagnostic, evidence_as_of),
         context=context if context is not None else priority_context(diagnostic),
     )
     return spec, data
+
+
+def progress_for(diagnostic: Diagnostic, as_of: date | None = None) -> dict[str, engine.Progress]:
+    """Progrès vérifiés (actions terminées) postérieurs à la validation du diagnostic de référence.
+
+    Un diagnostic non encore validé n'en reçoit aucun : la revue du conseiller fait foi.
+    """
+    if diagnostic.validated_at is None:
+        return {}
+    from pme360.plans.models import CriterionProgress
+
+    progress: dict[str, engine.Progress] = {}
+    records = CriterionProgress.objects.filter(pme=diagnostic.pme, achieved_at__gt=diagnostic.validated_at)
+    if as_of is not None:
+        records = records.filter(achieved_at__date__lte=as_of)
+    for record in records.select_related("action"):
+        current = progress.get(record.criterion_code)
+        if current is None or record.level > current.level:
+            progress[record.criterion_code] = engine.Progress(
+                level=record.level,
+                dated=timezone.localtime(record.achieved_at).date(),
+                reference=record.action.human_ref,
+            )
+    return progress
 
 
 def priority_context(diagnostic: Diagnostic) -> dict:

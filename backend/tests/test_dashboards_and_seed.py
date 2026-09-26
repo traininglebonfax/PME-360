@@ -28,7 +28,7 @@ def test_advisor_dashboard_counts_only_own_portfolio(org, make_user, make_pme, c
     data = client_for(advisor, org).get("/api/v1/dashboards/advisor").json()
     assert data["kpis"]["pmes_followed"] == 2
     assert data["kpis"]["pmes_inactive"] == 1
-    assert data["kpis"]["documents_to_verify"] == 0 and data["kpis"]["actions_overdue"]["available_in_phase"] == 5
+    assert data["kpis"]["documents_to_verify"] == 0 and data["kpis"]["actions_overdue"] == 0
 
 
 def test_portfolio_dashboard_requires_permission(org, make_user, make_pme, client_for):
@@ -81,6 +81,16 @@ def test_seed_demo_is_idempotent_and_fictitious():
             == "P1"
         )
         assert Diagnostic.objects.filter(status="EN_REVUE").count() == 1
+        # Phase 5 : plan de Boutik Plus accepté, une action terminée qui relève le score courant.
+        from pme360.plans.models import Action, ActionPlan, CriterionProgress, Recommendation
+
+        plan = ActionPlan.objects.get(pme__legal_name="Boutik Plus Distribution SARL")
+        assert plan.status == "EN_COURS" and plan.accepted_by.email == "aya.dirigeante@demo.test"
+        done = Action.objects.get(plan=plan, status="TERMINE")
+        assert CriterionProgress.objects.filter(action=done).count() == len(done.target_criteria)
+        live_boutik = ScoreSnapshot.objects.get(pme__legal_name="Boutik Plus Distribution SARL", is_frozen=False)
+        assert live_boutik.global_score > boutik.global_score
+        assert Recommendation.objects.filter(pme__legal_name="Délices du Bandama SAS", status="PROPOSEE").exists()
     assert all(u.email.endswith("@demo.test") for u in User.objects.all())
 
 

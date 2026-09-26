@@ -109,6 +109,15 @@ class Evidence:
     dated: date
 
 
+@dataclass(frozen=True)
+class Progress:
+    """Progrès vérifié (phase 5) : action terminée dont les livrables sont conformes → niveau atteint."""
+
+    level: int
+    dated: date
+    reference: str  # référence de l'action (ACT-AAAA-NNNNN)
+
+
 @dataclass
 class DiagnosticInput:
     reference_date: date
@@ -117,6 +126,7 @@ class DiagnosticInput:
     inputs: dict[str, InputValue] = field(default_factory=dict)
     reviews: dict[str, Review] = field(default_factory=dict)
     evidence: dict[str, Evidence] = field(default_factory=dict)
+    progress: dict[str, Progress] = field(default_factory=dict)
     # Contexte pour les règles de priorité (alertes, actions : phases 3 à 5 ; historique des snapshots).
     context: dict = field(default_factory=dict)
 
@@ -245,6 +255,8 @@ def evaluate_criterion(criterion: CriterionSpec, data: DiagnosticInput, settings
         level = declared.level
     elif evidence and evidence.verified and evidence.level is not None:
         level = evidence.level  # la preuve vérifiée suffit, même sans déclaration
+    elif criterion.code in data.progress:
+        level = 0  # relevé ci-dessous par le progrès vérifié
     else:
         return result
     source = declared.source if declared else "DECLARATIF"
@@ -254,6 +266,11 @@ def evaluate_criterion(criterion: CriterionSpec, data: DiagnosticInput, settings
     proven = bool(evidence and evidence.verified and evidence.level is not None and evidence.level >= level)
     if evidence and evidence.verified:
         source, answered_on = evidence.source, evidence.dated
+    progress = data.progress.get(criterion.code)
+    if progress and progress.level > level:
+        # Action terminée, livrables vérifiés conformes (Document 7, § 2.2) : le critère atteint le niveau visé.
+        level, proven, source, answered_on = progress.level, True, "DOCUMENT_VERIFIE", progress.dated
+        result["progress"] = progress.reference
     result["level_uncapped"] = level
     if criterion.evidence_policy == "REQUIRED" and not proven:
         # RM-01 : pas de conformité sans preuve vérifiée. Une preuve vérifiée de niveau inférieur au niveau

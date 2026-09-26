@@ -143,6 +143,7 @@ class UploadSerializer(serializers.Serializer):
     document_type = serializers.CharField(max_length=40, required=False, allow_blank=True)
     document_id = serializers.UUIDField(required=False, allow_null=True)
     deadline_id = serializers.UUIDField(required=False, allow_null=True)
+    deliverable_id = serializers.UUIDField(required=False, allow_null=True, help_text="Livrable d'une action du plan.")
     title = serializers.CharField(max_length=250, required=False, allow_blank=True, default="")
     period_start = serializers.DateField(required=False, allow_null=True)
     period_end = serializers.DateField(required=False, allow_null=True)
@@ -150,7 +151,12 @@ class UploadSerializer(serializers.Serializer):
     expires_at = serializers.DateField(required=False, allow_null=True)
 
     def validate(self, attrs):
-        if not (attrs.get("document_type") or attrs.get("document_id") or attrs.get("deadline_id")):
+        if not (
+            attrs.get("document_type")
+            or attrs.get("document_id")
+            or attrs.get("deadline_id")
+            or attrs.get("deliverable_id")
+        ):
             raise serializers.ValidationError({"document_type": ["Précisez le type de document."]})
         if attrs.get("period_start") and attrs.get("period_end") and attrs["period_end"] < attrs["period_start"]:
             raise serializers.ValidationError({"period_end": ["La fin de période précède son début."]})

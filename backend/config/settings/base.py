@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "pme360.alerts",
     "pme360.notifications",
     "pme360.ai",
+    "pme360.plans",
     "pme360.dashboards",
 ]
 

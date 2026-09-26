@@ -20,6 +20,7 @@ from pme360.diagnostic import views as diagnostic
 from pme360.documents import views as documents
 from pme360.notifications import views as notifications
 from pme360.organizations import views as organizations
+from pme360.plans import views as plans
 from pme360.pmes import views as pmes
 from pme360.scoring import views as scoring
 
@@ -117,6 +118,25 @@ urlpatterns = [
     path("diagnostics/<uuid:diagnostic_id>/suggestions", ai.SuggestionListView.as_view()),
     path("pmes/<uuid:pme_id>/financial-analysis", ai.FinancialAnalysisView.as_view()),
     path("pmes/<uuid:pme_id>/financial-analysis/interpretation", ai.FinancialInterpretationView.as_view()),
+    # Accompagnement (Document 7) : recommandations, plan versionné, actions, livrables, catalogue et règles
+    path("pmes/<uuid:pme_id>/recommendations", plans.PmeRecommendationsView.as_view()),
+    path("pmes/<uuid:pme_id>/recommendations/manual", plans.ManualRecommendationView.as_view()),
+    path("recommendations/<uuid:recommendation_id>/decision", plans.RecommendationDecisionView.as_view()),
+    path("pmes/<uuid:pme_id>/plan", plans.PmePlanView.as_view()),
+    path("pmes/<uuid:pme_id>/plans", plans.PmePlanHistoryView.as_view()),
+    path("pmes/<uuid:pme_id>/plan/generate", plans.PlanGenerateView.as_view()),
+    path("plans/<uuid:plan_id>", plans.PlanDetailView.as_view()),
+    path("plans/<uuid:plan_id>/transition", plans.PlanTransitionView.as_view()),
+    path("plans/<uuid:plan_id>/new-version", plans.PlanNewVersionView.as_view()),
+    path("actions", plans.ActionListView.as_view()),
+    path("actions/<uuid:action_id>", plans.ActionDetailView.as_view()),
+    path("actions/<uuid:action_id>/transition", plans.ActionTransitionView.as_view()),
+    path("actions/<uuid:action_id>/dependencies", plans.ActionDependencyView.as_view()),
+    path("support-offers", plans.SupportOfferListView.as_view()),
+    path("deliverable-templates", plans.DeliverableTemplateListView.as_view()),
+    path("recommendation-rules", plans.RuleListView.as_view()),
+    path("recommendation-rules/<uuid:rule_id>/test", plans.RuleTestView.as_view()),
+    path("recommendation-rules/<uuid:rule_id>/<str:target>", plans.RuleStatusView.as_view()),
     path("pmes/<uuid:pme_id>/compliance-folder", compliance.ComplianceFolderView.as_view()),
     path("pmes/<uuid:pme_id>/deadlines", compliance.PmeDeadlinesView.as_view()),
     path("deadlines/upcoming", compliance.UpcomingDeadlinesView.as_view()),

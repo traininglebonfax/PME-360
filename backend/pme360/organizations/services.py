@@ -52,6 +52,7 @@ def create_organization(
     from pme360.accounts.services import invite_user
     from pme360.compliance.defaults import install as install_compliance
     from pme360.diagnostic.referential import install_gude360
+    from pme360.plans.services import install_plans
     from pme360.pmes.defaults import install_defaults
 
     with system_context():
@@ -70,6 +71,7 @@ def create_organization(
         install_defaults(organization)
         install_gude360(organization)
         install_compliance(organization)
+        install_plans(organization)
         bootstrap_access = AccessContext(
             user=created_by, organization_id=organization.id, permissions=frozenset({"org.manage_users"})
         )
