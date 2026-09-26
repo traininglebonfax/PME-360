@@ -7,10 +7,10 @@ observées et n'attribuent aucune cause (RM-09).
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from statistics import mean, median
 
-from django.db.models import Count
+from django.db.models import Count, Min
 from django.utils import timezone
 
 from . import services
@@ -351,3 +351,162 @@ def offer_effectiveness(access) -> dict:
             }
         )
     return {"offers": offers, "unit": "niveaux de critère (0 à 4)", "notice": RM09}
+
+
+# --- Livrables et documents non fournis (Document 9, § 4.2, dernière question) -----------------------------------
+
+DELIVERABLE_GRACE_DAYS = 30  # un livrable demandé depuis plus de 30 jours sans dépôt est « non fourni »
+
+
+def _days(delta) -> float:
+    return delta.total_seconds() / 86400
+
+
+def missing_deliverables(access, today: date | None = None) -> dict:
+    """Taux de non-fourniture et délai moyen de fourniture, par type de livrable et par document d'obligation.
+
+    Livrables d'action : « demandé » = l'action est passée à « Document demandé » (ou un dépôt a été constaté) ;
+    « non fourni » = aucun dépôt plus de 30 jours après la demande ; délai = premier dépôt − demande.
+    Échéances d'obligation : « échue » = date limite passée (hors dispense) ; « non fournie » = aucun document
+    déposé ; retard moyen = premier dépôt − date limite (jours, négatif = en avance).
+    """
+    from pme360.compliance.models import Deadline
+    from pme360.documents.models import Document
+    from pme360.plans.models import ActionTransition, Deliverable
+    from pme360.pmes.models import Pme
+
+    now = timezone.now() if today is None else timezone.make_aware(datetime.combine(today, datetime.max.time()))
+    today = today or timezone.localdate()
+    pme_ids = access.pme_queryset(Pme.objects.all()).values("pk")
+
+    deliverables = list(Deliverable.objects.filter(action__pme_id__in=pme_ids).select_related("template", "document"))
+    requested_at: dict = {}
+    for action_id, at in (
+        ActionTransition.objects.filter(action_id__in={d.action_id for d in deliverables}, to_status="DOCUMENT_DEMANDE")
+        .order_by("created_at")
+        .values_list("action_id", "created_at")
+    ):
+        requested_at.setdefault(action_id, at)
+    groups: dict[str, dict] = {}
+    for d in deliverables:
+        asked = requested_at.get(d.action_id)
+        submitted = d.document.created_at if d.document_id else None
+        if asked is None and submitted is None:
+            continue  # jamais demandé : hors calcul
+        key = d.template.code if d.template_id else (d.document_type_code or d.title)
+        name = d.template.title if d.template_id else d.title
+        g = groups.setdefault(key, {"code": key, "name": name, "requested": 0, "missing": 0, "delays": []})
+        g["requested"] += 1
+        if submitted is None:
+            if asked is not None and _days(now - asked) > DELIVERABLE_GRACE_DAYS:
+                g["missing"] += 1
+        elif asked is not None:
+            g["delays"].append(max(0.0, _days(submitted - asked)))
+    deliverable_rows = [
+        {
+            "code": g["code"],
+            "name": g["name"],
+            "requested": g["requested"],
+            "missing": g["missing"],
+            "missing_rate": round(g["missing"] / g["requested"], 3),
+            "average_delay_days": _round(mean(g["delays"])) if g["delays"] else None,
+            "small_sample": g["requested"] < MIN_CELL,
+        }
+        for g in groups.values()
+    ]
+    deliverable_rows.sort(key=lambda r: (-r["missing_rate"], -r["requested"]))
+
+    deadlines = list(
+        Deadline.objects.filter(pme_id__in=pme_ids, due_date__lt=today)
+        .exclude(status=Deadline.Status.DISPENSE)
+        .select_related("pme_obligation__template__document_type")
+    )
+    first_upload = dict(
+        Document.objects.filter(deadline_id__in=[d.pk for d in deadlines])
+        .values("deadline_id")
+        .annotate(first=Min("created_at"))
+        .values_list("deadline_id", "first")
+    )
+    by_type: dict[str, dict] = {}
+    for d in deadlines:
+        document_type = d.pme_obligation.template.document_type
+        g = by_type.setdefault(
+            document_type.code,
+            {"code": document_type.code, "name": document_type.name, "due": 0, "missing": 0, "late": 0, "delays": []},
+        )
+        g["due"] += 1
+        first = first_upload.get(d.pk)
+        if first is None:
+            g["missing"] += 1
+            continue
+        delay = (timezone.localtime(first).date() - d.due_date).days
+        g["delays"].append(delay)
+        if delay > 0:
+            g["late"] += 1
+    document_rows = [
+        {
+            "code": g["code"],
+            "name": g["name"],
+            "due": g["due"],
+            "missing": g["missing"],
+            "late": g["late"],
+            "missing_rate": round(g["missing"] / g["due"], 3),
+            "average_delay_days": _round(mean(g["delays"])) if g["delays"] else None,
+            "small_sample": g["due"] < MIN_CELL,
+        }
+        for g in by_type.values()
+    ]
+    document_rows.sort(key=lambda r: (-r["missing_rate"], -r["due"]))
+    return {
+        "grace_days": DELIVERABLE_GRACE_DAYS,
+        "min_cell": MIN_CELL,
+        "deliverables": deliverable_rows,
+        "documents": document_rows,
+    }
+
+
+# --- Carte régionale (Document 9, § 4.3) --------------------------------------------------------------------------
+
+
+def regional_map(access) -> dict:
+    """Par région : nombre de PME, score moyen et part à risque (moyennes masquées sous 5 PME évaluées)."""
+    from pme360.pmes.models import Region
+
+    states = services.current_states(access)
+    rows = {
+        code: {"code": code, "name": name, "pmes": 0, "scores": [], "risk": 0}
+        for code, name in Region.objects.values_list("code", "name")
+    }
+    without_region = 0
+    for s in states:
+        row = rows.get(s["region_code"])
+        if row is None:
+            without_region += 1
+            continue
+        row["pmes"] += 1
+        if s["current_score"] is not None:
+            row["scores"].append(float(s["current_score"]))
+            if s["risk_index"] is not None and float(s["risk_index"]) >= RISK_THRESHOLD:
+                row["risk"] += 1
+    result = []
+    for row in rows.values():
+        scored = len(row["scores"])
+        enough = scored >= MIN_CELL
+        result.append(
+            {
+                "code": row["code"],
+                "name": row["name"],
+                "pmes": row["pmes"],
+                "scored": scored,
+                "average_score": _round(mean(row["scores"])) if enough else None,
+                "at_risk_share": round(row["risk"] / scored, 3) if enough else None,
+                "masked": 0 < scored < MIN_CELL,
+            }
+        )
+    result.sort(key=lambda r: (-r["pmes"], r["name"]))
+    return {
+        "regions": result,
+        "without_region": without_region,
+        "min_cell": MIN_CELL,
+        "risk_threshold": RISK_THRESHOLD,
+    }

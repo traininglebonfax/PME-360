@@ -416,3 +416,31 @@ def test_admin_creates_obligations_with_readable_rules_and_rm08(org, make_user, 
     with tenant_context(org.id):
         assert AuditLog.objects.filter(action="obligation.created").exists()
         assert AuditLog.objects.filter(action="obligation.updated").exists()
+
+
+def test_missing_documents_analysis_by_obligation(org, pme, advisor, client_for, django_capture_on_commit_callbacks):
+    """Analyse V1 : échéances échues sans document, retard moyen des dépôts, par type de document."""
+    from pme360.accounts.access import build_access
+    from pme360.analytics import portfolio
+
+    client = client_for(advisor, org)
+    with tenant_context(org.id):
+        services.run_for_pme(pme, TODAY)
+        rccm = Deadline.objects.get(pme=pme, pme_obligation__template__code="OBL-RCCM")
+    with django_capture_on_commit_callbacks(execute=True):
+        client.post(
+            f"/api/v1/pmes/{pme.id}/documents",
+            {"file": SimpleUploadedFile("rccm.pdf", files.pdf()), "deadline_id": str(rccm.id)},
+            format="multipart",
+        )
+    later = TODAY + timedelta(days=200)
+    with tenant_context(org.id):
+        result = portfolio.missing_deliverables(build_access(advisor, org.id), today=later)
+        due = Deadline.objects.filter(pme=pme, due_date__lt=later).exclude(status=Deadline.Status.DISPENSE).count()
+    rows = {r["code"]: r for r in result["documents"]}
+    assert sum(r["due"] for r in rows.values()) == due
+    assert rows["RCCM"]["missing"] == 0 and rows["RCCM"]["average_delay_days"] is not None
+    assert all(r["small_sample"] for r in rows.values())  # une seule PME : effectifs < 5 signalés
+    missing = [r for r in rows.values() if r["code"] != "RCCM"]
+    assert missing and all(r["missing_rate"] == 1.0 for r in missing)
+    assert result["documents"][0]["missing_rate"] >= result["documents"][-1]["missing_rate"]  # tri décroissant

@@ -376,6 +376,8 @@ class PortfolioAnalysesView(APIView):
                 "trajectories": portfolio.trajectories(access),
                 "reinforced_support": portfolio.reinforced_support(access),
                 "offer_effectiveness": portfolio.offer_effectiveness(access),
+                "missing_deliverables": portfolio.missing_deliverables(access),
+                "regional_map": portfolio.regional_map(access),
                 "refreshed_at": services.freshness(),
             }
         )
