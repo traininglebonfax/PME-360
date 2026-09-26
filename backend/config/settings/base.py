@@ -260,6 +260,7 @@ SPECTACULAR_SETTINGS = {
         "ExtractionStatusEnum": "pme360.ai.models.DocumentExtraction.Status",
         "SuggestionStatusEnum": "pme360.ai.models.CriterionSuggestion.Status",
         "ActionStatusEnum": "pme360.plans.models.Action.Status",
+        "ReportTypeEnum": "pme360.reports.models.Report.Type",
         "ActionPlanStatusEnum": "pme360.plans.models.ActionPlan.Status",
         "DeliverableStatusEnum": "pme360.plans.models.Deliverable.Status",
         "RecommendationStatusEnum": "pme360.plans.models.Recommendation.Status",
@@ -275,6 +276,11 @@ CELERY_BEAT_SCHEDULE = {
     "compliance-daily": {"task": "pme360.compliance.tasks.run_daily", "schedule": crontab(hour=2, minute=0)},
     # Vues analytiques : rafraîchies par événement (plafond 30 s) et au moins toutes les 15 minutes (retards datés).
     "analytics-refresh": {"task": "pme360.analytics.tasks.refresh_views", "schedule": 900.0},
+    # Rapport trimestriel de portefeuille (anonymisé) le 1er jour de chaque trimestre, pour le trimestre écoulé.
+    "portfolio-quarterly-report": {
+        "task": "pme360.reports.tasks.generate_quarterly_portfolio_reports",
+        "schedule": crontab(day_of_month=1, month_of_year="1,4,7,10", hour=3, minute=0),
+    },
 }
 
 LOGGING = {

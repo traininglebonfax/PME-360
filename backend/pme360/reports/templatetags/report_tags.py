@@ -54,3 +54,37 @@ def tone(value) -> str:
         return "#c9ced6"
     value = float(value)
     return "#c2410c" if value < 50 else "#b7791f" if value < 70 else "#0f7a55"
+
+
+@register.filter
+def pct_width(value) -> int:
+    """Proportion (0 à 1) → largeur de barre en %, jamais nulle pour rester visible."""
+    return bar(None if value is None else float(value) * 100)
+
+
+@register.filter
+def pct_rest(value) -> int:
+    return 100 - pct_width(value)
+
+
+KPI_LABELS = {
+    "pmes_total": "PME au total",
+    "pmes_new_this_month": "Nouvelles PME",
+    "pmes_accompanied": "PME accompagnées",
+    "pmes_active": "PME actives",
+    "average_score": "Score moyen",
+    "average_progress": "Progression moyenne",
+    "average_compliance": "Conformité moyenne",
+    "pmes_at_risk": "PME à risque",
+    "pmes_urgent": "Intervention urgente",
+    "pmes_without_advisor": "PME sans conseiller",
+    "pmes_late": "PME en retard",
+    "actions_done": "Actions réalisées",
+    "actions_overdue": "Actions en retard",
+    "average_confidence": "Confiance moyenne",
+}
+
+
+@register.filter
+def kpi_label(key: str) -> str:
+    return KPI_LABELS.get(key, key)

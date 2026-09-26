@@ -23,6 +23,7 @@ const GUDE_NAV: NavItem[] = [
   { href: "/pme", label: "PME", permission: "pme.view" },
   { href: "/portefeuille", label: "Portefeuille", permission: "dashboard.portfolio" },
   { href: "/analyses", label: "Analyses", permission: "dashboard.portfolio" },
+  { href: "/rapports", label: "Rapports", permission: "dashboard.portfolio" },
   { href: "/verifications", label: "Documents à vérifier", permission: "document.verify" },
   { href: "/alertes", label: "Alertes", permission: "pme.view" },
   { href: "/assistant", label: "Copilot", permission: "ai.ask" },
