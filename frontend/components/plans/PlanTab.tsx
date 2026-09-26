@@ -11,7 +11,8 @@ import { useState } from "react";
 import { Alert, Badge, Button, Card, cx, EmptyState, LoadingBlock, SelectInput, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { ACTION_STATUS, AXES, DIMENSIONS, PHASES, PLAN_STATUS, priorityLabel, RECOMMENDATION_STATUS, SOURCE_LABELS } from "@/lib/plans";
+import { useActionStatus } from "@/lib/actionWorkflow";
+import { AXES, DIMENSIONS, PHASES, PLAN_STATUS, priorityLabel, RECOMMENDATION_STATUS, SOURCE_LABELS } from "@/lib/plans";
 import { hasPermission, useMe } from "@/lib/session";
 
 type Recommendation = Schemas["Recommendation"];
@@ -427,6 +428,7 @@ function PlanPanel({ plan, pmeId, canEdit }: { plan: Plan; pmeId: string; canEdi
 }
 
 export function PhaseBoard({ actions, actionHref, pmeView = false }: { actions: Schemas["Action"][]; actionHref: (id: string) => string; pmeView?: boolean }) {
+  const statusOf = useActionStatus();
   const phases = PHASES.filter((phase) => actions.some((a) => a.phase === phase.key));
   if (actions.length === 0) return <EmptyState title="Aucune action" />;
   return (
@@ -440,7 +442,7 @@ export function PhaseBoard({ actions, actionHref, pmeView = false }: { actions: 
             {actions
               .filter((a) => a.phase === phase.key)
               .map((action) => {
-                const status = ACTION_STATUS[action.status];
+                const status = statusOf(action.status);
                 const deps = action.depends_on as { human_ref: string; title: string }[];
                 return (
                   <li key={action.id}>

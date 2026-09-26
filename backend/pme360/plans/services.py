@@ -700,35 +700,30 @@ def _expect(plan: ActionPlan, status: str) -> None:
 
 # --- Workflow des actions (Document 7, § 2.2) --------------------------------------------------------------------
 
-MANUAL = {
-    S.NON_COMMENCE: {S.EN_COURS, S.EN_ATTENTE_PME, S.EN_ATTENTE_GUDE, S.ABANDONNE},
-    S.EN_COURS: {S.DOCUMENT_DEMANDE, S.EN_ATTENTE_PME, S.EN_ATTENTE_GUDE, S.ABANDONNE, S.TERMINE},
-    S.DOCUMENT_DEMANDE: {S.EN_COURS, S.EN_ATTENTE_PME, S.EN_ATTENTE_GUDE, S.ABANDONNE},
-    S.NON_CONFORME: {S.EN_COURS, S.DOCUMENT_DEMANDE, S.ABANDONNE},
-    S.CONFORME: {S.TERMINE},
-    S.EN_ATTENTE_PME: {S.EN_COURS, S.ABANDONNE},
-    S.EN_ATTENTE_GUDE: {S.EN_COURS, S.ABANDONNE},
-    S.BLOQUE: {S.ABANDONNE},
-    S.DOCUMENT_RECU: {S.ABANDONNE},
-    S.A_VERIFIER: {S.ABANDONNE},
-}
-PME_ALLOWED = {S.EN_COURS, S.EN_ATTENTE_GUDE}  # la PME démarre, reprend, ou signale attendre GUDE-PME
-
 
 def transition_action(action: Action, access, to: str, reason: str = "") -> Action:
+    """Transition manuelle, selon le workflow configuré par l'organisation (``pme360.workflows``)."""
+    from pme360.workflows.services import action_workflow
+
     if not access.has("task.update"):
         raise PermissionDenied()
-    if access.is_pme_user and (action.pme_id not in access.own_pme_ids or to not in PME_ALLOWED):
+    if access.is_pme_user and action.pme_id not in access.own_pme_ids:
+        raise PermissionDenied()
+    workflow = action_workflow()
+    step = workflow.find(action.status, to)
+    actor = "PME" if access.is_pme_user else "STAFF"
+    if access.is_pme_user and not any(t["to"] == to and actor in t["actors"] for t in workflow.transitions):
         raise PermissionDenied("Cette étape est réalisée par votre conseiller.")
     if action.plan.status not in LIVE_PLAN:
         raise BusinessError("Le plan doit être validé et accepté avant de démarrer les actions.", code="plan_not_live")
-    if to not in MANUAL.get(action.status, set()):
+    if step is None or actor not in step["actors"]:
         raise BusinessError(
-            f"Passage impossible de « {action.get_status_display()} » à « {S(to).label} ».", code="invalid_transition"
+            f"Passage impossible de « {workflow.label(action.status)} » à « {workflow.label(to)} ».",
+            code="invalid_transition",
         )
     reason = reason.strip()
-    if to == S.ABANDONNE and not reason:
-        raise ValidationError({"reason": ["Motif obligatoire pour abandonner une action."]})
+    if step["reason_required"] and not reason:
+        raise ValidationError({"reason": [f"Motif obligatoire pour « {step['button'] or workflow.label(to)} »."]})
     if to == S.TERMINE:
         pending = action.deliverables.exclude(status=Deliverable.Status.CONFORME)
         if pending.exists():

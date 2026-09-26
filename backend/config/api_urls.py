@@ -24,6 +24,7 @@ from pme360.plans import views as plans
 from pme360.pmes import views as pmes
 from pme360.reports import views as reports
 from pme360.scoring import views as scoring
+from pme360.workflows import views as workflows
 
 
 @extend_schema(responses=inline_serializer("Health", {"status": serializers.CharField()}))
@@ -186,6 +187,10 @@ urlpatterns = [
     path("notifications/unread-count", notifications.NotificationCountView.as_view()),
     path("notifications/read", notifications.NotificationReadView.as_view()),
     path("me/notification-preferences", notifications.NotificationPreferencesView.as_view()),
+    path("workflows/<str:target>", workflows.ActiveWorkflowView.as_view()),
+    path("config/workflows/<str:target>", workflows.WorkflowAdminView.as_view()),
+    path("config/workflows/<str:target>/draft", workflows.WorkflowDraftView.as_view()),
+    path("config/workflows/<str:target>/draft/activate", workflows.WorkflowActivateView.as_view()),
     path("config/notification-templates", notifications.NotificationTemplateListView.as_view()),
     path("config/notification-templates/<str:event_code>", notifications.NotificationTemplateDetailView.as_view()),
     path("config/notification-templates/<str:event_code>/reset", notifications.NotificationTemplateResetView.as_view()),

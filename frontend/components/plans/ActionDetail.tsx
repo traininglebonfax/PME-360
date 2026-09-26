@@ -13,13 +13,15 @@ import { ActionComments } from "@/components/plans/ActionComments";
 import { Alert, Badge, Button, Card, LoadingBlock, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { ACTION_STATUS, type ActionStatus, DELIVERABLE_STATUS, DIMENSIONS, formatCost, PHASES, TRANSITION_LABELS } from "@/lib/plans";
+import { useActionStatus } from "@/lib/actionWorkflow";
+import { type ActionStatus, DELIVERABLE_STATUS, DIMENSIONS, formatCost, PHASES } from "@/lib/plans";
 
 type Action = Schemas["ActionDetail"];
 
 export function ActionDetail({ actionId, pmeView = false }: { actionId: string; pmeView?: boolean }) {
   const queryClient = useQueryClient();
   const key = ["action", actionId];
+  const statusOf = useActionStatus();
   const action = useQuery({
     queryKey: key,
     queryFn: () => unwrap(api.GET("/api/v1/actions/{action_id}", { params: { path: { action_id: actionId } } })),
@@ -32,7 +34,7 @@ export function ActionDetail({ actionId, pmeView = false }: { actionId: string; 
   if (action.isLoading) return <LoadingBlock />;
   if (action.error) return <Alert>{errorMessage(action.error)}</Alert>;
   const data = action.data!;
-  const status = ACTION_STATUS[data.status];
+  const status = statusOf(data.status);
   const phase = PHASES.find((p) => p.key === data.phase);
   const steps = data.sub_actions as { title: string; done: boolean }[];
 
@@ -117,7 +119,7 @@ export function ActionDetail({ actionId, pmeView = false }: { actionId: string; 
                 {data.transitions.map((t) => (
                   <li key={t.id}>
                     <p>
-                      {ACTION_STATUS[t.to_status as ActionStatus]?.label ?? t.to_status}{" "}
+                      {pmeView ? statusOf(t.to_status).pme : statusOf(t.to_status).label}{" "}
                       <span className="text-xs text-muted">
                         · {formatDateTime(t.created_at)} · {t.actor_type === "SYSTEM" ? "automatique" : t.actor_name}
                       </span>
@@ -135,6 +137,7 @@ export function ActionDetail({ actionId, pmeView = false }: { actionId: string; 
 }
 
 function DependencyList({ title, items }: { title: string; items: Schemas["ActionRef"][] }) {
+  const statusOf = useActionStatus();
   if (items.length === 0) return null;
   return (
     <div className="mb-2 text-sm">
@@ -145,7 +148,7 @@ function DependencyList({ title, items }: { title: string; items: Schemas["Actio
             <Link href={`/actions/${item.id}`} className="text-brand-700 hover:underline">
               {item.human_ref} {item.title}
             </Link>{" "}
-            <span className="text-xs text-muted">({ACTION_STATUS[item.status as ActionStatus]?.label})</span>
+            <span className="text-xs text-muted">({statusOf(item.status).label})</span>
           </li>
         ))}
       </ul>
@@ -255,10 +258,14 @@ function Transitions({ action, pmeView, onUpdated }: { action: Action; pmeView: 
       onUpdated(updated);
     },
   });
-  const order: ActionStatus[] = ["EN_COURS", "DOCUMENT_DEMANDE", "TERMINE", "EN_ATTENTE_PME", "EN_ATTENTE_GUDE", "ABANDONNE"];
-  const allowed = (action.allowed_transitions as ActionStatus[])
-    .filter((to) => !(to === "TERMINE" && action.deliverables.length > 0))
-    .sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  const order: ActionStatus[] = ["EN_COURS", "DOCUMENT_DEMANDE", "TERMINE", "EN_ATTENTE_PME", "EN_ATTENTE_GUDE", "NON_COMMENCE", "ABANDONNE"];
+  // Transitions du workflow configuré par l'organisation (libellé du bouton, motif obligatoire).
+  const options = action.transition_options
+    .filter((o) => !(o.to === "TERMINE" && action.deliverables.length > 0))
+    .sort((a, b) => order.indexOf(a.to) - order.indexOf(b.to));
+  const selected = options.find((o) => o.to === target);
+  const buttonLabel = (o: (typeof options)[number]) =>
+    pmeView && o.to === "EN_COURS" && action.started_at && o.label === "Je démarre cette action" ? "Reprendre l'action" : o.label;
   const hint =
     action.status === "BLOQUE"
       ? "Cette action démarrera automatiquement quand les actions dont elle dépend seront terminées."
@@ -269,18 +276,18 @@ function Transitions({ action, pmeView, onUpdated }: { action: Action; pmeView: 
   return (
     <Card title={pmeView ? "Où en est cette action ?" : "Statut"}>
       {hint && <p className="mb-3 text-sm text-muted">{hint}</p>}
-      {allowed.length === 0 ? (
+      {options.length === 0 ? (
         <p className="text-sm text-muted">{pmeView ? "Rien à faire de votre côté pour l'instant." : "Aucune transition manuelle possible."}</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {allowed.map((to) => (
+          {options.map((o) => (
             <Button
-              key={to}
-              variant={to === "ABANDONNE" ? "ghost" : to === "EN_COURS" ? "primary" : "secondary"}
-              loading={move.isPending && move.variables?.to === to}
-              onClick={() => (to === "ABANDONNE" || to === "EN_ATTENTE_PME" || to === "EN_ATTENTE_GUDE" ? setTarget(to) : move.mutate({ to, why: "" }))}
+              key={o.to}
+              variant={o.to === "ABANDONNE" ? "ghost" : o.to === "EN_COURS" ? "primary" : "secondary"}
+              loading={move.isPending && move.variables?.to === o.to}
+              onClick={() => (o.reason_required || o.to === "EN_ATTENTE_PME" || o.to === "EN_ATTENTE_GUDE" ? setTarget(o.to) : move.mutate({ to: o.to, why: "" }))}
             >
-              {pmeView && to === "EN_COURS" ? (action.started_at ? "Reprendre l'action" : "Je démarre cette action") : pmeView && to === "EN_ATTENTE_GUDE" ? "J'attends mon conseiller" : TRANSITION_LABELS[to] ?? to}
+              {buttonLabel(o)}
             </Button>
           ))}
         </div>
@@ -293,7 +300,12 @@ function Transitions({ action, pmeView, onUpdated }: { action: Action; pmeView: 
             move.mutate({ to: target, why: reason });
           }}
         >
-          <TextInput label={target === "ABANDONNE" ? "Motif de l'abandon (obligatoire)" : "Précision (facultatif)"} required={target === "ABANDONNE"} value={reason} onChange={(e) => setReason(e.target.value)} />
+          <TextInput
+            label={selected?.reason_required ? `Motif — ${selected.label} (obligatoire)` : "Précision (facultatif)"}
+            required={Boolean(selected?.reason_required)}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
           <div className="flex gap-2">
             <Button type="submit" variant={target === "ABANDONNE" ? "danger" : "primary"} loading={move.isPending}>
               Confirmer

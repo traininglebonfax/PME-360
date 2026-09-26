@@ -632,6 +632,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/config/workflows/{target}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["config_workflows_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/workflows/{target}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["config_workflows_draft_create"];
+        delete: operations["config_workflows_draft_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["config_workflows_draft_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/config/workflows/{target}/draft/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["config_workflows_draft_activate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboards/advisor": {
         parameters: {
             query?: never;
@@ -2347,6 +2395,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workflows/{target}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Workflow en vigueur (libellés des états, transitions) : lu par les écrans des actions, PME comprises. */
+        get: operations["workflows_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2452,6 +2517,7 @@ export interface components {
             readonly dependents: components["schemas"]["ActionRef"][];
             readonly rationale: string;
             readonly allowed_transitions: components["schemas"]["ActionStatusEnum"][];
+            readonly transition_options: components["schemas"]["ActionTransitionOption"][];
         };
         /**
          * @description * `submit` - submit
@@ -2495,6 +2561,11 @@ export interface components {
          * @enum {string}
          */
         ActionStatusEnum: "BLOQUE" | "NON_COMMENCE" | "EN_COURS" | "DOCUMENT_DEMANDE" | "DOCUMENT_RECU" | "A_VERIFIER" | "CONFORME" | "NON_CONFORME" | "TERMINE" | "EN_ATTENTE_PME" | "EN_ATTENTE_GUDE" | "ABANDONNE";
+        ActionTransitionOption: {
+            to: components["schemas"]["ActionStatusEnum"];
+            label: string;
+            reason_required: boolean;
+        };
         ActionTransitionRequestRequest: {
             to: components["schemas"]["ActionStatusEnum"];
             /** @default  */
@@ -2503,6 +2574,14 @@ export interface components {
         ActivationRequest: {
             active: boolean;
         };
+        ActiveWorkflow: {
+            /** @description 0 : workflow par défaut. */
+            version: number;
+            states: {
+                [key: string]: components["schemas"]["WorkflowState"];
+            };
+            transitions: components["schemas"]["WorkflowTransition"][];
+        };
         /**
          * @description * `USER` - Utilisateur
          *     * `SYSTEM` - Système
@@ -2510,6 +2589,12 @@ export interface components {
          * @enum {string}
          */
         ActorTypeEnum: "USER" | "SYSTEM" | "AI";
+        /**
+         * @description * `STAFF` - STAFF
+         *     * `PME` - PME
+         * @enum {string}
+         */
+        ActorsEnum: "STAFF" | "PME";
         AdvisorSummary: {
             /** Format: uuid */
             id: string;
@@ -3599,6 +3684,16 @@ export interface components {
             live: components["schemas"]["SnapshotDetail"] | null;
             open_diagnostic: unknown;
         };
+        HistoryItem: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly version: number;
+            readonly status: components["schemas"]["WorkflowStatusEnum"];
+            readonly notes: string;
+            /** Format: date-time */
+            readonly activated_at: string | null;
+            readonly activated_by_name: string;
+        };
         ImportFileRequest: {
             /** Format: binary */
             file: string;
@@ -4058,6 +4153,13 @@ export interface components {
             sensitive?: boolean;
             order?: number;
             is_active?: boolean;
+        };
+        PatchedDraftWriteRequest: {
+            states?: {
+                [key: string]: components["schemas"]["WorkflowStateRequest"];
+            };
+            transitions?: components["schemas"]["WorkflowTransitionRequest"][];
+            notes?: string;
         };
         PatchedObligationWriteRequest: {
             code?: string;
@@ -5265,6 +5367,80 @@ export interface components {
         WaiveRequest: {
             reason: string;
         };
+        WorkflowAdmin: {
+            active: components["schemas"]["ActiveWorkflow"];
+            draft: components["schemas"]["WorkflowDefinition"] | null;
+            issues: components["schemas"]["WorkflowIssues"] | null;
+            history: components["schemas"]["HistoryItem"][];
+            system_transitions: components["schemas"]["WorkflowSystemTransition"][];
+            rules: components["schemas"]["WorkflowRules"];
+        };
+        WorkflowDefinition: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly version: number;
+            readonly status: components["schemas"]["WorkflowStatusEnum"];
+            states: {
+                [key: string]: components["schemas"]["WorkflowState"];
+            };
+            transitions: components["schemas"]["WorkflowTransition"][];
+            readonly notes: string;
+            /** Format: date-time */
+            readonly activated_at: string | null;
+            readonly activated_by_name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        WorkflowIssues: {
+            errors: string[];
+            warnings: string[];
+        };
+        WorkflowRules: {
+            terminal: string[];
+            system_only_targets: string[];
+            pme_targets: string[];
+            mandatory_target: string;
+        };
+        WorkflowState: {
+            label: string;
+            pme_label: string;
+        };
+        WorkflowStateRequest: {
+            label: string;
+            pme_label: string;
+        };
+        /**
+         * @description * `DRAFT` - Brouillon
+         *     * `ACTIVE` - Active
+         *     * `RETIRED` - Retirée
+         * @enum {string}
+         */
+        WorkflowStatusEnum: "DRAFT" | "ACTIVE" | "RETIRED";
+        WorkflowSystemTransition: {
+            to: string;
+            trigger: string;
+            from: string;
+        };
+        WorkflowTransition: {
+            to: string;
+            actors: components["schemas"]["ActorsEnum"][];
+            reason_required: boolean;
+            button: string;
+            /** @default  */
+            pme_button: string;
+            from: string;
+        };
+        WorkflowTransitionRequest: {
+            to: string;
+            actors: components["schemas"]["ActorsEnum"][];
+            reason_required: boolean;
+            button: string;
+            /** @default  */
+            pme_button: string;
+            from: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -6238,6 +6414,115 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TestSent"];
+                };
+            };
+        };
+    };
+    config_workflows_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowAdmin"];
+                };
+            };
+        };
+    };
+    config_workflows_draft_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowAdmin"];
+                };
+            };
+        };
+    };
+    config_workflows_draft_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowAdmin"];
+                };
+            };
+        };
+    };
+    config_workflows_draft_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDraftWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowAdmin"];
+                };
+            };
+        };
+    };
+    config_workflows_draft_activate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowAdmin"];
                 };
             };
         };
@@ -9067,6 +9352,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QueueItem"][];
+                };
+            };
+        };
+    };
+    workflows_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveWorkflow"];
                 };
             };
         };

@@ -31,6 +31,7 @@ const GUDE_NAV: NavItem[] = [
   { href: "/conformite", label: "Conformité et obligations", permission: "org.configure" },
   { href: "/accompagnement", label: "Accompagnement", permission: "org.configure" },
   { href: "/modeles-notification", label: "Modèles de notification", permission: "org.configure" },
+  { href: "/workflows", label: "Workflows", permission: "org.configure" },
   { href: "/ia", label: "Intelligence artificielle", permission: "ai.review" },
   { href: "/programmes", label: "Programmes", permission: "programme.manage" },
   { href: "/utilisateurs", label: "Utilisateurs", permission: "org.manage_users" },

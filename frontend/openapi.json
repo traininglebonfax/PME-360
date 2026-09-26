@@ -1628,6 +1628,186 @@
                 }
             }
         },
+        "/api/v1/config/workflows/{target}": {
+            "get": {
+                "operationId": "config_workflows_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "target",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WorkflowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/workflows/{target}/draft": {
+            "post": {
+                "operationId": "config_workflows_draft_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "target",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WorkflowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "config_workflows_draft_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "target",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedDraftWriteRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WorkflowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "config_workflows_draft_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "target",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WorkflowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/config/workflows/{target}/draft/activate": {
+            "post": {
+                "operationId": "config_workflows_draft_activate_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "target",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "config"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WorkflowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/dashboards/advisor": {
             "get": {
                 "operationId": "dashboards_advisor_retrieve",
@@ -6548,6 +6728,42 @@
                     }
                 }
             }
+        },
+        "/api/v1/workflows/{target}": {
+            "get": {
+                "operationId": "workflows_retrieve",
+                "description": "Workflow en vigueur (libellés des états, transitions) : lu par les écrans des actions, PME comprises.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "target",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "workflows"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActiveWorkflow"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -6966,6 +7182,13 @@
                             "$ref": "#/components/schemas/ActionStatusEnum"
                         },
                         "readOnly": true
+                    },
+                    "transition_options": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActionTransitionOption"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -7005,6 +7228,7 @@
                     "target_criteria",
                     "target_level",
                     "title",
+                    "transition_options",
                     "transitions",
                     "waiting_on",
                     "why"
@@ -7083,6 +7307,25 @@
                 "type": "string",
                 "description": "* `BLOQUE` - Bloquée (dépendance)\n* `NON_COMMENCE` - Non commencée\n* `EN_COURS` - En cours\n* `DOCUMENT_DEMANDE` - Document demandé\n* `DOCUMENT_RECU` - Document reçu\n* `A_VERIFIER` - À vérifier\n* `CONFORME` - Conforme\n* `NON_CONFORME` - Non conforme\n* `TERMINE` - Terminée\n* `EN_ATTENTE_PME` - En attente de la PME\n* `EN_ATTENTE_GUDE` - En attente de GUDE-PME\n* `ABANDONNE` - Abandonnée"
             },
+            "ActionTransitionOption": {
+                "type": "object",
+                "properties": {
+                    "to": {
+                        "$ref": "#/components/schemas/ActionStatusEnum"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "reason_required": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "label",
+                    "reason_required",
+                    "to"
+                ]
+            },
             "ActionTransitionRequestRequest": {
                 "type": "object",
                 "properties": {
@@ -7109,6 +7352,32 @@
                     "active"
                 ]
             },
+            "ActiveWorkflow": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer",
+                        "description": "0 : workflow par défaut."
+                    },
+                    "states": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/WorkflowState"
+                        }
+                    },
+                    "transitions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkflowTransition"
+                        }
+                    }
+                },
+                "required": [
+                    "states",
+                    "transitions",
+                    "version"
+                ]
+            },
             "ActorTypeEnum": {
                 "enum": [
                     "USER",
@@ -7117,6 +7386,14 @@
                 ],
                 "type": "string",
                 "description": "* `USER` - Utilisateur\n* `SYSTEM` - Système\n* `AI` - IA"
+            },
+            "ActorsEnum": {
+                "enum": [
+                    "STAFF",
+                    "PME"
+                ],
+                "type": "string",
+                "description": "* `STAFF` - STAFF\n* `PME` - PME"
             },
             "AdvisorSummary": {
                 "type": "object",
@@ -11070,6 +11347,50 @@
                     "snapshot"
                 ]
             },
+            "HistoryItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "version": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/WorkflowStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "activated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "activated_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "activated_at",
+                    "activated_by_name",
+                    "id",
+                    "notes",
+                    "status",
+                    "version"
+                ]
+            },
             "ImportFileRequest": {
                 "type": "object",
                 "properties": {
@@ -12562,6 +12883,26 @@
                     },
                     "is_active": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "PatchedDraftWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "states": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/WorkflowStateRequest"
+                        }
+                    },
+                    "transitions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkflowTransitionRequest"
+                        }
+                    },
+                    "notes": {
+                        "type": "string"
                     }
                 }
             },
@@ -16558,6 +16899,308 @@
                 },
                 "required": [
                     "reason"
+                ]
+            },
+            "WorkflowAdmin": {
+                "type": "object",
+                "properties": {
+                    "active": {
+                        "$ref": "#/components/schemas/ActiveWorkflow"
+                    },
+                    "draft": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/WorkflowDefinition"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "issues": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/WorkflowIssues"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "history": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/HistoryItem"
+                        }
+                    },
+                    "system_transitions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkflowSystemTransition"
+                        }
+                    },
+                    "rules": {
+                        "$ref": "#/components/schemas/WorkflowRules"
+                    }
+                },
+                "required": [
+                    "active",
+                    "draft",
+                    "history",
+                    "issues",
+                    "rules",
+                    "system_transitions"
+                ]
+            },
+            "WorkflowDefinition": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "version": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/WorkflowStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "states": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/WorkflowState"
+                        }
+                    },
+                    "transitions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkflowTransition"
+                        }
+                    },
+                    "notes": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "activated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "activated_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "activated_at",
+                    "activated_by_name",
+                    "created_at",
+                    "id",
+                    "notes",
+                    "states",
+                    "status",
+                    "transitions",
+                    "updated_at",
+                    "version"
+                ]
+            },
+            "WorkflowIssues": {
+                "type": "object",
+                "properties": {
+                    "errors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "warnings": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "errors",
+                    "warnings"
+                ]
+            },
+            "WorkflowRules": {
+                "type": "object",
+                "properties": {
+                    "terminal": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "system_only_targets": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "pme_targets": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "mandatory_target": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "mandatory_target",
+                    "pme_targets",
+                    "system_only_targets",
+                    "terminal"
+                ]
+            },
+            "WorkflowState": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "pme_label": {
+                        "type": "string",
+                        "maxLength": 60
+                    }
+                },
+                "required": [
+                    "label",
+                    "pme_label"
+                ]
+            },
+            "WorkflowStateRequest": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "pme_label": {
+                        "type": "string",
+                        "maxLength": 60
+                    }
+                },
+                "required": [
+                    "label",
+                    "pme_label"
+                ]
+            },
+            "WorkflowStatusEnum": {
+                "enum": [
+                    "DRAFT",
+                    "ACTIVE",
+                    "RETIRED"
+                ],
+                "type": "string",
+                "description": "* `DRAFT` - Brouillon\n* `ACTIVE` - Active\n* `RETIRED` - Retirée"
+            },
+            "WorkflowSystemTransition": {
+                "type": "object",
+                "properties": {
+                    "to": {
+                        "type": "string"
+                    },
+                    "trigger": {
+                        "type": "string"
+                    },
+                    "from": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "from",
+                    "to",
+                    "trigger"
+                ]
+            },
+            "WorkflowTransition": {
+                "type": "object",
+                "properties": {
+                    "to": {
+                        "type": "string"
+                    },
+                    "actors": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActorsEnum"
+                        }
+                    },
+                    "reason_required": {
+                        "type": "boolean"
+                    },
+                    "button": {
+                        "type": "string"
+                    },
+                    "pme_button": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "from": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "actors",
+                    "button",
+                    "from",
+                    "reason_required",
+                    "to"
+                ]
+            },
+            "WorkflowTransitionRequest": {
+                "type": "object",
+                "properties": {
+                    "to": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "actors": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActorsEnum"
+                        }
+                    },
+                    "reason_required": {
+                        "type": "boolean"
+                    },
+                    "button": {
+                        "type": "string"
+                    },
+                    "pme_button": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "from": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "actors",
+                    "button",
+                    "from",
+                    "reason_required",
+                    "to"
                 ]
             }
         },
