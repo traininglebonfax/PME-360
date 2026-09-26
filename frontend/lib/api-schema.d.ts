@@ -516,6 +516,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/config/document-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["config_document_categories_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/document-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Tous les types de documents (actifs et inactifs) avec leur usage ; création. */
+        get: operations["config_document_types_list"];
+        put?: never;
+        /** @description Tous les types de documents (actifs et inactifs) avec leur usage ; création. */
+        post: operations["config_document_types_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/document-types/{type_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["config_document_types_partial_update"];
+        trace?: never;
+    };
     "/api/v1/dashboards/advisor": {
         parameters: {
             query?: never;
@@ -1168,6 +1218,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/obligation-templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["obligation_templates_partial_update"];
+        trace?: never;
+    };
     "/api/v1/obligation-templates/{template_id}/activation": {
         parameters: {
             query?: never;
@@ -1178,6 +1244,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["obligation_templates_activation_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/obligation-templates/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["obligation_templates_new_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2804,6 +2886,10 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        DocumentCategory: {
+            code: string;
+            name: string;
+        };
         DocumentCheck: {
             readonly check_code: string;
             readonly result: components["schemas"]["ResultEnum"];
@@ -2862,6 +2948,48 @@ export interface components {
             readonly freshness_days: number | null;
             /** @description Données personnelles : jamais envoyé à une IA externe. */
             readonly sensitive: boolean;
+        };
+        DocumentTypeAdmin: {
+            /** Format: uuid */
+            readonly id: string;
+            code: string;
+            name: string;
+            category: string;
+            readonly category_name: string;
+            description?: string;
+            /** @description Comment l'obtenir / le préparer (langage simple). */
+            guidance?: string;
+            period_kind?: components["schemas"]["PeriodKindEnum"];
+            /** @description Durée de validité depuis la délivrance. */
+            validity_days?: number | null;
+            /** @description « À jour » si daté de moins de N jours. */
+            freshness_days?: number | null;
+            /** @description Niveau de critère prouvé par ce document. */
+            evidence_level?: number;
+            /** @description Données personnelles : jamais envoyé à une IA externe. */
+            sensitive?: boolean;
+            order?: number;
+            is_active?: boolean;
+            readonly usage: components["schemas"]["DocumentTypeUsage"];
+        };
+        DocumentTypeUsage: {
+            documents: number;
+            obligations: string[];
+            criteria: string[];
+        };
+        DocumentTypeWriteRequest: {
+            code?: string;
+            name?: string;
+            category?: string;
+            description?: string;
+            guidance?: string;
+            period_kind?: components["schemas"]["PeriodKindEnum"];
+            validity_days?: number | null;
+            freshness_days?: number | null;
+            evidence_level?: number;
+            sensitive?: boolean;
+            order?: number;
+            is_active?: boolean;
         };
         DocumentVersion: {
             /** Format: uuid */
@@ -3397,6 +3525,22 @@ export interface components {
             readonly is_critical: boolean;
             readonly is_active: boolean;
             readonly pmes: number;
+            readonly applicability_text: string;
+            readonly frequency_text: string;
+        };
+        ObligationWriteRequest: {
+            code?: string;
+            name?: string;
+            description?: string;
+            nature?: components["schemas"]["NatureEnum"];
+            document_type?: string;
+            regulatory_rule?: string | null;
+            frequency?: components["schemas"]["FrequencyEnum"];
+            frequency_rule?: unknown;
+            due_days_after_period_end?: number;
+            applicability?: unknown;
+            reminder_offsets?: number[];
+            is_critical?: boolean;
         };
         OfferRef: {
             /** Format: uuid */
@@ -3520,6 +3664,34 @@ export interface components {
             /** @description Seuils de la règle (jours, points, pourcentages…). */
             params?: unknown;
             is_active?: boolean;
+        };
+        PatchedDocumentTypeWriteRequest: {
+            code?: string;
+            name?: string;
+            category?: string;
+            description?: string;
+            guidance?: string;
+            period_kind?: components["schemas"]["PeriodKindEnum"];
+            validity_days?: number | null;
+            freshness_days?: number | null;
+            evidence_level?: number;
+            sensitive?: boolean;
+            order?: number;
+            is_active?: boolean;
+        };
+        PatchedObligationWriteRequest: {
+            code?: string;
+            name?: string;
+            description?: string;
+            nature?: components["schemas"]["NatureEnum"];
+            document_type?: string;
+            regulatory_rule?: string | null;
+            frequency?: components["schemas"]["FrequencyEnum"];
+            frequency_rule?: unknown;
+            due_days_after_period_end?: number;
+            applicability?: unknown;
+            reminder_offsets?: number[];
+            is_critical?: boolean;
         };
         PatchedOrganizationUpdateRequest: {
             name?: string;
@@ -5450,6 +5622,92 @@ export interface operations {
             };
         };
     };
+    config_document_categories_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentCategory"][];
+                };
+            };
+        };
+    };
+    config_document_types_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypeAdmin"][];
+                };
+            };
+        };
+    };
+    config_document_types_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DocumentTypeWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypeAdmin"];
+                };
+            };
+        };
+    };
+    config_document_types_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDocumentTypeWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypeAdmin"];
+                };
+            };
+        };
+    };
     dashboards_advisor_retrieve: {
         parameters: {
             query?: never;
@@ -6372,6 +6630,31 @@ export interface operations {
             };
         };
     };
+    obligation_templates_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedObligationWriteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObligationTemplate"];
+                };
+            };
+        };
+    };
     obligation_templates_activation_create: {
         parameters: {
             query?: never;
@@ -6388,6 +6671,29 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObligationTemplate"];
+                };
+            };
+        };
+    };
+    obligation_templates_new_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ObligationWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

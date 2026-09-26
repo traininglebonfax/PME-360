@@ -2,13 +2,14 @@ from datetime import timedelta
 
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import serializers
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from pme360.core.permissions import get_access
 from pme360.diagnostic.views import scoped_pme
+from pme360.documents.models import DocumentCategory, DocumentType
 from pme360.documents.serializers import DocumentSerializer, PmeRefSerializer
 from pme360.pmes.models import Pme
 
@@ -184,6 +185,8 @@ class ObligationTemplateSerializer(serializers.ModelSerializer):
     regulatory_status = serializers.CharField(source="regulatory_rule.status", read_only=True, default=None)
     reminder_offsets = serializers.ListField(child=serializers.IntegerField(), read_only=True)
     pmes = serializers.SerializerMethodField()
+    applicability_text = serializers.SerializerMethodField()
+    frequency_text = serializers.SerializerMethodField()
 
     class Meta:
         model = ObligationTemplate
@@ -205,11 +208,32 @@ class ObligationTemplateSerializer(serializers.ModelSerializer):
             "is_critical",
             "is_active",
             "pmes",
+            "applicability_text",
+            "frequency_text",
         ]
         read_only_fields = fields
 
     def get_pmes(self, obj) -> int:
         return obj.pme_obligations.count()
+
+    def _labels(self) -> dict:
+        from .configuration import value_labels
+
+        if "labels" not in self.context:
+            self.context["labels"] = value_labels()
+        return self.context["labels"]
+
+    def get_applicability_text(self, obj) -> str:
+        from .configuration import describe_logic
+
+        return describe_logic(obj.applicability, self._labels())
+
+    def get_frequency_text(self, obj) -> str:
+        from .configuration import describe_logic
+
+        if obj.frequency_rule:
+            return describe_logic(obj.frequency_rule, self._labels())
+        return obj.get_frequency_display()
 
 
 class VerifyRuleSerializer(serializers.Serializer):
@@ -307,3 +331,149 @@ class ComplianceRunView(APIView):
             for key in ("obligations", "deadlines_created", "reminders"):
                 totals[key] += stats[key]
         return Response(totals)
+
+
+# --- Configuration sans code : types de documents et obligations (V1) ------------------------------------------
+
+
+class DocumentCategorySerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name = serializers.CharField()
+
+
+class DocumentTypeUsageSerializer(serializers.Serializer):
+    documents = serializers.IntegerField()
+    obligations = serializers.ListField(child=serializers.CharField())
+    criteria = serializers.ListField(child=serializers.CharField())
+
+
+class DocumentTypeAdminSerializer(serializers.ModelSerializer):
+    category = serializers.CharField(source="category.code")
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    usage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DocumentType
+        fields = [
+            "id",
+            "code",
+            "name",
+            "category",
+            "category_name",
+            "description",
+            "guidance",
+            "period_kind",
+            "validity_days",
+            "freshness_days",
+            "evidence_level",
+            "sensitive",
+            "order",
+            "is_active",
+            "usage",
+        ]
+        read_only_fields = ["id", "category_name", "usage"]
+
+    @extend_schema_field(DocumentTypeUsageSerializer)
+    def get_usage(self, obj) -> dict:
+        from .configuration import document_type_usage
+
+        return document_type_usage(obj)
+
+
+class DocumentTypeWriteSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=40, required=False)
+    name = serializers.CharField(max_length=200, required=False)
+    category = serializers.CharField(max_length=40, required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
+    guidance = serializers.CharField(required=False, allow_blank=True)
+    period_kind = serializers.ChoiceField(choices=DocumentType.PeriodKind.choices, required=False)
+    validity_days = serializers.IntegerField(min_value=1, max_value=3650, required=False, allow_null=True)
+    freshness_days = serializers.IntegerField(min_value=1, max_value=3650, required=False, allow_null=True)
+    evidence_level = serializers.IntegerField(min_value=0, max_value=4, required=False)
+    sensitive = serializers.BooleanField(required=False)
+    order = serializers.IntegerField(min_value=0, required=False)
+    is_active = serializers.BooleanField(required=False)
+
+
+class DocumentCategoryListView(APIView):
+    required_permissions = "org.configure"
+
+    @extend_schema(responses=DocumentCategorySerializer(many=True))
+    def get(self, request):
+        return Response(DocumentCategorySerializer(DocumentCategory.objects.order_by("order", "name"), many=True).data)
+
+
+class DocumentTypeAdminListView(APIView):
+    """Tous les types de documents (actifs et inactifs) avec leur usage ; création."""
+
+    required_permissions = "org.configure"
+
+    @extend_schema(responses=DocumentTypeAdminSerializer(many=True))
+    def get(self, request):
+        types = DocumentType.objects.select_related("category").order_by("category__order", "order", "name")
+        return Response(DocumentTypeAdminSerializer(types, many=True).data)
+
+    @extend_schema(request=DocumentTypeWriteSerializer, responses={201: DocumentTypeAdminSerializer})
+    def post(self, request):
+        from .configuration import save_document_type
+
+        serializer = DocumentTypeWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        document_type = save_document_type(get_access(request), serializer.validated_data)
+        return Response(DocumentTypeAdminSerializer(document_type).data, status=status.HTTP_201_CREATED)
+
+
+class DocumentTypeAdminDetailView(APIView):
+    required_permissions = "org.configure"
+
+    @extend_schema(request=DocumentTypeWriteSerializer, responses=DocumentTypeAdminSerializer)
+    def patch(self, request, type_id):
+        from .configuration import save_document_type
+
+        document_type = get_object_or_404(DocumentType.objects.select_related("category"), pk=type_id)
+        serializer = DocumentTypeWriteSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        document_type = save_document_type(get_access(request), serializer.validated_data, document_type)
+        return Response(DocumentTypeAdminSerializer(document_type).data)
+
+
+class ObligationWriteSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=40, required=False)
+    name = serializers.CharField(max_length=200, required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
+    nature = serializers.ChoiceField(choices=ObligationTemplate.Nature.choices, required=False)
+    document_type = serializers.CharField(max_length=40, required=False)
+    regulatory_rule = serializers.CharField(max_length=40, required=False, allow_blank=True, allow_null=True)
+    frequency = serializers.ChoiceField(choices=ObligationTemplate.Frequency.choices, required=False)
+    frequency_rule = serializers.JSONField(required=False, allow_null=True)
+    due_days_after_period_end = serializers.IntegerField(required=False)
+    applicability = serializers.JSONField(required=False, allow_null=True)
+    reminder_offsets = serializers.ListField(child=serializers.IntegerField(), required=False)
+    is_critical = serializers.BooleanField(required=False)
+
+
+class ObligationTemplateCreateView(APIView):
+    required_permissions = "org.configure"
+
+    @extend_schema(request=ObligationWriteSerializer, responses={201: ObligationTemplateSerializer})
+    def post(self, request):
+        from .configuration import save_obligation
+
+        serializer = ObligationWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        template = save_obligation(get_access(request), serializer.validated_data)
+        return Response(ObligationTemplateSerializer(template).data, status=status.HTTP_201_CREATED)
+
+
+class ObligationTemplateDetailView(APIView):
+    required_permissions = "org.configure"
+
+    @extend_schema(request=ObligationWriteSerializer, responses=ObligationTemplateSerializer)
+    def patch(self, request, template_id):
+        from .configuration import save_obligation
+
+        template = get_object_or_404(ObligationTemplate.objects.select_related("regulatory_rule"), pk=template_id)
+        serializer = ObligationWriteSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        template = save_obligation(get_access(request), serializer.validated_data, template)
+        return Response(ObligationTemplateSerializer(template).data)

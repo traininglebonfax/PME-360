@@ -1,12 +1,14 @@
 "use client";
 
 /**
- * Administration de la conformité (Document 8) : registre réglementaire sourcé (RM-08), obligations,
- * règles d'alerte (Document 7, § 8) et exécution du planificateur quotidien.
+ * Administration de la conformité (Document 8) : registre réglementaire sourcé (RM-08), obligations (création et
+ * règles de profil sans code), types de documents (V1), règles d'alerte (Document 7, § 8) et planificateur quotidien.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { DocumentTypesAdmin } from "@/components/compliance/DocumentTypesAdmin";
+import { NATURES, ObligationForm } from "@/components/compliance/ObligationForm";
 import { Alert, Badge, Button, Card, cx, LoadingBlock, PageHeader, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { SEVERITY } from "@/lib/documents";
@@ -19,13 +21,10 @@ const RULE_STATUS: Record<string, { label: string; tone: "brand" | "warning" | "
   OBSOLETE: { label: "Obsolète", tone: "muted" },
   HORS_PERIMETRE: { label: "Hors périmètre", tone: "muted" },
 };
-const NATURES: Record<string, string> = { REGLEMENTAIRE: "Réglementaire", PROGRAMME: "Programme", BONNE_PRATIQUE: "Bonne pratique" };
-const FREQUENCIES: Record<string, string> = {
-  PONCTUELLE: "Ponctuelle", MENSUELLE: "Mensuelle", TRIMESTRIELLE: "Trimestrielle", SEMESTRIELLE: "Semestrielle", ANNUELLE: "Annuelle",
-};
 const TABS = [
   { key: "registre", label: "Registre réglementaire" },
   { key: "obligations", label: "Obligations" },
+  { key: "documents", label: "Types de documents" },
   { key: "alertes", label: "Règles d'alerte" },
 ] as const;
 
@@ -65,6 +64,7 @@ export default function CompliancePage() {
       </div>
       {tab === "registre" && <Registry />}
       {tab === "obligations" && <Obligations />}
+      {tab === "documents" && <DocumentTypesAdmin />}
       {tab === "alertes" && <AlertRules />}
     </>
   );
@@ -176,6 +176,7 @@ function RuleForm({ rule, onDone }: { rule: Schemas["RegulatoryRule"]; onDone: (
 function Obligations() {
   const queryClient = useQueryClient();
   const templates = useQuery({ queryKey: ["obligation-templates"], queryFn: () => unwrap(api.GET("/api/v1/obligation-templates")) });
+  const [editing, setEditing] = useState<Schemas["ObligationTemplate"] | "new" | null>(null);
   const toggle = useMutation({
     mutationFn: ({ id, active }: { id: string; active: boolean }) =>
       unwrap(api.POST("/api/v1/obligation-templates/{template_id}/activation", { params: { path: { template_id: id } }, body: { active } })),
@@ -184,60 +185,79 @@ function Obligations() {
   if (templates.isLoading) return <LoadingBlock />;
   if (templates.error) return <Alert>{errorMessage(templates.error)}</Alert>;
   return (
-    <Card>
-      {toggle.error && (
-        <div className="mb-3">
-          <Alert>{errorMessage(toggle.error)}</Alert>
-        </div>
-      )}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-line text-sm">
-          <thead className="text-left text-xs uppercase tracking-wide text-muted">
-            <tr>
-              <th className="py-2 pr-4">Obligation</th>
-              <th className="py-2 pr-4">Nature</th>
-              <th className="py-2 pr-4">Périodicité</th>
-              <th className="py-2 pr-4">Règle</th>
-              <th className="py-2 pr-4 text-right">PME</th>
-              <th className="py-2">Active</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line align-top">
-            {templates.data!.map((t) => (
-              <tr key={t.id}>
-                <td className="py-2.5 pr-4">
-                  <p className="font-medium">{t.name}</p>
-                  <p className="text-xs text-muted">
-                    {t.document_type_name} · échéance {t.due_days_after_period_end} j après la période
-                    {t.is_critical && " · critique"}
-                  </p>
-                  {t.description && <p className="mt-0.5 text-xs text-muted">{t.description}</p>}
-                </td>
-                <td className="py-2.5 pr-4 text-muted">{NATURES[t.nature]}</td>
-                <td className="py-2.5 pr-4 text-muted">
-                  {FREQUENCIES[t.frequency]}
-                  {t.frequency_rule ? " (selon le profil)" : ""}
-                </td>
-                <td className="py-2.5 pr-4">
-                  {t.regulatory_rule ? <Badge tone={RULE_STATUS[t.regulatory_status ?? "A_VERIFIER"].tone}>{t.regulatory_rule}</Badge> : <span className="text-muted">—</span>}
-                </td>
-                <td className="py-2.5 pr-4 text-right tabular-nums">{t.pmes}</td>
-                <td className="py-2.5">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-brand-600"
-                    aria-label={`Activer ${t.name}`}
-                    checked={t.is_active}
-                    disabled={toggle.isPending}
-                    onChange={() => toggle.mutate({ id: t.id, active: !t.is_active })}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted">
+          Une obligation réglementaire ne peut être active que si sa règle du registre est vérifiée (RM-08). Les modifications valent pour les
+          prochaines échéances.
+        </p>
+        {editing === null && <Button onClick={() => setEditing("new")}>Nouvelle obligation</Button>}
       </div>
-    </Card>
+      {editing !== null && (
+        <Card title={editing === "new" ? "Nouvelle obligation" : `Modifier « ${editing.name} »`}>
+          <ObligationForm key={editing === "new" ? "new" : editing.id} initial={editing === "new" ? null : editing} onDone={() => setEditing(null)} />
+        </Card>
+      )}
+      <Card>
+        {toggle.error && (
+          <div className="mb-3">
+            <Alert>{errorMessage(toggle.error)}</Alert>
+          </div>
+        )}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-line text-sm">
+            <thead className="text-left text-xs uppercase tracking-wide text-muted">
+              <tr>
+                <th className="py-2 pr-4">Obligation</th>
+                <th className="py-2 pr-4">Nature</th>
+                <th className="py-2 pr-4">S'applique à</th>
+                <th className="py-2 pr-4">Périodicité</th>
+                <th className="py-2 pr-4">Règle</th>
+                <th className="py-2 pr-4 text-right">PME</th>
+                <th className="py-2 pr-4">Active</th>
+                <th className="py-2" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line align-top">
+              {templates.data!.map((t) => (
+                <tr key={t.id}>
+                  <td className="py-2.5 pr-4">
+                    <p className="font-medium">{t.name}</p>
+                    <p className="text-xs text-muted">
+                      {t.document_type_name} · échéance {t.due_days_after_period_end} j après la période
+                      {t.is_critical && " · critique"}
+                    </p>
+                    {t.description && <p className="mt-0.5 text-xs text-muted">{t.description}</p>}
+                  </td>
+                  <td className="py-2.5 pr-4 text-muted">{NATURES[t.nature]}</td>
+                  <td className="max-w-xs py-2.5 pr-4 text-xs text-muted">{t.applicability_text}</td>
+                  <td className="max-w-xs py-2.5 pr-4 text-xs text-muted">{t.frequency_text}</td>
+                  <td className="py-2.5 pr-4">
+                    {t.regulatory_rule ? <Badge tone={RULE_STATUS[t.regulatory_status ?? "A_VERIFIER"].tone}>{t.regulatory_rule}</Badge> : <span className="text-muted">—</span>}
+                  </td>
+                  <td className="py-2.5 pr-4 text-right tabular-nums">{t.pmes}</td>
+                  <td className="py-2.5 pr-4">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-brand-600"
+                      aria-label={`Activer ${t.name}`}
+                      checked={t.is_active}
+                      disabled={toggle.isPending}
+                      onChange={() => toggle.mutate({ id: t.id, active: !t.is_active })}
+                    />
+                  </td>
+                  <td className="py-2.5 text-right">
+                    <button className="text-xs text-brand-700 hover:underline" onClick={() => setEditing(t)} aria-label={`Modifier ${t.name}`}>
+                      Modifier
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
   );
 }
 
