@@ -142,6 +142,7 @@ urlpatterns = [
     path("support-offers", plans.SupportOfferListView.as_view()),
     path("deliverable-templates", plans.DeliverableTemplateListView.as_view()),
     path("recommendation-rules", plans.RuleListView.as_view()),
+    path("recommendation-rules/variables", plans.RuleVariablesView.as_view()),
     path("recommendation-rules/<uuid:rule_id>/test", plans.RuleTestView.as_view()),
     path("recommendation-rules/<uuid:rule_id>/activate", plans.RuleStatusView.as_view(target="activate")),
     path("recommendation-rules/<uuid:rule_id>/deactivate", plans.RuleStatusView.as_view(target="deactivate")),

@@ -98,8 +98,21 @@ test("l'administrateur teste une règle de recommandation sur le portefeuille", 
   await page.getByRole("link", { name: "Accompagnement" }).click();
   await expect(page.getByRole("heading", { name: "Accompagnement" })).toBeVisible();
   const version = page.getByTestId("rule-version").first();
+  // La règle se lit en français ; la formule technique reste repliée.
+  await expect(version.getByTestId("rule-sentence")).toContainText("SI");
+  await expect(version.getByTestId("rule-sentence")).toContainText("ALORS proposer");
+  await expect(version.getByText('{"or"')).toBeHidden();
   await version.getByRole("button", { name: "Tester" }).click();
   await expect(version.getByText(/PME concernée\(s\) sur \d+/)).toBeVisible();
+
+  // Nouvelle version avec le constructeur visuel : conditions en listes, aperçu en français.
+  await version.getByRole("button", { name: "Nouvelle version" }).click();
+  const clause = page.getByTestId("rule-clause").first();
+  await expect(clause.getByLabel("Donnée de la PME")).toBeVisible();
+  await clause.getByLabel("Valeur").fill("1");
+  await expect(page.getByTestId("rule-preview")).toContainText("au plus 1");
+  await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
+  await expect(page.getByText("Brouillon").first()).toBeVisible();
   await page.getByRole("tab", { name: "Offres" }).click();
   await expect(page.getByText("Tableau de trésorerie").first()).toBeVisible();
 });

@@ -131,6 +131,7 @@ export default function DashboardPage() {
 }
 
 function Portfolio({ data }: { data: PortfolioDashboard }) {
+  if (!data?.kpis) return null; // réponse incomplète (rechargement, API indisponible) : pas d'erreur d'affichage
   const k = data.kpis;
   const def = data.definitions;
   return (
