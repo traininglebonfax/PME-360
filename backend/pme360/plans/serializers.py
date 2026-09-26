@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import (
@@ -188,6 +189,7 @@ class ActionSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     @staticmethod
+    @extend_schema_field(ActionRefSerializer(many=True))
     def get_depends_on(action) -> list[dict]:
         return ActionRefSerializer([link.depends_on_action for link in action.dependency_links.all()], many=True).data
 
@@ -232,9 +234,11 @@ class ActionDetailSerializer(ActionSerializer):
         read_only_fields = fields
 
     @staticmethod
+    @extend_schema_field(ActionRefSerializer(many=True))
     def get_dependents(action) -> list[dict]:
         return ActionRefSerializer([link.action for link in action.dependent_links.all()], many=True).data
 
+    @extend_schema_field(serializers.ListField(child=serializers.ChoiceField(choices=Action.Status.choices)))
     def get_allowed_transitions(self, action) -> list[str]:
         from .services import MANUAL, PME_ALLOWED
 
@@ -264,6 +268,7 @@ class DependencyRequestSerializer(serializers.Serializer):
 
 
 class PlanSerializer(serializers.ModelSerializer):
+    accepted_offline = serializers.SerializerMethodField()
     validated_by_name = serializers.CharField(source="validated_by.full_name", read_only=True, default=None)
     accepted_by_name = serializers.CharField(source="accepted_by.full_name", read_only=True, default=None)
     pme_name = serializers.CharField(source="pme.legal_name", read_only=True)
@@ -285,11 +290,23 @@ class PlanSerializer(serializers.ModelSerializer):
             "validated_at",
             "accepted_by_name",
             "accepted_at",
+            "accepted_offline",
             "closed_at",
             "close_reason",
             "created_at",
         ]
         read_only_fields = fields
+
+    @staticmethod
+    def get_accepted_offline(plan) -> bool:
+        """Acceptation enregistrée par l'équipe (PME sans accès au portail)."""
+        return bool(plan.accepted_by_id) and not plan.accepted_by.memberships.filter(role__is_pme_role=True).exists()
+
+
+class PlanProgressSerializer(serializers.Serializer):
+    total = serializers.IntegerField()
+    done = serializers.IntegerField()
+    rate = serializers.FloatField(allow_null=True)
 
 
 class PlanDetailSerializer(PlanSerializer):
@@ -300,6 +317,7 @@ class PlanDetailSerializer(PlanSerializer):
         fields = [*PlanSerializer.Meta.fields, "actions", "progress"]
         read_only_fields = fields
 
+    @extend_schema_field(ActionSerializer(many=True))
     def get_actions(self, plan) -> list[dict]:
         actions = plan.actions.select_related("offer", "advisor_user", "owner_user", "pme").prefetch_related(
             "deliverables", "dependency_links__depends_on_action"
@@ -307,6 +325,7 @@ class PlanDetailSerializer(PlanSerializer):
         return ActionSerializer(actions, many=True, context=self.context).data
 
     @staticmethod
+    @extend_schema_field(PlanProgressSerializer)
     def get_progress(plan) -> dict:
         statuses = list(plan.actions.values_list("status", flat=True))
         done = sum(1 for s in statuses if s == Action.Status.TERMINE)
@@ -320,11 +339,11 @@ class PlanGenerateSerializer(serializers.Serializer):
 
 
 class PlanTransitionSerializer(serializers.Serializer):
-    action = serializers.ChoiceField(choices=["submit", "validate", "accept", "reopen", "close"])
+    action = serializers.ChoiceField(choices=["submit", "validate", "accept", "accept_offline", "reopen", "close"])
     reason = serializers.CharField(required=False, allow_blank=True, default="")
 
 
-class ReasonSerializer(serializers.Serializer):
+class PlanReasonSerializer(serializers.Serializer):
     reason = serializers.CharField()
 
 

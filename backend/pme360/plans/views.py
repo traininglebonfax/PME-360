@@ -24,9 +24,9 @@ from .serializers import (
     ManualRecommendationSerializer,
     PlanDetailSerializer,
     PlanGenerateSerializer,
+    PlanReasonSerializer,
     PlanSerializer,
     PlanTransitionSerializer,
-    ReasonSerializer,
     RecommendationDecisionSerializer,
     RecommendationSerializer,
     RuleSerializer,
@@ -217,11 +217,11 @@ class PlanTransitionView(APIView):
 class PlanNewVersionView(APIView):
     required_permissions = "plan.edit"
 
-    @extend_schema(request=ReasonSerializer, responses={201: PlanDetailSerializer})
+    @extend_schema(request=PlanReasonSerializer, responses={201: PlanDetailSerializer})
     def post(self, request, plan_id):
         _staff(request)
         plan = scoped_plan(request, plan_id)
-        serializer = ReasonSerializer(data=request.data)
+        serializer = PlanReasonSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         new = services.new_version(plan, get_access(request), reason=serializer.validated_data["reason"])
         return Response(PlanDetailSerializer(new, context=_context(request)).data, status=status.HTTP_201_CREATED)
@@ -368,9 +368,11 @@ class RuleTestView(APIView):
 
 class RuleStatusView(APIView):
     required_permissions = "org.configure"
+    target = ""
 
     @extend_schema(request=None, responses=RuleSerializer)
-    def post(self, request, rule_id, target):
+    def post(self, request, rule_id):
+        target = self.target
         rule = get_object_or_404(RecommendationRule.objects.select_related("offer"), pk=rule_id)
         status_value = {
             "activate": RecommendationRule.Status.ACTIVE,

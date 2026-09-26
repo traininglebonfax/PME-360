@@ -4,6 +4,71 @@
  */
 
 export interface paths {
+    "/api/v1/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Actions du périmètre (« Ma journée » du conseiller, suivi PME) ; filtres : pme, status, overdue. */
+        get: operations["actions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actions/{action_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["actions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["actions_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/actions/{action_id}/dependencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["actions_dependencies_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actions/{action_id}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["actions_transition_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai/analyses": {
         parameters: {
             query?: never;
@@ -509,6 +574,22 @@ export interface paths {
         };
         /** @description Échéances du périmètre (tableau de bord conseiller) : en retard et à venir. */
         get: operations["deadlines_upcoming_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deliverable-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["deliverable_templates_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1052,6 +1133,54 @@ export interface paths {
         patch: operations["organization_partial_update"];
         trace?: never;
     };
+    "/api/v1/plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["plans_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plans/{plan_id}/new-version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["plans_new_version_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plans/{plan_id}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["plans_transition_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/organizations": {
         parameters: {
             query?: never;
@@ -1291,6 +1420,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pmes/{pme_id}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Plan courant de la PME (le plan ouvert, sinon le dernier clos) ; 204 s'il n'y en a pas. */
+        get: operations["pmes_plan_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pmes/{pme_id}/plan/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pmes_plan_generate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pmes/{pme_id}/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pmes_plans_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pmes/{pme_id}/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pmes_recommendations_list"];
+        put?: never;
+        /** @description (Re)génère les recommandations à partir des règles actives et du score courant. */
+        post: operations["pmes_recommendations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pmes/{pme_id}/recommendations/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pmes_recommendations_manual_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pmes/{pme_pk}/persons": {
         parameters: {
             query?: never;
@@ -1387,6 +1598,86 @@ export interface paths {
         get: operations["programmes_cohorts_list"];
         put?: never;
         post: operations["programmes_cohorts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendation-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recommendation_rules_list"];
+        put?: never;
+        post: operations["recommendation_rules_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendation-rules/{rule_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recommendation_rules_activate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendation-rules/{rule_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recommendation_rules_deactivate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendation-rules/{rule_id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recommendation_rules_test_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendations/{recommendation_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recommendations_decision_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1507,6 +1798,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/support-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["support_offers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -1581,6 +1888,152 @@ export interface components {
     schemas: {
         AcceptResult: {
             accepted: number;
+        };
+        Action: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly human_ref: string;
+            /** Format: uuid */
+            readonly plan: string;
+            /** Format: uuid */
+            readonly pme: string;
+            readonly pme_name: string;
+            readonly offer_code: string;
+            readonly dimension_code: string;
+            readonly target_criteria: unknown;
+            readonly target_level: number | null;
+            readonly problem: string;
+            readonly objective: string;
+            readonly title: string;
+            /** @description Pourquoi cette action, en langage PME. */
+            readonly why: string;
+            /** @description [{title, done}] */
+            readonly sub_actions: unknown;
+            readonly owner_type: components["schemas"]["OwnerTypeEnum"];
+            readonly owner_name: string;
+            readonly advisor_name: string;
+            /** Format: double */
+            readonly priority_score: number;
+            readonly phase: components["schemas"]["PhaseEnum"];
+            readonly position: number;
+            /** Format: date */
+            readonly start_date: string | null;
+            /** Format: date */
+            readonly due_date: string;
+            /** Format: date */
+            readonly started_at: string | null;
+            readonly status: components["schemas"]["ActionStatusEnum"];
+            /** @description PME | GUDE : partie à qui le retard est imputé. */
+            readonly waiting_on: string;
+            readonly estimated_cost_min: number;
+            readonly estimated_cost_max: number;
+            readonly success_indicator: string;
+            /** Format: date-time */
+            readonly completed_at: string | null;
+            readonly abandon_reason: string;
+            readonly depends_on: components["schemas"]["ActionRef"][];
+            readonly deliverables_total: number;
+            readonly deliverables_conform: number;
+            readonly overdue: boolean;
+        };
+        ActionDetail: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly human_ref: string;
+            /** Format: uuid */
+            readonly plan: string;
+            /** Format: uuid */
+            readonly pme: string;
+            readonly pme_name: string;
+            readonly offer_code: string;
+            readonly dimension_code: string;
+            readonly target_criteria: unknown;
+            readonly target_level: number | null;
+            readonly problem: string;
+            readonly objective: string;
+            readonly title: string;
+            /** @description Pourquoi cette action, en langage PME. */
+            readonly why: string;
+            /** @description [{title, done}] */
+            readonly sub_actions: unknown;
+            readonly owner_type: components["schemas"]["OwnerTypeEnum"];
+            readonly owner_name: string;
+            readonly advisor_name: string;
+            /** Format: double */
+            readonly priority_score: number;
+            readonly phase: components["schemas"]["PhaseEnum"];
+            readonly position: number;
+            /** Format: date */
+            readonly start_date: string | null;
+            /** Format: date */
+            readonly due_date: string;
+            /** Format: date */
+            readonly started_at: string | null;
+            readonly status: components["schemas"]["ActionStatusEnum"];
+            /** @description PME | GUDE : partie à qui le retard est imputé. */
+            readonly waiting_on: string;
+            readonly estimated_cost_min: number;
+            readonly estimated_cost_max: number;
+            readonly success_indicator: string;
+            /** Format: date-time */
+            readonly completed_at: string | null;
+            readonly abandon_reason: string;
+            readonly depends_on: components["schemas"]["ActionRef"][];
+            readonly deliverables_total: number;
+            readonly deliverables_conform: number;
+            readonly overdue: boolean;
+            readonly deliverables: components["schemas"]["Deliverable"][];
+            readonly transitions: components["schemas"]["Transition"][];
+            readonly dependents: components["schemas"]["ActionRef"][];
+            readonly rationale: string;
+            readonly allowed_transitions: components["schemas"]["ActionStatusEnum"][];
+        };
+        /**
+         * @description * `submit` - submit
+         *     * `validate` - validate
+         *     * `accept` - accept
+         *     * `accept_offline` - accept_offline
+         *     * `reopen` - reopen
+         *     * `close` - close
+         * @enum {string}
+         */
+        ActionEnum: "submit" | "validate" | "accept" | "accept_offline" | "reopen" | "close";
+        /**
+         * @description * `BROUILLON` - Brouillon
+         *     * `EN_VALIDATION` - En validation
+         *     * `VALIDE` - Validé
+         *     * `EN_COURS` - En cours
+         *     * `CLOS` - Clos
+         * @enum {string}
+         */
+        ActionPlanStatusEnum: "BROUILLON" | "EN_VALIDATION" | "VALIDE" | "EN_COURS" | "CLOS";
+        ActionRef: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly human_ref: string;
+            readonly title: string;
+            readonly status: components["schemas"]["ActionStatusEnum"];
+        };
+        /**
+         * @description * `BLOQUE` - Bloquée (dépendance)
+         *     * `NON_COMMENCE` - Non commencée
+         *     * `EN_COURS` - En cours
+         *     * `DOCUMENT_DEMANDE` - Document demandé
+         *     * `DOCUMENT_RECU` - Document reçu
+         *     * `A_VERIFIER` - À vérifier
+         *     * `CONFORME` - Conforme
+         *     * `NON_CONFORME` - Non conforme
+         *     * `TERMINE` - Terminée
+         *     * `EN_ATTENTE_PME` - En attente de la PME
+         *     * `EN_ATTENTE_GUDE` - En attente de GUDE-PME
+         *     * `ABANDONNE` - Abandonnée
+         * @enum {string}
+         */
+        ActionStatusEnum: "BLOQUE" | "NON_COMMENCE" | "EN_COURS" | "DOCUMENT_DEMANDE" | "DOCUMENT_RECU" | "A_VERIFIER" | "CONFORME" | "NON_CONFORME" | "TERMINE" | "EN_ATTENTE_PME" | "EN_ATTENTE_GUDE" | "ABANDONNE";
+        ActionTransitionRequestRequest: {
+            to: components["schemas"]["ActionStatusEnum"];
+            /** @default  */
+            reason: string;
         };
         ActivationRequest: {
             active: boolean;
@@ -2022,6 +2475,50 @@ export interface components {
          * @enum {string}
          */
         DecisionEnum: "CONFORME" | "CONFORME_SOUS_RESERVE" | "NON_CONFORME" | "INCOHERENT";
+        Deliverable: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly title: string;
+            readonly document_type_code: string;
+            readonly status: components["schemas"]["DeliverableStatusEnum"];
+            readonly reason: string;
+            /** Format: uuid */
+            readonly document: string | null;
+            readonly document_title: string;
+            readonly template: components["schemas"]["DeliverableTemplate"];
+        };
+        /**
+         * @description * `ATTENDU` - Attendu
+         *     * `DEPOSE` - Déposé
+         *     * `A_VERIFIER` - À vérifier
+         *     * `CONFORME` - Conforme
+         *     * `NON_CONFORME` - Non conforme
+         * @enum {string}
+         */
+        DeliverableStatusEnum: "ATTENDU" | "DEPOSE" | "A_VERIFIER" | "CONFORME" | "NON_CONFORME";
+        DeliverableTemplate: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly title: string;
+            readonly category: string;
+            /** @description docx, xlsx, pdf… */
+            readonly format: string;
+            /** @description Type de document sous lequel le livrable est déposé. */
+            readonly document_type_code: string;
+            /** @description Comment le remplir, en langage simple. */
+            readonly instructions: string;
+            /** @description Exemple rempli fictif (extrait). */
+            readonly example: string;
+            /** @description Points contrôlés par le conseiller. */
+            readonly verification_criteria: unknown;
+            readonly version: string;
+            readonly is_active: boolean;
+        };
+        DependencyRequestRequest: {
+            /** Format: uuid */
+            depends_on: string;
+        };
         Diagnostic: {
             /** Format: uuid */
             readonly id: string;
@@ -2243,9 +2740,14 @@ export interface components {
          *     * `DEADLINE_OVERDUE` - DEADLINE_OVERDUE
          *     * `DEADLINE_ESCALATION` - DEADLINE_ESCALATION
          *     * `ALERT_RAISED` - ALERT_RAISED
+         *     * `PLAN_TO_ACCEPT` - PLAN_TO_ACCEPT
+         *     * `PLAN_ACCEPTED` - PLAN_ACCEPTED
+         *     * `ACTION_DOCUMENT_REQUESTED` - ACTION_DOCUMENT_REQUESTED
+         *     * `ACTION_DELIVERABLE_REJECTED` - ACTION_DELIVERABLE_REJECTED
+         *     * `ACTION_UNBLOCKED` - ACTION_UNBLOCKED
          * @enum {string}
          */
-        EventCodeEnum: "AI_BUDGET_WARNING" | "PREDIAGNOSTIC_READY" | "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED";
+        EventCodeEnum: "AI_BUDGET_WARNING" | "PREDIAGNOSTIC_READY" | "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED" | "PLAN_TO_ACCEPT" | "PLAN_ACCEPTED" | "ACTION_DOCUMENT_REQUESTED" | "ACTION_DELIVERABLE_REJECTED" | "ACTION_UNBLOCKED";
         /**
          * @description * `NONE` - Aucune
          *     * `RECOMMENDED` - Recommandée
@@ -2510,6 +3012,11 @@ export interface components {
          * @enum {string}
          */
         LoginStatusEnum: "ok" | "mfa_required" | "mfa_setup_required";
+        ManualRecommendationRequest: {
+            offer_code: string;
+            problem: string;
+            rationale: string;
+        };
         Me: {
             user: components["schemas"]["MeUser"];
             organization: components["schemas"]["MeOrganization"] | null;
@@ -2649,6 +3156,18 @@ export interface components {
             readonly is_active: boolean;
             readonly pmes: number;
         };
+        OfferRef: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly title: string;
+            readonly dimension_code: string;
+            readonly typical_duration_days: number;
+            /** @description Critères améliorés par l'offre. */
+            readonly target_criteria: unknown;
+            /** @description Niveau visé (indicateur de réussite). */
+            readonly target_level: number;
+        };
         Option: {
             value: string;
             label: string;
@@ -2713,6 +3232,13 @@ export interface components {
             /** @default false */
             trusted_device: boolean;
         };
+        /**
+         * @description * `PME` - PME
+         *     * `GUDE` - GUDE-PME
+         *     * `PARTENAIRE` - Partenaire
+         * @enum {string}
+         */
+        OwnerTypeEnum: "PME" | "GUDE" | "PARTENAIRE";
         PaginatedPmeListList: {
             /**
              * Format: uri
@@ -2734,6 +3260,18 @@ export interface components {
         PasswordResetRequestRequest: {
             /** Format: email */
             email: string;
+        };
+        PatchedActionUpdateRequest: {
+            title?: string;
+            /** Format: date */
+            start_date?: string;
+            /** Format: date */
+            due_date?: string;
+            phase?: components["schemas"]["PhaseEnum"];
+            owner_type?: components["schemas"]["OwnerTypeEnum"];
+            sub_actions?: {
+                [key: string]: unknown;
+            }[];
         };
         PatchedAlertRuleRequest: {
             severity?: components["schemas"]["SeverityEnum"];
@@ -2853,11 +3391,106 @@ export interface components {
             /** @description Facultatif (statistiques). */
             birth_year?: number | null;
         };
+        /**
+         * @description * `J1_30` - Jours 1–30
+         *     * `J31_60` - Jours 31–60
+         *     * `J61_90` - Jours 61–90
+         *     * `M6` - 6 mois
+         *     * `M12` - 12 mois
+         * @enum {string}
+         */
+        PhaseEnum: "J1_30" | "J31_60" | "J61_90" | "M6" | "M12";
         Pillar: {
             readonly code: string;
             readonly name: string;
             /** Format: decimal */
             readonly weight: string;
+        };
+        Plan: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly pme: string;
+            readonly pme_name: string;
+            /** Format: uuid */
+            readonly diagnostic: string;
+            readonly title: string;
+            /** @default 1 */
+            readonly version: number;
+            readonly status: components["schemas"]["ActionPlanStatusEnum"];
+            /** Format: date */
+            readonly horizon_start: string;
+            /** @description Actions simultanées maximum par horizon. */
+            readonly capacity: number;
+            /** Format: date-time */
+            readonly submitted_at: string | null;
+            readonly validated_by_name: string;
+            /** Format: date-time */
+            readonly validated_at: string | null;
+            readonly accepted_by_name: string;
+            /** Format: date-time */
+            readonly accepted_at: string | null;
+            /** @description Acceptation enregistrée par l'équipe (PME sans accès au portail). */
+            readonly accepted_offline: boolean;
+            /** Format: date-time */
+            readonly closed_at: string | null;
+            readonly close_reason: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        PlanDetail: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly pme: string;
+            readonly pme_name: string;
+            /** Format: uuid */
+            readonly diagnostic: string;
+            readonly title: string;
+            /** @default 1 */
+            readonly version: number;
+            readonly status: components["schemas"]["ActionPlanStatusEnum"];
+            /** Format: date */
+            readonly horizon_start: string;
+            /** @description Actions simultanées maximum par horizon. */
+            readonly capacity: number;
+            /** Format: date-time */
+            readonly submitted_at: string | null;
+            readonly validated_by_name: string;
+            /** Format: date-time */
+            readonly validated_at: string | null;
+            readonly accepted_by_name: string;
+            /** Format: date-time */
+            readonly accepted_at: string | null;
+            /** @description Acceptation enregistrée par l'équipe (PME sans accès au portail). */
+            readonly accepted_offline: boolean;
+            /** Format: date-time */
+            readonly closed_at: string | null;
+            readonly close_reason: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly actions: components["schemas"]["Action"][];
+            readonly progress: components["schemas"]["PlanProgress"];
+        };
+        PlanGenerateRequest: {
+            /** Format: date */
+            horizon_start?: string | null;
+            /** @default  */
+            title: string;
+        };
+        PlanProgress: {
+            total: number;
+            done: number;
+            /** Format: double */
+            rate: number | null;
+        };
+        PlanReasonRequest: {
+            reason: string;
+        };
+        PlanTransitionRequest: {
+            action: components["schemas"]["ActionEnum"];
+            /** @default  */
+            reason: string;
         };
         /** @description Vue plateforme : aucune donnée métier, uniquement l'identité du tenant. */
         PlatformOrganization: {
@@ -3040,6 +3673,13 @@ export interface components {
             /** Format: double */
             submit_threshold: number;
         };
+        /**
+         * @description * `GUDE` - GUDE-PME
+         *     * `PARTENAIRE` - Partenaire
+         *     * `PME_SEULE` - PME en autonomie
+         * @enum {string}
+         */
+        ProviderTypeEnum: "GUDE" | "PARTENAIRE" | "PME_SEULE";
         QuestionRequest: {
             question: string;
         };
@@ -3142,6 +3782,68 @@ export interface components {
          * @enum {string}
          */
         ReasonsEnum: "rccm" | "ncc" | "name";
+        Recommendation: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly diagnostic: string;
+            readonly offer: components["schemas"]["OfferRef"];
+            readonly source: components["schemas"]["SourceEnum"];
+            /** @description [{code, version}] des règles ayant proposé l'offre. */
+            readonly rules: unknown;
+            readonly problem: string;
+            readonly rationale: string;
+            readonly evidence_refs: unknown;
+            readonly impact: number;
+            readonly urgency: number;
+            readonly risk: number;
+            readonly effort: number;
+            /** @description Comment chaque axe a été proposé. */
+            readonly scoring_details: unknown;
+            /** Format: double */
+            readonly priority_computed: number;
+            /** Format: double */
+            readonly priority_final: number;
+            readonly priority_override_reason: string;
+            readonly status: components["schemas"]["RecommendationStatusEnum"];
+            readonly decision_reason: string;
+            readonly decided_by_name: string;
+            /** Format: date-time */
+            readonly decided_at: string | null;
+        };
+        RecommendationDecisionRequest: {
+            status: components["schemas"]["RecommendationDecisionStatusEnum"];
+            /** @default  */
+            reason: string;
+            impact?: number | null;
+            urgency?: number | null;
+            risk?: number | null;
+            effort?: number | null;
+            /** @default  */
+            priority_reason: string;
+        };
+        /**
+         * @description * `PROPOSEE` - PROPOSEE
+         *     * `ACCEPTEE` - ACCEPTEE
+         *     * `REJETEE` - REJETEE
+         * @enum {string}
+         */
+        RecommendationDecisionStatusEnum: "PROPOSEE" | "ACCEPTEE" | "REJETEE";
+        /**
+         * @description * `DRAFT` - Brouillon
+         *     * `ACTIVE` - Active
+         *     * `INACTIVE` - Inactive
+         * @enum {string}
+         */
+        RecommendationRuleStatusEnum: "DRAFT" | "ACTIVE" | "INACTIVE";
+        /**
+         * @description * `PROPOSEE` - Proposée
+         *     * `ACCEPTEE` - Acceptée
+         *     * `REJETEE` - Rejetée
+         *     * `CONVERTIE` - Convertie en action
+         * @enum {string}
+         */
+        RecommendationStatusEnum: "PROPOSEE" | "ACCEPTEE" | "REJETEE" | "CONVERTIE";
         RefItem: {
             /** Format: uuid */
             id: string;
@@ -3266,6 +3968,28 @@ export interface components {
          * @enum {string}
          */
         RoleInPmeEnum: "CONSEILLER_PRINCIPAL" | "EXPERT";
+        Rule: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly version: number;
+            readonly name: string;
+            readonly condition: unknown;
+            readonly offer_code: string;
+            readonly offer_title: string;
+            /** @description Vide : calculé. */
+            readonly impact: number | null;
+            readonly urgency: number | null;
+            readonly risk: number | null;
+            readonly problem_template: string;
+            readonly rationale_template: string;
+            readonly status: components["schemas"]["RecommendationRuleStatusEnum"];
+            /** Format: date-time */
+            readonly tested_at: string | null;
+            readonly test_result: unknown;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         RuleStatusRequest: {
             status: components["schemas"]["RuleStatusStatusEnum"];
             /** @default  */
@@ -3279,6 +4003,23 @@ export interface components {
          * @enum {string}
          */
         RuleStatusStatusEnum: "A_VERIFIER" | "PRE_VERIFIE" | "OBSOLETE" | "HORS_PERIMETRE";
+        RuleTestResult: {
+            evaluated: number;
+            matched: {
+                [key: string]: unknown;
+            }[];
+        };
+        RuleWriteRequest: {
+            code: string;
+            name: string;
+            condition: unknown;
+            offer_code: string;
+            impact?: number | null;
+            urgency?: number | null;
+            risk?: number | null;
+            problem_template: string;
+            rationale_template: string;
+        };
         RunResult: {
             pmes: number;
             obligations: number;
@@ -3387,6 +4128,13 @@ export interface components {
             readonly quadrant: string;
             readonly diagnostic_type: string;
         };
+        /**
+         * @description * `REGLE` - Règle
+         *     * `IA` - IA
+         *     * `CONSEILLER` - Conseiller
+         * @enum {string}
+         */
+        SourceEnum: "REGLE" | "IA" | "CONSEILLER";
         StartDiagnosticRequest: {
             type: components["schemas"]["DiagnosticTypeEnum"];
             /** Format: date */
@@ -3413,6 +4161,37 @@ export interface components {
          * @enum {string}
          */
         SuggestionStatusEnum: "PROPOSEE" | "ACCEPTEE" | "MODIFIEE" | "ECARTEE";
+        SupportOffer: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly code: string;
+            readonly title: string;
+            readonly dimension_code: string;
+            readonly objective: string;
+            readonly description: string;
+            readonly typical_duration_days: number;
+            /** @description 1 (< 1 semaine, gratuit) à 5 (> 3 mois ou coûteux). */
+            readonly effort: number;
+            /** @description Critères améliorés par l'offre. */
+            readonly target_criteria: unknown;
+            /** @description Niveau visé (indicateur de réussite). */
+            readonly target_level: number;
+            /** @description Codes des modèles de livrables attendus. */
+            readonly deliverables: unknown;
+            readonly required_document_types: unknown;
+            /** @description Étapes proposées (titres). */
+            readonly sub_actions: unknown;
+            /** @description Codes d'offres à terminer d'abord (si elles sont au plan). */
+            readonly depends_on: unknown;
+            readonly estimated_cost_min: number;
+            readonly estimated_cost_max: number;
+            readonly provider_type: components["schemas"]["ProviderTypeEnum"];
+            readonly provider_label: string;
+            /** @description Offre de croissance (horizon 12 mois, niveau ≥ N3). */
+            readonly is_growth: boolean;
+            readonly is_active: boolean;
+            readonly success_indicator: string;
+        };
         SwitchOrganizationRequest: {
             /** Format: uuid */
             organization_id: string;
@@ -3434,6 +4213,17 @@ export interface components {
             actor: string | null;
             before: unknown;
             after: unknown;
+        };
+        Transition: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly from_status: string;
+            readonly to_status: string;
+            readonly actor_name: string;
+            readonly actor_type: string;
+            readonly reason: string;
+            /** Format: date-time */
+            readonly created_at: string;
         };
         TransitionRequest: {
             to: components["schemas"]["LifecycleStatusEnum"];
@@ -3459,6 +4249,11 @@ export interface components {
             document_id?: string | null;
             /** Format: uuid */
             deadline_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Livrable d'une action du plan.
+             */
+            deliverable_id?: string | null;
             /** @default  */
             title: string;
             /** Format: date */
@@ -3531,6 +4326,126 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    actions_list: {
+        parameters: {
+            query?: {
+                overdue?: boolean;
+                pme?: string;
+                /** @description Statuts séparés par des virgules. */
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Action"][];
+                };
+            };
+        };
+    };
+    actions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionDetail"];
+                };
+            };
+        };
+    };
+    actions_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedActionUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionDetail"];
+                };
+            };
+        };
+    };
+    actions_dependencies_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DependencyRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionDetail"];
+                };
+            };
+        };
+    };
+    actions_transition_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActionTransitionRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionDetail"];
+                };
+            };
+        };
+    };
     ai_analyses_list: {
         parameters: {
             query?: {
@@ -4264,6 +5179,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Deadline"][];
+                };
+            };
+        };
+    };
+    deliverable_templates_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliverableTemplate"][];
                 };
             };
         };
@@ -5064,6 +5998,77 @@ export interface operations {
             };
         };
     };
+    plans_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetail"];
+                };
+            };
+        };
+    };
+    plans_new_version_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanReasonRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetail"];
+                };
+            };
+        };
+    };
+    plans_transition_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanTransitionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetail"];
+                };
+            };
+        };
+    };
     platform_organizations_list: {
         parameters: {
             query?: never;
@@ -5509,6 +6514,147 @@ export interface operations {
             };
         };
     };
+    pmes_plan_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetail"];
+                };
+            };
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    pmes_plan_generate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PlanGenerateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetail"];
+                };
+            };
+        };
+    };
+    pmes_plans_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plan"][];
+                };
+            };
+        };
+    };
+    pmes_recommendations_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recommendation"][];
+                };
+            };
+        };
+    };
+    pmes_recommendations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recommendation"][];
+                };
+            };
+        };
+    };
+    pmes_recommendations_manual_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualRecommendationRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recommendation"];
+                };
+            };
+        };
+    };
     pmes_persons_list: {
         parameters: {
             query?: never;
@@ -5783,6 +6929,136 @@ export interface operations {
             };
         };
     };
+    recommendation_rules_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rule"][];
+                };
+            };
+        };
+    };
+    recommendation_rules_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleWriteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rule"];
+                };
+            };
+        };
+    };
+    recommendation_rules_activate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rule"];
+                };
+            };
+        };
+    };
+    recommendation_rules_deactivate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rule"];
+                };
+            };
+        };
+    };
+    recommendation_rules_test_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleTestResult"];
+                };
+            };
+        };
+    };
+    recommendations_decision_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recommendation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecommendationDecisionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recommendation"];
+                };
+            };
+        };
+    };
     ref_list: {
         parameters: {
             query?: never;
@@ -5933,6 +7209,25 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    support_offers_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportOffer"][];
                 };
             };
         };

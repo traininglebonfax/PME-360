@@ -616,7 +616,7 @@ def plan_visible_to_pme(plan: ActionPlan) -> bool:
 
 
 def transition_plan(plan: ActionPlan, access, action: str, reason: str = "") -> ActionPlan:
-    """submit (conseiller) → validate (GUDE) → accept (dirigeant PME) → VALIDÉ ; reopen ; close."""
+    """submit (conseiller) → validate (GUDE) → accept (dirigeant PME) → VALIDÉ ; accept_offline ; reopen ; close."""
     before = plan.status
     now = timezone.now()
     if action == "submit":
@@ -651,6 +651,15 @@ def transition_plan(plan: ActionPlan, access, action: str, reason: str = "") -> 
             link=f"/pme/{plan.pme_id}?onglet=plan",
             pme=plan.pme,
         )
+    elif action == "accept_offline":
+        # PME sans accès au portail : le conseiller enregistre l'acceptation recueillie hors ligne (motif tracé).
+        _require(access, "plan.edit", staff=True)
+        _expect(plan, ActionPlan.Status.EN_VALIDATION)
+        if plan.validated_at is None:
+            raise BusinessError("Le plan doit d'abord être validé par GUDE-PME.", code="not_validated")
+        if not reason.strip():
+            raise ValidationError({"reason": ["Précisez comment la PME a accepté le plan (entretien, PV signé…)."]})
+        plan.status, plan.accepted_by, plan.accepted_at = ActionPlan.Status.VALIDE, access.user, now
     elif action == "reopen":
         _require(access, "plan.edit", staff=True)
         _expect(plan, ActionPlan.Status.EN_VALIDATION)

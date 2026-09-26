@@ -10,6 +10,7 @@ import Link from "next/link";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Alert, ButtonLink, Card, LoadingBlock } from "@/components/ui";
 import { DOCUMENT_STATUS } from "@/lib/documents";
+import { ACTION_STATUS, type ActionStatus } from "@/lib/plans";
 import { formatDate } from "@/lib/format";
 import { formatPercent, formatScore } from "@/lib/scoring";
 import { api, errorMessage, unwrap } from "@/lib/api";
@@ -80,10 +81,7 @@ export default function PmeSpacePage() {
               ) : dashboard.data.open_diagnostic?.status === "EN_REVUE" ? (
                 <p className="text-sm text-muted">Merci ! Votre conseiller examine vos réponses. Vos résultats s'afficheront ici après validation.</p>
               ) : (
-                <p className="text-sm text-muted">
-                  Rien pour le moment. Vos prochaines actions (3 au maximum), avec le pourquoi, le comment et le document à fournir,
-                  apparaîtront ici.
-                </p>
+                <NextActions data={dashboard.data} />
               )}
             </Card>
 
@@ -181,6 +179,54 @@ function ScoreSummary({ data }: { data: PmeDashboard }) {
       <p className="mt-2 text-xs text-muted">
         Fiabilité de la mesure : {formatPercent(score.confidence)} ({score.confidence_label?.toLowerCase()}). Elle augmentera quand vos
         justificatifs seront déposés et vérifiés.
+      </p>
+    </div>
+  );
+}
+
+function NextActions({ data }: { data: PmeDashboard }) {
+  const plan = data.next_actions.plan;
+  if (!plan)
+    return (
+      <p className="text-sm text-muted">
+        Rien pour le moment. Votre conseiller prépare votre plan d'accompagnement : vos prochaines actions, avec le pourquoi et les documents à
+        fournir, apparaîtront ici.
+      </p>
+    );
+  if (plan.to_accept)
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-ink">Votre plan d'accompagnement ({plan.total} actions) est prêt. Consultez-le et acceptez-le pour démarrer.</p>
+        <ButtonLink href="/espace/plan">Voir mon plan</ButtonLink>
+      </div>
+    );
+  const items = data.next_actions.items.slice(0, 3);
+  return (
+    <div className="space-y-3">
+      {items.length === 0 ? (
+        <p className="text-sm text-muted">Toutes les actions de votre plan sont terminées. Bravo !</p>
+      ) : (
+        <ul className="divide-y divide-line">
+          {items.map((item) => {
+            const status = ACTION_STATUS[item.status as ActionStatus];
+            return (
+              <li key={item.id} className="py-2">
+                <Link href={`/espace/plan/${item.id}`} className="flex items-center justify-between gap-3 text-sm hover:text-brand-700">
+                  <span className="font-medium">{item.title}</span>
+                  <span className={item.overdue ? "text-xs font-medium text-red-700" : "text-xs text-muted"}>
+                    {item.overdue ? "en retard" : status?.pme ?? item.status} · {formatDate(item.due_date)}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className="text-xs text-muted">
+        {plan.done}/{plan.total} action(s) terminée(s) ·{" "}
+        <Link href="/espace/plan" className="text-brand-700 hover:underline">
+          Voir tout mon plan
+        </Link>
       </p>
     </div>
   );

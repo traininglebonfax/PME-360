@@ -23,7 +23,18 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 2 — Diagnostic | ✅ Livrée (voir ci-dessous) ; référentiel GUDE-360 v1 **à valider en atelier** (D-04) |
 | 3 — Documents & conformité | ✅ Livrée (voir ci-dessous) ; règles réglementaires CNPS / fiscales / états financiers **à vérifier** avant activation (RM-08) |
 | 4 — IA | ✅ Livrée (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
-| 5 — Accompagnement | À venir |
+| 5 — Accompagnement | ✅ Livrée sur la branche `phase-5-accompagnement` (voir ci-dessous) ; catalogue d'offres, règles et modèles de livrables **à valider** par GUDE-PME |
+| 6 — Reporting | À venir |
+
+### Contenu de la phase 5
+
+- **Moteur de recommandations sans code** : règles « SI … ALORS proposer une offre » en JSON Logic sur le score courant (critères, dimensions, indicateurs, risque, maturité, conformité, alertes, échéances) ; **versionnées** (une règle active n'est jamais modifiée), **testées sur le portefeuille** en lecture seule avant activation ; justification rédigée à partir des données (« RHO-01 niveau 1 »). 14 règles et 14 offres par défaut (Document 7, § 3.4), 21 modèles de livrables avec instructions en langage simple et points de vérification.
+- **Priorisation** Impact × Urgence × Risque × Effort (Document 6, § 9) : notes proposées et expliquées, score PS de 13 à 100, ajustement possible avec motif ; revue du conseiller (accepter, rejeter avec motif, ajouter une recommandation).
+- **Plan versionné** : génération des actions (étapes, livrables, dépendances, horizons J1–30 à 12 mois, capacité de 5 actions par horizon), références `ACT-AAAA-NNNNN`, « pourquoi » en langage PME ; cycle BROUILLON → EN VALIDATION → validation GUDE-PME → **acceptation par la dirigeante** (ou acceptation recueillie hors ligne, enregistrée avec motif par le conseiller) → EN COURS → CLOS ; nouvelle version avec historique.
+- **Workflow des actions** (Document 7, § 2.2) : BLOQUÉE tant qu'une dépendance n'est pas terminée, démarrage par la PME, livrable déposé depuis la fiche action → analyse → « À vérifier » dans la file du conseiller → conforme / à reprendre (motif pour la PME) ; action **terminée automatiquement** quand tous ses livrables sont conformes, actions dépendantes débloquées et notifiées, abandon motivé ; journal des transitions en ajout seul ; alerte « Action en retard » activée.
+- **Le score suit les preuves** : une action terminée enregistre un **progrès vérifié** (critères portés au niveau visé) qui relève le score courant ; les snapshots figés restent inchangés, un nouveau diagnostic revu par le conseiller fait foi.
+- **Interfaces** : onglet « Plan & actions » de la fiche PME, fiche action, page « Mon plan » et prochaines actions sur l'accueil du portail PME, retards d'actions dans la file du conseiller, administration « Accompagnement » (règles, offres, livrables) ; le Copilot répond sur les priorités du plan.
+- **Qualité** : 281 tests backend, 20 tests unitaires frontend, 18 tests E2E.
 
 ### Contenu de la phase 4
 

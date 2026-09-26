@@ -393,3 +393,22 @@ def test_transition_log_is_append_only(api, pme_api, pme, diagnosed):
         entry = ActionTransition.objects.first()
         with pytest.raises((InternalError, ProgrammingError)), transaction.atomic():
             ActionTransition.objects.filter(pk=entry.pk).update(reason="modifié")
+
+
+def test_advisor_records_offline_acceptance_with_reason(api, pme, diagnosed):
+    recs = _recommendations(api, pme)
+    _decide(api, recs["OFF-RH-BASE"], "ACCEPTEE")
+    plan = api.post(f"/api/v1/pmes/{pme.id}/plan/generate", {}, format="json").json()
+    for step in ("submit", "validate"):
+        api.post(f"/api/v1/plans/{plan['id']}/transition", {"action": step}, format="json")
+    missing = api.post(f"/api/v1/plans/{plan['id']}/transition", {"action": "accept_offline"}, format="json")
+    assert missing.status_code == 400 and "reason" in missing.json()["errors"]
+    accepted = api.post(
+        f"/api/v1/plans/{plan['id']}/transition",
+        {"action": "accept_offline", "reason": "Accepté en entretien, PV signé le 26/09"},
+        format="json",
+    ).json()
+    assert accepted["status"] == "VALIDE" and accepted["accepted_offline"]
+    with tenant_context(pme.organization_id):
+        entry = AuditLog.objects.filter(action="plan.accept_offline").get()
+    assert "PV signé" in entry.after["reason"]

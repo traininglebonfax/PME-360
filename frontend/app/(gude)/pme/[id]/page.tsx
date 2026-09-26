@@ -7,10 +7,11 @@ import { type FormEvent, useState } from "react";
 
 import { LifecycleBadge } from "@/components/LifecycleBadge";
 import { FinancialTab } from "@/components/ai/FinancialTab";
+import { PlanTab } from "@/components/plans/PlanTab";
 import { AlertList } from "@/components/alerts/AlertList";
 import { DocumentsTab } from "@/components/documents/DocumentsTab";
 import { DiagnosticTab } from "@/components/scoring/DiagnosticTab";
-import { Alert, Badge, Button, Card, cx, EmptyState, Kpi, LoadingBlock, PendingKpi, SelectInput, TextInput } from "@/components/ui";
+import { Alert, Badge, Button, Card, cx, EmptyState, Kpi, LoadingBlock, SelectInput, TextInput } from "@/components/ui";
 import { formatPercent, formatScore, PRIORITY_LABELS } from "@/lib/scoring";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate, formatDateTime, formatRelative } from "@/lib/format";
@@ -30,7 +31,7 @@ const TABS = [
   { key: "documents", label: "Documents" },
   { key: "finances", label: "Finances" },
   { key: "alertes", label: "Alertes" },
-  { key: "plan", label: "Plan & actions", phase: 5 },
+  { key: "plan", label: "Plan & actions" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -90,7 +91,6 @@ export default function PmeDetailPage() {
               )}
             >
               {item.label}
-              {"phase" in item && <span className="ml-1.5 text-xs text-gray-400">P{item.phase}</span>}
             </button>
           ))}
         </div>
@@ -105,11 +105,7 @@ export default function PmeDetailPage() {
       {tab === "documents" && <DocumentsTab pmeId={data.id} />}
       {tab === "finances" && <FinancialTab pmeId={data.id} />}
       {tab === "alertes" && <AlertList pmeId={data.id} scope="all" />}
-      {tab === "plan" && (
-        <EmptyState title="Module en cours de construction">
-          {tab === "plan" && "Le plan d'accompagnement 90 jours et les actions arrivent en phase 5."}
-        </EmptyState>
-      )}
+      {tab === "plan" && <PlanTab pmeId={data.id} />}
     </>
   );
 }
@@ -124,8 +120,16 @@ function Synthesis({ pme }: { pme: Pme }) {
     queryKey: ["folder", pme.id],
     queryFn: () => unwrap(api.GET("/api/v1/pmes/{pme_id}/compliance-folder", { params: { path: { pme_id: pme.id } } })),
   });
+  const plan = useQuery({
+    queryKey: ["plan", pme.id],
+    queryFn: async () => {
+      const { data, response } = await api.GET("/api/v1/pmes/{pme_id}/plan", { params: { path: { pme_id: pme.id } } });
+      return response.status === 204 ? null : (data as Schemas["PlanDetail"]);
+    },
+  });
   const snapshot = health.data?.live ?? health.data?.snapshot;
   const rate = folder.data?.rate;
+  const overdue = plan.data?.actions.filter((a) => a.overdue).length ?? 0;
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="grid grid-cols-2 gap-3 lg:col-span-2">
@@ -144,7 +148,11 @@ function Synthesis({ pme }: { pme: Pme }) {
           value={rate?.rate === null || rate?.rate === undefined ? "—" : formatPercent(rate.rate)}
           hint={rate ? `${rate.eligible} élément(s) exigible(s)` : undefined}
         />
-        <PendingKpi label="Actions du plan" phase={5} />
+        <Kpi
+          label="Actions du plan"
+          value={plan.data ? `${plan.data.progress.done}/${plan.data.progress.total}` : "—"}
+          hint={plan.data ? `terminées · plan v${plan.data.version}${overdue ? ` · ${overdue} en retard` : ""}` : "Aucun plan"}
+        />
       </div>
       <Card title="En bref">
         <dl className="space-y-3 text-sm">

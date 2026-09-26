@@ -6,6 +6,230 @@
         "description": "API de la plateforme PME360 (instance GUDE-PME 360). Erreurs au format RFC 9457."
     },
     "paths": {
+        "/api/v1/actions": {
+            "get": {
+                "operationId": "actions_list",
+                "description": "Actions du périmètre (« Ma journée » du conseiller, suivi PME) ; filtres : pme, status, overdue.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "overdue",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "pme",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Statuts séparés par des virgules."
+                    }
+                ],
+                "tags": [
+                    "actions"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Action"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/actions/{action_id}": {
+            "get": {
+                "operationId": "actions_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "action_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "actions"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActionDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "actions_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "action_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "actions"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedActionUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActionDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/actions/{action_id}/dependencies": {
+            "post": {
+                "operationId": "actions_dependencies_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "action_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "actions"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DependencyRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActionDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/actions/{action_id}/transition": {
+            "post": {
+                "operationId": "actions_transition_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "action_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "actions"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActionTransitionRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActionDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/ai/analyses": {
             "get": {
                 "operationId": "ai_analyses_list",
@@ -1196,6 +1420,34 @@
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/components/schemas/Deadline"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/deliverable-templates": {
+            "get": {
+                "operationId": "deliverable_templates_list",
+                "tags": [
+                    "deliverable-templates"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DeliverableTemplate"
                                     }
                                 }
                             }
@@ -2538,6 +2790,134 @@
                 }
             }
         },
+        "/api/v1/plans/{plan_id}": {
+            "get": {
+                "operationId": "plans_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "plan_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "plans"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/plans/{plan_id}/new-version": {
+            "post": {
+                "operationId": "plans_new_version_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "plan_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "plans"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlanReasonRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/plans/{plan_id}/transition": {
+            "post": {
+                "operationId": "plans_transition_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "plan_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "plans"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlanTransitionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/platform/organizations": {
             "get": {
                 "operationId": "platform_organizations_list",
@@ -3385,6 +3765,253 @@
                 }
             }
         },
+        "/api/v1/pmes/{pme_id}/plan": {
+            "get": {
+                "operationId": "pmes_plan_retrieve",
+                "description": "Plan courant de la PME (le plan ouvert, sinon le dernier clos) ; 204 s'il n'y en a pas.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/pmes/{pme_id}/plan/generate": {
+            "post": {
+                "operationId": "pmes_plan_generate_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlanGenerateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlanDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/pmes/{pme_id}/plans": {
+            "get": {
+                "operationId": "pmes_plans_list",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Plan"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/pmes/{pme_id}/recommendations": {
+            "get": {
+                "operationId": "pmes_recommendations_list",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Recommendation"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "pmes_recommendations_create",
+                "description": "(Re)génère les recommandations à partir des règles actives et du score courant.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Recommendation"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/pmes/{pme_id}/recommendations/manual": {
+            "post": {
+                "operationId": "pmes_recommendations_manual_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ManualRecommendationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Recommendation"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/pmes/{pme_pk}/persons": {
             "get": {
                 "operationId": "pmes_persons_list",
@@ -3896,6 +4523,221 @@
                 }
             }
         },
+        "/api/v1/recommendation-rules": {
+            "get": {
+                "operationId": "recommendation_rules_list",
+                "tags": [
+                    "recommendation-rules"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Rule"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "recommendation_rules_create",
+                "tags": [
+                    "recommendation-rules"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RuleWriteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/recommendation-rules/{rule_id}/activate": {
+            "post": {
+                "operationId": "recommendation_rules_activate_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "rule_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "recommendation-rules"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/recommendation-rules/{rule_id}/deactivate": {
+            "post": {
+                "operationId": "recommendation_rules_deactivate_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "rule_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "recommendation-rules"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/recommendation-rules/{rule_id}/test": {
+            "post": {
+                "operationId": "recommendation_rules_test_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "rule_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "recommendation-rules"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RuleTestResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/recommendations/{recommendation_id}/decision": {
+            "post": {
+                "operationId": "recommendations_decision_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "recommendation_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "recommendations"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RecommendationDecisionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Recommendation"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/ref/{kind}": {
             "get": {
                 "operationId": "ref_list",
@@ -4166,6 +5008,34 @@
                 }
             }
         },
+        "/api/v1/support-offers": {
+            "get": {
+                "operationId": "support_offers_list",
+                "tags": [
+                    "support-offers"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupportOffer"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "get": {
                 "operationId": "users_list",
@@ -4301,6 +5171,541 @@
                 },
                 "required": [
                     "accepted"
+                ]
+            },
+            "Action": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "human_ref": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "plan": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "offer_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "dimension_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "target_criteria": {
+                        "readOnly": true
+                    },
+                    "target_level": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "problem": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "objective": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "why": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Pourquoi cette action, en langage PME."
+                    },
+                    "sub_actions": {
+                        "readOnly": true,
+                        "description": "[{title, done}]"
+                    },
+                    "owner_type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OwnerTypeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "owner_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "advisor_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "priority_score": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "phase": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PhaseEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "position": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ActionStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "waiting_on": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "PME | GUDE : partie à qui le retard est imputé."
+                    },
+                    "estimated_cost_min": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "estimated_cost_max": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "success_indicator": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "completed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "abandon_reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "depends_on": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActionRef"
+                        },
+                        "readOnly": true
+                    },
+                    "deliverables_total": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "deliverables_conform": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "overdue": {
+                        "type": "boolean",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "abandon_reason",
+                    "advisor_name",
+                    "completed_at",
+                    "deliverables_conform",
+                    "deliverables_total",
+                    "depends_on",
+                    "dimension_code",
+                    "due_date",
+                    "estimated_cost_max",
+                    "estimated_cost_min",
+                    "human_ref",
+                    "id",
+                    "objective",
+                    "offer_code",
+                    "overdue",
+                    "owner_name",
+                    "owner_type",
+                    "phase",
+                    "plan",
+                    "pme",
+                    "pme_name",
+                    "position",
+                    "priority_score",
+                    "problem",
+                    "start_date",
+                    "started_at",
+                    "status",
+                    "sub_actions",
+                    "success_indicator",
+                    "target_criteria",
+                    "target_level",
+                    "title",
+                    "waiting_on",
+                    "why"
+                ]
+            },
+            "ActionDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "human_ref": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "plan": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "offer_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "dimension_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "target_criteria": {
+                        "readOnly": true
+                    },
+                    "target_level": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "problem": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "objective": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "why": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Pourquoi cette action, en langage PME."
+                    },
+                    "sub_actions": {
+                        "readOnly": true,
+                        "description": "[{title, done}]"
+                    },
+                    "owner_type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OwnerTypeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "owner_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "advisor_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "priority_score": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "phase": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PhaseEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "position": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ActionStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "waiting_on": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "PME | GUDE : partie à qui le retard est imputé."
+                    },
+                    "estimated_cost_min": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "estimated_cost_max": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "success_indicator": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "completed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "abandon_reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "depends_on": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActionRef"
+                        },
+                        "readOnly": true
+                    },
+                    "deliverables_total": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "deliverables_conform": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "overdue": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "deliverables": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Deliverable"
+                        },
+                        "readOnly": true
+                    },
+                    "transitions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Transition"
+                        },
+                        "readOnly": true
+                    },
+                    "dependents": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActionRef"
+                        },
+                        "readOnly": true
+                    },
+                    "rationale": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "allowed_transitions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActionStatusEnum"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "abandon_reason",
+                    "advisor_name",
+                    "allowed_transitions",
+                    "completed_at",
+                    "deliverables",
+                    "deliverables_conform",
+                    "deliverables_total",
+                    "dependents",
+                    "depends_on",
+                    "dimension_code",
+                    "due_date",
+                    "estimated_cost_max",
+                    "estimated_cost_min",
+                    "human_ref",
+                    "id",
+                    "objective",
+                    "offer_code",
+                    "overdue",
+                    "owner_name",
+                    "owner_type",
+                    "phase",
+                    "plan",
+                    "pme",
+                    "pme_name",
+                    "position",
+                    "priority_score",
+                    "problem",
+                    "rationale",
+                    "start_date",
+                    "started_at",
+                    "status",
+                    "sub_actions",
+                    "success_indicator",
+                    "target_criteria",
+                    "target_level",
+                    "title",
+                    "transitions",
+                    "waiting_on",
+                    "why"
+                ]
+            },
+            "ActionEnum": {
+                "enum": [
+                    "submit",
+                    "validate",
+                    "accept",
+                    "accept_offline",
+                    "reopen",
+                    "close"
+                ],
+                "type": "string",
+                "description": "* `submit` - submit\n* `validate` - validate\n* `accept` - accept\n* `accept_offline` - accept_offline\n* `reopen` - reopen\n* `close` - close"
+            },
+            "ActionPlanStatusEnum": {
+                "enum": [
+                    "BROUILLON",
+                    "EN_VALIDATION",
+                    "VALIDE",
+                    "EN_COURS",
+                    "CLOS"
+                ],
+                "type": "string",
+                "description": "* `BROUILLON` - Brouillon\n* `EN_VALIDATION` - En validation\n* `VALIDE` - Validé\n* `EN_COURS` - En cours\n* `CLOS` - Clos"
+            },
+            "ActionRef": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "human_ref": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ActionStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "human_ref",
+                    "id",
+                    "status",
+                    "title"
+                ]
+            },
+            "ActionStatusEnum": {
+                "enum": [
+                    "BLOQUE",
+                    "NON_COMMENCE",
+                    "EN_COURS",
+                    "DOCUMENT_DEMANDE",
+                    "DOCUMENT_RECU",
+                    "A_VERIFIER",
+                    "CONFORME",
+                    "NON_CONFORME",
+                    "TERMINE",
+                    "EN_ATTENTE_PME",
+                    "EN_ATTENTE_GUDE",
+                    "ABANDONNE"
+                ],
+                "type": "string",
+                "description": "* `BLOQUE` - Bloquée (dépendance)\n* `NON_COMMENCE` - Non commencée\n* `EN_COURS` - En cours\n* `DOCUMENT_DEMANDE` - Document demandé\n* `DOCUMENT_RECU` - Document reçu\n* `A_VERIFIER` - À vérifier\n* `CONFORME` - Conforme\n* `NON_CONFORME` - Non conforme\n* `TERMINE` - Terminée\n* `EN_ATTENTE_PME` - En attente de la PME\n* `EN_ATTENTE_GUDE` - En attente de GUDE-PME\n* `ABANDONNE` - Abandonnée"
+            },
+            "ActionTransitionRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "to": {
+                        "$ref": "#/components/schemas/ActionStatusEnum"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "required": [
+                    "to"
                 ]
             },
             "ActivationRequest": {
@@ -5767,6 +7172,154 @@
                 "type": "string",
                 "description": "* `CONFORME` - Conforme\n* `CONFORME_SOUS_RESERVE` - Conforme sous réserve\n* `NON_CONFORME` - Non conforme\n* `INCOHERENT` - Incohérent"
             },
+            "Deliverable": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "document_type_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DeliverableStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "document": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "document_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "template": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DeliverableTemplate"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "document",
+                    "document_title",
+                    "document_type_code",
+                    "id",
+                    "reason",
+                    "status",
+                    "template",
+                    "title"
+                ]
+            },
+            "DeliverableStatusEnum": {
+                "enum": [
+                    "ATTENDU",
+                    "DEPOSE",
+                    "A_VERIFIER",
+                    "CONFORME",
+                    "NON_CONFORME"
+                ],
+                "type": "string",
+                "description": "* `ATTENDU` - Attendu\n* `DEPOSE` - Déposé\n* `A_VERIFIER` - À vérifier\n* `CONFORME` - Conforme\n* `NON_CONFORME` - Non conforme"
+            },
+            "DeliverableTemplate": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "category": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "format": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "docx, xlsx, pdf…"
+                    },
+                    "document_type_code": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Type de document sous lequel le livrable est déposé."
+                    },
+                    "instructions": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Comment le remplir, en langage simple."
+                    },
+                    "example": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Exemple rempli fictif (extrait)."
+                    },
+                    "verification_criteria": {
+                        "readOnly": true,
+                        "description": "Points contrôlés par le conseiller."
+                    },
+                    "version": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "category",
+                    "code",
+                    "document_type_code",
+                    "example",
+                    "format",
+                    "id",
+                    "instructions",
+                    "is_active",
+                    "title",
+                    "verification_criteria",
+                    "version"
+                ]
+            },
+            "DependencyRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "depends_on": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "required": [
+                    "depends_on"
+                ]
+            },
             "Diagnostic": {
                 "type": "object",
                 "properties": {
@@ -6678,10 +8231,15 @@
                     "DEADLINE_DUE_TODAY",
                     "DEADLINE_OVERDUE",
                     "DEADLINE_ESCALATION",
-                    "ALERT_RAISED"
+                    "ALERT_RAISED",
+                    "PLAN_TO_ACCEPT",
+                    "PLAN_ACCEPTED",
+                    "ACTION_DOCUMENT_REQUESTED",
+                    "ACTION_DELIVERABLE_REJECTED",
+                    "ACTION_UNBLOCKED"
                 ],
                 "type": "string",
-                "description": "* `AI_BUDGET_WARNING` - AI_BUDGET_WARNING\n* `PREDIAGNOSTIC_READY` - PREDIAGNOSTIC_READY\n* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED"
+                "description": "* `AI_BUDGET_WARNING` - AI_BUDGET_WARNING\n* `PREDIAGNOSTIC_READY` - PREDIAGNOSTIC_READY\n* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED\n* `PLAN_TO_ACCEPT` - PLAN_TO_ACCEPT\n* `PLAN_ACCEPTED` - PLAN_ACCEPTED\n* `ACTION_DOCUMENT_REQUESTED` - ACTION_DOCUMENT_REQUESTED\n* `ACTION_DELIVERABLE_REJECTED` - ACTION_DELIVERABLE_REJECTED\n* `ACTION_UNBLOCKED` - ACTION_UNBLOCKED"
             },
             "EvidencePolicyEnum": {
                 "enum": [
@@ -7494,6 +9052,29 @@
                 "type": "string",
                 "description": "* `ok` - ok\n* `mfa_required` - mfa_required\n* `mfa_setup_required` - mfa_setup_required"
             },
+            "ManualRecommendationRequest": {
+                "type": "object",
+                "properties": {
+                    "offer_code": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "problem": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                    },
+                    "rationale": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "offer_code",
+                    "problem",
+                    "rationale"
+                ]
+            },
             "Me": {
                 "type": "object",
                 "properties": {
@@ -8005,6 +9586,50 @@
                     "reminder_offsets"
                 ]
             },
+            "OfferRef": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "dimension_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "typical_duration_days": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "target_criteria": {
+                        "readOnly": true,
+                        "description": "Critères améliorés par l'offre."
+                    },
+                    "target_level": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "description": "Niveau visé (indicateur de réussite)."
+                    }
+                },
+                "required": [
+                    "code",
+                    "dimension_code",
+                    "id",
+                    "target_criteria",
+                    "target_level",
+                    "title",
+                    "typical_duration_days"
+                ]
+            },
             "Option": {
                 "type": "object",
                 "properties": {
@@ -8186,6 +9811,15 @@
                     "email"
                 ]
             },
+            "OwnerTypeEnum": {
+                "enum": [
+                    "PME",
+                    "GUDE",
+                    "PARTENAIRE"
+                ],
+                "type": "string",
+                "description": "* `PME` - PME\n* `GUDE` - GUDE-PME\n* `PARTENAIRE` - Partenaire"
+            },
             "PaginatedPmeListList": {
                 "type": "object",
                 "required": [
@@ -8249,6 +9883,37 @@
                 "required": [
                     "email"
                 ]
+            },
+            "PatchedActionUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "phase": {
+                        "$ref": "#/components/schemas/PhaseEnum"
+                    },
+                    "owner_type": {
+                        "$ref": "#/components/schemas/OwnerTypeEnum"
+                    },
+                    "sub_actions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        }
+                    }
+                }
             },
             "PatchedAlertRuleRequest": {
                 "type": "object",
@@ -8605,6 +10270,17 @@
                     "role"
                 ]
             },
+            "PhaseEnum": {
+                "enum": [
+                    "J1_30",
+                    "J31_60",
+                    "J61_90",
+                    "M6",
+                    "M12"
+                ],
+                "type": "string",
+                "description": "* `J1_30` - Jours 1–30\n* `J31_60` - Jours 31–60\n* `J61_90` - Jours 61–90\n* `M6` - 6 mois\n* `M12` - 12 mois"
+            },
             "Pillar": {
                 "type": "object",
                 "properties": {
@@ -8627,6 +10303,320 @@
                     "code",
                     "name",
                     "weight"
+                ]
+            },
+            "Plan": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "diagnostic": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "version": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "default": 1
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ActionPlanStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "horizon_start": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "description": "Actions simultanées maximum par horizon."
+                    },
+                    "submitted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "validated_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "validated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "accepted_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "accepted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "accepted_offline": {
+                        "type": "boolean",
+                        "description": "Acceptation enregistrée par l'équipe (PME sans accès au portail).",
+                        "readOnly": true
+                    },
+                    "closed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "close_reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "accepted_at",
+                    "accepted_by_name",
+                    "accepted_offline",
+                    "capacity",
+                    "close_reason",
+                    "closed_at",
+                    "created_at",
+                    "diagnostic",
+                    "horizon_start",
+                    "id",
+                    "pme",
+                    "pme_name",
+                    "status",
+                    "submitted_at",
+                    "title",
+                    "validated_at",
+                    "validated_by_name",
+                    "version"
+                ]
+            },
+            "PlanDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "diagnostic": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "version": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "default": 1
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ActionPlanStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "horizon_start": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "description": "Actions simultanées maximum par horizon."
+                    },
+                    "submitted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "validated_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "validated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "accepted_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "accepted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "accepted_offline": {
+                        "type": "boolean",
+                        "description": "Acceptation enregistrée par l'équipe (PME sans accès au portail).",
+                        "readOnly": true
+                    },
+                    "closed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "close_reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "actions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Action"
+                        },
+                        "readOnly": true
+                    },
+                    "progress": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PlanProgress"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "accepted_at",
+                    "accepted_by_name",
+                    "accepted_offline",
+                    "actions",
+                    "capacity",
+                    "close_reason",
+                    "closed_at",
+                    "created_at",
+                    "diagnostic",
+                    "horizon_start",
+                    "id",
+                    "pme",
+                    "pme_name",
+                    "progress",
+                    "status",
+                    "submitted_at",
+                    "title",
+                    "validated_at",
+                    "validated_by_name",
+                    "version"
+                ]
+            },
+            "PlanGenerateRequest": {
+                "type": "object",
+                "properties": {
+                    "horizon_start": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 200
+                    }
+                }
+            },
+            "PlanProgress": {
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer"
+                    },
+                    "done": {
+                        "type": "integer"
+                    },
+                    "rate": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "done",
+                    "rate",
+                    "total"
+                ]
+            },
+            "PlanReasonRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "reason"
+                ]
+            },
+            "PlanTransitionRequest": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "$ref": "#/components/schemas/ActionEnum"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "required": [
+                    "action"
                 ]
             },
             "PlatformOrganization": {
@@ -9331,6 +11321,15 @@
                     "submit_threshold"
                 ]
             },
+            "ProviderTypeEnum": {
+                "enum": [
+                    "GUDE",
+                    "PARTENAIRE",
+                    "PME_SEULE"
+                ],
+                "type": "string",
+                "description": "* `GUDE` - GUDE-PME\n* `PARTENAIRE` - Partenaire\n* `PME_SEULE` - PME en autonomie"
+            },
             "QuestionRequest": {
                 "type": "object",
                 "properties": {
@@ -9726,6 +11725,201 @@
                 ],
                 "type": "string",
                 "description": "* `rccm` - rccm\n* `ncc` - ncc\n* `name` - name"
+            },
+            "Recommendation": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "diagnostic": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "offer": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OfferRef"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "source": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/SourceEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "rules": {
+                        "readOnly": true,
+                        "description": "[{code, version}] des règles ayant proposé l'offre."
+                    },
+                    "problem": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "rationale": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "evidence_refs": {
+                        "readOnly": true
+                    },
+                    "impact": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "urgency": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "risk": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "effort": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "scoring_details": {
+                        "readOnly": true,
+                        "description": "Comment chaque axe a été proposé."
+                    },
+                    "priority_computed": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "priority_final": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "priority_override_reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RecommendationStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "decision_reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "decided_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "decided_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "decided_at",
+                    "decided_by_name",
+                    "decision_reason",
+                    "diagnostic",
+                    "effort",
+                    "evidence_refs",
+                    "id",
+                    "impact",
+                    "offer",
+                    "priority_computed",
+                    "priority_final",
+                    "priority_override_reason",
+                    "problem",
+                    "rationale",
+                    "risk",
+                    "rules",
+                    "scoring_details",
+                    "source",
+                    "status",
+                    "urgency"
+                ]
+            },
+            "RecommendationDecisionRequest": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/RecommendationDecisionStatusEnum"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "impact": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "urgency": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "risk": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "effort": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "priority_reason": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "required": [
+                    "status"
+                ]
+            },
+            "RecommendationDecisionStatusEnum": {
+                "enum": [
+                    "PROPOSEE",
+                    "ACCEPTEE",
+                    "REJETEE"
+                ],
+                "type": "string",
+                "description": "* `PROPOSEE` - PROPOSEE\n* `ACCEPTEE` - ACCEPTEE\n* `REJETEE` - REJETEE"
+            },
+            "RecommendationRuleStatusEnum": {
+                "enum": [
+                    "DRAFT",
+                    "ACTIVE",
+                    "INACTIVE"
+                ],
+                "type": "string",
+                "description": "* `DRAFT` - Brouillon\n* `ACTIVE` - Active\n* `INACTIVE` - Inactive"
+            },
+            "RecommendationStatusEnum": {
+                "enum": [
+                    "PROPOSEE",
+                    "ACCEPTEE",
+                    "REJETEE",
+                    "CONVERTIE"
+                ],
+                "type": "string",
+                "description": "* `PROPOSEE` - Proposée\n* `ACCEPTEE` - Acceptée\n* `REJETEE` - Rejetée\n* `CONVERTIE` - Convertie en action"
             },
             "RefItem": {
                 "type": "object",
@@ -10124,6 +12318,104 @@
                 "type": "string",
                 "description": "* `CONSEILLER_PRINCIPAL` - Conseiller principal\n* `EXPERT` - Expert"
             },
+            "Rule": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "version": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "condition": {
+                        "readOnly": true
+                    },
+                    "offer_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "offer_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "impact": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "Vide : calculé."
+                    },
+                    "urgency": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "risk": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "problem_template": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "rationale_template": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RecommendationRuleStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "tested_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "test_result": {
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "code",
+                    "condition",
+                    "created_at",
+                    "id",
+                    "impact",
+                    "name",
+                    "offer_code",
+                    "offer_title",
+                    "problem_template",
+                    "rationale_template",
+                    "risk",
+                    "status",
+                    "test_result",
+                    "tested_at",
+                    "urgency",
+                    "version"
+                ]
+            },
             "RuleStatusRequest": {
                 "type": "object",
                 "properties": {
@@ -10149,6 +12441,80 @@
                 ],
                 "type": "string",
                 "description": "* `A_VERIFIER` - À vérifier\n* `PRE_VERIFIE` - Pré-vérifiée (source identifiée)\n* `OBSOLETE` - Obsolète\n* `HORS_PERIMETRE` - Hors périmètre"
+            },
+            "RuleTestResult": {
+                "type": "object",
+                "properties": {
+                    "evaluated": {
+                        "type": "integer"
+                    },
+                    "matched": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        }
+                    }
+                },
+                "required": [
+                    "evaluated",
+                    "matched"
+                ]
+            },
+            "RuleWriteRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[A-Z0-9\\-]{3,40}$"
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "condition": {},
+                    "offer_code": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "impact": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "urgency": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "risk": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "nullable": true
+                    },
+                    "problem_template": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                    },
+                    "rationale_template": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "code",
+                    "condition",
+                    "name",
+                    "offer_code",
+                    "problem_template",
+                    "rationale_template"
+                ]
             },
             "RunResult": {
                 "type": "object",
@@ -10458,6 +12824,15 @@
                     "risk_index"
                 ]
             },
+            "SourceEnum": {
+                "enum": [
+                    "REGLE",
+                    "IA",
+                    "CONSEILLER"
+                ],
+                "type": "string",
+                "description": "* `REGLE` - Règle\n* `IA` - IA\n* `CONSEILLER` - Conseiller"
+            },
             "StartDiagnosticRequest": {
                 "type": "object",
                 "properties": {
@@ -10539,6 +12914,125 @@
                 "type": "string",
                 "description": "* `PROPOSEE` - Proposée\n* `ACCEPTEE` - Acceptée\n* `MODIFIEE` - Modifiée par le conseiller\n* `ECARTEE` - Écartée"
             },
+            "SupportOffer": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "dimension_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "objective": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "typical_duration_days": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "effort": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "description": "1 (< 1 semaine, gratuit) à 5 (> 3 mois ou coûteux)."
+                    },
+                    "target_criteria": {
+                        "readOnly": true,
+                        "description": "Critères améliorés par l'offre."
+                    },
+                    "target_level": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "description": "Niveau visé (indicateur de réussite)."
+                    },
+                    "deliverables": {
+                        "readOnly": true,
+                        "description": "Codes des modèles de livrables attendus."
+                    },
+                    "required_document_types": {
+                        "readOnly": true
+                    },
+                    "sub_actions": {
+                        "readOnly": true,
+                        "description": "Étapes proposées (titres)."
+                    },
+                    "depends_on": {
+                        "readOnly": true,
+                        "description": "Codes d'offres à terminer d'abord (si elles sont au plan)."
+                    },
+                    "estimated_cost_min": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "estimated_cost_max": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "provider_type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ProviderTypeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "provider_label": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_growth": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Offre de croissance (horizon 12 mois, niveau ≥ N3)."
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "success_indicator": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "code",
+                    "deliverables",
+                    "depends_on",
+                    "description",
+                    "dimension_code",
+                    "effort",
+                    "estimated_cost_max",
+                    "estimated_cost_min",
+                    "id",
+                    "is_active",
+                    "is_growth",
+                    "objective",
+                    "provider_label",
+                    "provider_type",
+                    "required_document_types",
+                    "sub_actions",
+                    "success_indicator",
+                    "target_criteria",
+                    "target_level",
+                    "title",
+                    "typical_duration_days"
+                ]
+            },
             "SwitchOrganizationRequest": {
                 "type": "object",
                 "properties": {
@@ -10596,6 +13090,50 @@
                     "before",
                     "id",
                     "label"
+                ]
+            },
+            "Transition": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "from_status": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "to_status": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "actor_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "actor_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "actor_name",
+                    "actor_type",
+                    "created_at",
+                    "from_status",
+                    "id",
+                    "reason",
+                    "to_status"
                 ]
             },
             "TransitionRequest": {
@@ -10656,6 +13194,12 @@
                         "type": "string",
                         "format": "uuid",
                         "nullable": true
+                    },
+                    "deliverable_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true,
+                        "description": "Livrable d'une action du plan."
                     },
                     "title": {
                         "type": "string",
