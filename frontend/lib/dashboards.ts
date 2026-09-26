@@ -198,5 +198,46 @@ export interface PortfolioAnalyses {
     unit: string;
     notice: string;
   };
+  missing_deliverables: MissingDeliverables;
+  regional_map: RegionalMap;
   refreshed_at: string | null;
+}
+
+export interface MissingDeliverables {
+  grace_days: number;
+  min_cell: number;
+  deliverables: {
+    code: string;
+    name: string;
+    requested: number;
+    missing: number;
+    missing_rate: number;
+    average_delay_days: number | null;
+    small_sample: boolean;
+  }[];
+  documents: {
+    code: string;
+    name: string;
+    due: number;
+    missing: number;
+    late: number;
+    missing_rate: number;
+    average_delay_days: number | null;
+    small_sample: boolean;
+  }[];
+}
+
+export interface RegionalMap {
+  regions: {
+    code: string;
+    name: string;
+    pmes: number;
+    scored: number;
+    average_score: number | null;
+    at_risk_share: number | null;
+    masked: boolean;
+  }[];
+  without_region: number;
+  min_cell: number;
+  risk_threshold: number;
 }

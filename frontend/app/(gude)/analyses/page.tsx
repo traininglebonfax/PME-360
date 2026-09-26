@@ -2,7 +2,8 @@
 
 /**
  * Analyses de portefeuille (Document 9, § 4.2) : problèmes fréquents, besoins d'accompagnement, secteurs en
- * difficulté, trajectoires, accompagnement renforcé, évolutions observées par offre. Aucune attribution causale
+ * difficulté, trajectoires, accompagnement renforcé, évolutions observées par offre, livrables non fournis, carte
+ * régionale (V1). Aucune attribution causale
  * (RM-09) : les évolutions sont décrites, avec leurs effectifs.
  */
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +11,8 @@ import Link from "next/link";
 
 import { BarList } from "@/components/BarList";
 import { Heatmap } from "@/components/charts/Charts";
+import { MissingDeliverables } from "@/components/charts/MissingDeliverables";
+import { RegionMap } from "@/components/charts/RegionMap";
 import { Alert, Badge, Card, EmptyState, LoadingBlock, PageHeader } from "@/components/ui";
 import { api, errorMessage, unwrap } from "@/lib/api";
 import type { PortfolioAnalyses, ShareRow } from "@/lib/dashboards";
@@ -147,6 +150,14 @@ export default function AnalysesPage() {
               <p className="mt-2 text-xs text-muted">Évolution en {data.offer_effectiveness.unit}, entre le diagnostic initial et la situation courante. Effectifs faibles : à lire avec prudence.</p>
             </div>
           )}
+        </Card>
+
+        <Card title="Quels livrables restent systématiquement non fournis ?" className="lg:col-span-2">
+          <MissingDeliverables data={data.missing_deliverables} />
+        </Card>
+
+        <Card title="Où sont les PME ? Carte des régions" className="lg:col-span-2">
+          <RegionMap data={data.regional_map} />
         </Card>
       </div>
     </>

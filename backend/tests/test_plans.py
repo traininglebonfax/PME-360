@@ -500,3 +500,39 @@ def test_configured_workflow_governs_manual_transitions(org, make_user, client_f
         f"/api/v1/actions/{rh['id']}/transition", {"to": "EN_COURS", "reason": "Réunion faite"}, format="json"
     )
     assert started.status_code == 200, started.content
+
+
+def test_missing_deliverables_and_regional_map(api, pme_api, pme, diagnosed, advisor, org, run_pipeline):
+    """Analyses V1 : livrables demandés non fournis après 30 jours, délai de fourniture ; carte régionale."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from pme360.accounts.access import build_access
+    from pme360.analytics import portfolio
+
+    plan = _live_plan(api, pme_api, pme)
+    details = [api.get(f"/api/v1/actions/{a['id']}").json() for a in plan["actions"]]
+    with_deliverables = [a for a in details if a["deliverables"] and a["status"] == "NON_COMMENCE"][:2]
+    assert len(with_deliverables) == 2
+    for action in with_deliverables:
+        api.post(f"/api/v1/actions/{action['id']}/transition", {"to": "EN_COURS"}, format="json")
+        moved = api.post(f"/api/v1/actions/{action['id']}/transition", {"to": "DOCUMENT_DEMANDE"}, format="json")
+        assert moved.status_code == 200, moved.content
+    delivered = with_deliverables[0]["deliverables"][0]
+    run_pipeline(lambda: _upload_deliverable(pme_api, pme, delivered["id"]))
+    with tenant_context(org.id):
+        access = build_access(advisor, org.id)
+        soon = portfolio.missing_deliverables(access, today=timezone.localdate())
+        later = portfolio.missing_deliverables(access, today=timezone.localdate() + timedelta(days=45))
+    requested = sum(r["requested"] for r in later["deliverables"])
+    assert requested == sum(len(a["deliverables"]) for a in with_deliverables)
+    assert sum(r["missing"] for r in soon["deliverables"]) == 0  # délai de grâce de 30 jours
+    assert sum(r["missing"] for r in later["deliverables"]) == requested - 1
+    assert any(r["average_delay_days"] is not None for r in later["deliverables"])
+
+    with tenant_context(org.id):
+        regional = portfolio.regional_map(access)
+    total = sum(r["pmes"] for r in regional["regions"]) + regional["without_region"]
+    assert total == 1 and len(regional["regions"]) == 33
+    assert all(r["average_score"] is None for r in regional["regions"])  # moins de 5 PME évaluées : masqué
