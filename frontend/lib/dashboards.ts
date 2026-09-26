@@ -59,8 +59,18 @@ export interface PortfolioDashboard {
     low_confidence_share: number | null;
     pmes_at_risk: number;
     pmes_urgent: number;
+    pmes_late: number;
+    actions_done: number;
+    actions_overdue: number;
+    progress_pmes: number;
     average_compliance: { value: number | null; pmes: number };
   };
+  definitions: Record<string, string>;
+  quadrant_thresholds: { imo_threshold: number; ipe_threshold: number };
+  refreshed_at: string | null;
+  accompanied_by_sector: Breakdown[];
+  accompanied_by_region: Breakdown[];
+  accompanied_by_size: Breakdown[];
   by_maturity: Breakdown[];
   by_priority: Breakdown[];
   weaknesses: { code: string; name: string; weak: number; evaluated: number; share: number }[];
@@ -91,12 +101,13 @@ export interface PmeDashboard {
   } | null;
   open_diagnostic: { id: string; type: string; status: string; reference_date: string } | null;
   next_actions: {
-    plan: { id: string; status: string; to_accept: boolean; done: number; total: number } | null;
+    plan: { id: string; status: string; to_accept: boolean; done: number; total: number; in_progress: number; overdue: number } | null;
     items: { id: string; human_ref: string; title: string; status: string; due_date: string; overdue: boolean }[];
   };
   compliance: ComplianceRate;
   feedback: { id: string; title: string; status: string; reason: string; decided_at: string }[];
   deadlines: { id: string; label: string; period: string; due_date: string; status: string; document_type: string }[];
+  evolution: { code: string; name: string; initial: number | null; current: number | null }[];
 }
 
 export interface ProgressRow {
@@ -113,4 +124,79 @@ export interface ComplianceRate {
   eligible: number;
   points: number;
   counts: Record<string, number>;
+}
+
+/** Ligne du tableau de portefeuille (Document 9, § 3). */
+export interface PortfolioRow {
+  pme_id: string;
+  legal_name: string;
+  sector_name: string | null;
+  region_name: string | null;
+  size_category: string | null;
+  lifecycle_status: string;
+  maturity_level: number | null;
+  maturity_label: string | null;
+  current_score: number | null;
+  trend_6m: number | null;
+  imo: number | null;
+  ipe: number | null;
+  quadrant: string | null;
+  confidence: number | null;
+  compliance_rate: number | null;
+  risk_index: number | null;
+  intervention_priority: string | null;
+  actions_overdue: number;
+  alerts_high: number;
+  last_activity_at: string | null;
+}
+
+export interface ShareRow {
+  code: string;
+  name: string;
+  weak: number;
+  evaluated: number;
+  share: number;
+}
+
+/** Analyses de portefeuille (Document 9, § 4.2). */
+export interface PortfolioAnalyses {
+  frequent_problems: { threshold: number; weak_level: number; dimensions: ShareRow[]; criteria: ShareRow[] };
+  demanded_offers: { code: string; title: string; dimension: string; pmes: number }[];
+  sector_heatmap: {
+    min_cell: number;
+    sectors: { code: string; name: string }[];
+    dimensions: { code: string; name: string }[];
+    cells: { sector: string; dimension: string; n: number; average: number | null }[];
+  };
+  trajectories: {
+    top: (ProgressRow & { current: number | null })[];
+    stagnating: (ProgressRow & { current: number | null })[];
+    distribution: { label: string; count: number }[];
+    measured: number;
+    notice: string;
+  };
+  reinforced_support: {
+    pme_id: string;
+    pme_name: string;
+    priority: string;
+    reason: string | null;
+    global_score: number | null;
+    risk_index: number | null;
+    actions_overdue: number;
+    alerts_high: number;
+  }[];
+  offer_effectiveness: {
+    offers: {
+      code: string;
+      title: string;
+      criteria: string[];
+      treated_n: number;
+      treated_delta: number | null;
+      compared_n: number;
+      compared_delta: number | null;
+    }[];
+    unit: string;
+    notice: string;
+  };
+  refreshed_at: string | null;
 }

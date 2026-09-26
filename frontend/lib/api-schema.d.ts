@@ -549,6 +549,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboards/portfolio/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Analyses de portefeuille (Document 9, § 4.2) : problèmes fréquents, besoins, secteurs, trajectoires. */
+        get: operations["dashboards_portfolio_analyses_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboards/portfolio/pmes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Tableau du portefeuille, filtrable côté interface ; ``?format=csv`` pour l'export. */
+        get: operations["dashboards_portfolio_pmes_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/deadlines/{deadline_id}/waive": {
         parameters: {
             query?: never;
@@ -689,6 +723,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["diagnostics_reopen_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/diagnostics/{diagnostic_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Génère une nouvelle version du rapport de diagnostic (les versions précédentes restent archivées). */
+        post: operations["diagnostics_report_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1502,6 +1553,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pmes/{pme_id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pmes_reports_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pmes/{pme_pk}/persons": {
         parameters: {
             query?: never;
@@ -1743,6 +1810,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["regulatory_rules_verify_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/{report_id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reports_pdf_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2745,9 +2828,10 @@ export interface components {
          *     * `ACTION_DOCUMENT_REQUESTED` - ACTION_DOCUMENT_REQUESTED
          *     * `ACTION_DELIVERABLE_REJECTED` - ACTION_DELIVERABLE_REJECTED
          *     * `ACTION_UNBLOCKED` - ACTION_UNBLOCKED
+         *     * `REPORT_READY` - REPORT_READY
          * @enum {string}
          */
-        EventCodeEnum: "AI_BUDGET_WARNING" | "PREDIAGNOSTIC_READY" | "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED" | "PLAN_TO_ACCEPT" | "PLAN_ACCEPTED" | "ACTION_DOCUMENT_REQUESTED" | "ACTION_DELIVERABLE_REJECTED" | "ACTION_UNBLOCKED";
+        EventCodeEnum: "AI_BUDGET_WARNING" | "PREDIAGNOSTIC_READY" | "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED" | "PLAN_TO_ACCEPT" | "PLAN_ACCEPTED" | "ACTION_DOCUMENT_REQUESTED" | "ACTION_DELIVERABLE_REJECTED" | "ACTION_UNBLOCKED" | "REPORT_READY";
         /**
          * @description * `NONE` - Aucune
          *     * `RECOMMENDED` - Recommandée
@@ -3887,6 +3971,35 @@ export interface components {
             documents: number;
             historique: number;
         };
+        Report: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly type: components["schemas"]["ReportTypeEnum"];
+            /** Format: uuid */
+            readonly pme: string | null;
+            /** Format: uuid */
+            readonly diagnostic: string | null;
+            /** @default 1 */
+            readonly version: number;
+            readonly title: string;
+            readonly period: string;
+            readonly template_version: string;
+            readonly size_bytes: number;
+            readonly sha256: string;
+            /** @description Moteur de rendu PDF utilisé. */
+            readonly engine: string;
+            /** Format: double */
+            readonly confidence: number | null;
+            readonly generated_by_name: string;
+            /** Format: date-time */
+            readonly generated_at: string;
+        };
+        /**
+         * @description * `DIAGNOSTIC` - Rapport de diagnostic
+         *     * `PORTEFEUILLE` - Rapport de portefeuille
+         * @enum {string}
+         */
+        ReportTypeEnum: "DIAGNOSTIC" | "PORTEFEUILLE";
         /**
          * @description * `OK` - OK
          *     * `ALERTE` - Alerte
@@ -5137,6 +5250,48 @@ export interface operations {
             };
         };
     };
+    dashboards_portfolio_analyses_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    dashboards_portfolio_pmes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
     deadlines_waive_create: {
         parameters: {
             query?: never;
@@ -5338,6 +5493,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Diagnostic"];
+                };
+            };
+        };
+    };
+    diagnostics_report_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
                 };
             };
         };
@@ -6655,6 +6831,27 @@ export interface operations {
             };
         };
     };
+    pmes_reports_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"][];
+                };
+            };
+        };
+    };
     pmes_persons_list: {
         parameters: {
             query?: never;
@@ -7146,6 +7343,26 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RegulatoryRule"];
                 };
+            };
+        };
+    };
+    reports_pdf_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PDF archivé */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

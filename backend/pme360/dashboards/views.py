@@ -67,6 +67,10 @@ def next_actions(pme) -> dict:
             "status": plan.status,
             "to_accept": plan.status == ActionPlan.Status.EN_VALIDATION,
             "done": statuses.count(Action.Status.TERMINE),
+            "in_progress": sum(1 for status in statuses if status not in (*Action.TERMINAL, Action.Status.BLOQUE)),
+            "overdue": plan.actions.filter(due_date__lt=today)
+            .exclude(status__in=[*Action.TERMINAL, Action.Status.BLOQUE])
+            .count(),
             "total": len(statuses),
         },
         "items": [
@@ -81,6 +85,30 @@ def next_actions(pme) -> dict:
             for a in actions
         ],
     }
+
+
+def evolution(baseline, current) -> list[dict]:
+    """« Mon évolution » : score de chaque dimension au diagnostic initial et aujourd'hui (Document 9, § 2)."""
+    if baseline is None or current is None:
+        return []
+    initial = {d["code"]: d.get("score") for d in baseline.result.get("dimensions", [])}
+    return [
+        {
+            "code": d["code"],
+            "name": d.get("short_name") or d["name"],
+            "initial": initial.get(d["code"]),
+            "current": d.get("score"),
+        }
+        for d in current.result.get("dimensions", [])
+    ]
+
+
+def quadrant_thresholds() -> dict:
+    """Seuils IMO / IPE des quadrants maturité × performance du référentiel publié (Document 6, § 4)."""
+    from pme360.diagnostic.models import FrameworkVersion
+
+    version = FrameworkVersion.objects.filter(status=FrameworkVersion.Status.PUBLISHED).first()
+    return (version.settings if version else {}).get("quadrants", {"imo_threshold": 55, "ipe_threshold": 60})
 
 
 def latest_snapshots(pmes) -> dict:
@@ -323,6 +351,7 @@ def portfolio_overview(access) -> dict:
             if item["priority"] == "P1"
         ],
         "definitions": portfolio.DEFINITIONS,
+        "quadrant_thresholds": quadrant_thresholds(),
         "refreshed_at": services.freshness(),
         "inactivity_days": organization.setting("inactivity_days"),
         "min_cell": MIN_CELL,
@@ -494,6 +523,7 @@ class PmeDashboardView(APIView):
                 "open_diagnostic": open_diagnostic,
                 "next_actions": next_actions(pme),
                 "compliance": compliance.compliance_rate(pme),
+                "evolution": evolution(baseline, snapshot),
                 "feedback": [
                     {
                         "id": d.pk,

@@ -8,6 +8,8 @@ import { LifecycleBadge } from "@/components/LifecycleBadge";
 import Link from "next/link";
 
 import { NotificationBell } from "@/components/NotificationBell";
+import { Dumbbell } from "@/components/charts/Charts";
+import { ReportsList } from "@/components/reports/ReportsList";
 import { Alert, ButtonLink, Card, LoadingBlock } from "@/components/ui";
 import { DOCUMENT_STATUS } from "@/lib/documents";
 import { ACTION_STATUS, type ActionStatus } from "@/lib/plans";
@@ -84,6 +86,14 @@ export default function PmeSpacePage() {
                 <NextActions data={dashboard.data} />
               )}
             </Card>
+
+            {dashboard.data.evolution.length > 0 && (
+              <Card title="Mon évolution par domaine">
+                <Dumbbell rows={dashboard.data.evolution} />
+              </Card>
+            )}
+
+            <ReportsList pmeId={dashboard.data.pme.id} pmeView />
 
             <Card title="Mon conseiller GUDE-PME">
               {dashboard.data.advisor ? (
@@ -223,7 +233,8 @@ function NextActions({ data }: { data: PmeDashboard }) {
         </ul>
       )}
       <p className="text-xs text-muted">
-        {plan.done}/{plan.total} action(s) terminée(s) ·{" "}
+        {plan.done}/{plan.total} action(s) terminée(s) · {plan.in_progress} en cours
+        {plan.overdue > 0 && <span className="font-medium text-red-700"> · {plan.overdue} en retard</span>} ·{" "}
         <Link href="/espace/plan" className="text-brand-700 hover:underline">
           Voir tout mon plan
         </Link>

@@ -1345,6 +1345,60 @@
                 }
             }
         },
+        "/api/v1/dashboards/portfolio/analyses": {
+            "get": {
+                "operationId": "dashboards_portfolio_analyses_retrieve",
+                "description": "Analyses de portefeuille (Document 9, § 4.2) : problèmes fréquents, besoins, secteurs, trajectoires.",
+                "tags": [
+                    "dashboards"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/dashboards/portfolio/pmes": {
+            "get": {
+                "operationId": "dashboards_portfolio_pmes_retrieve",
+                "description": "Tableau du portefeuille, filtrable côté interface ; ``?format=csv`` pour l'export.",
+                "tags": [
+                    "dashboards"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/deadlines/{deadline_id}/waive": {
             "post": {
                 "operationId": "deadlines_waive_create",
@@ -1697,6 +1751,43 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Diagnostic"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/diagnostics/{diagnostic_id}/report": {
+            "post": {
+                "operationId": "diagnostics_report_create",
+                "description": "Génère une nouvelle version du rapport de diagnostic (les versions précédentes restent archivées).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "diagnostic_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "diagnostics"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Report"
                                 }
                             }
                         },
@@ -4012,6 +4103,45 @@
                 }
             }
         },
+        "/api/v1/pmes/{pme_id}/reports": {
+            "get": {
+                "operationId": "pmes_reports_list",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Report"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/pmes/{pme_pk}/persons": {
             "get": {
                 "operationId": "pmes_persons_list",
@@ -4893,6 +5023,35 @@
                             }
                         },
                         "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/reports/{report_id}/pdf": {
+            "get": {
+                "operationId": "reports_pdf_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "report_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF archivé"
                     }
                 }
             }
@@ -8236,10 +8395,11 @@
                     "PLAN_ACCEPTED",
                     "ACTION_DOCUMENT_REQUESTED",
                     "ACTION_DELIVERABLE_REJECTED",
-                    "ACTION_UNBLOCKED"
+                    "ACTION_UNBLOCKED",
+                    "REPORT_READY"
                 ],
                 "type": "string",
-                "description": "* `AI_BUDGET_WARNING` - AI_BUDGET_WARNING\n* `PREDIAGNOSTIC_READY` - PREDIAGNOSTIC_READY\n* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED\n* `PLAN_TO_ACCEPT` - PLAN_TO_ACCEPT\n* `PLAN_ACCEPTED` - PLAN_ACCEPTED\n* `ACTION_DOCUMENT_REQUESTED` - ACTION_DOCUMENT_REQUESTED\n* `ACTION_DELIVERABLE_REJECTED` - ACTION_DELIVERABLE_REJECTED\n* `ACTION_UNBLOCKED` - ACTION_UNBLOCKED"
+                "description": "* `AI_BUDGET_WARNING` - AI_BUDGET_WARNING\n* `PREDIAGNOSTIC_READY` - PREDIAGNOSTIC_READY\n* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED\n* `PLAN_TO_ACCEPT` - PLAN_TO_ACCEPT\n* `PLAN_ACCEPTED` - PLAN_ACCEPTED\n* `ACTION_DOCUMENT_REQUESTED` - ACTION_DOCUMENT_REQUESTED\n* `ACTION_DELIVERABLE_REJECTED` - ACTION_DELIVERABLE_REJECTED\n* `ACTION_UNBLOCKED` - ACTION_UNBLOCKED\n* `REPORT_READY` - REPORT_READY"
             },
             "EvidencePolicyEnum": {
                 "enum": [
@@ -12066,6 +12226,105 @@
                     "referentiel",
                     "reglementation"
                 ]
+            },
+            "Report": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ReportTypeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "diagnostic": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "version": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "default": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "period": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "template_version": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "size_bytes": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "sha256": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "engine": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Moteur de rendu PDF utilisé."
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "generated_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "generated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "confidence",
+                    "diagnostic",
+                    "engine",
+                    "generated_at",
+                    "generated_by_name",
+                    "id",
+                    "period",
+                    "pme",
+                    "sha256",
+                    "size_bytes",
+                    "template_version",
+                    "title",
+                    "type",
+                    "version"
+                ]
+            },
+            "ReportTypeEnum": {
+                "enum": [
+                    "DIAGNOSTIC",
+                    "PORTEFEUILLE"
+                ],
+                "type": "string",
+                "description": "* `DIAGNOSTIC` - Rapport de diagnostic\n* `PORTEFEUILLE` - Rapport de portefeuille"
             },
             "ResultEnum": {
                 "enum": [
