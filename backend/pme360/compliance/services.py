@@ -64,6 +64,9 @@ def verify_rule(rule: RegulatoryRule, user, *, source_reference: str, verified_a
         before=before,
         after={"status": rule.status, "source_reference": rule.source_reference, "verified_at": verified_at},
     )
+    from pme360.ai.knowledge import index_regulatory
+
+    index_regulatory()
     return rule
 
 
@@ -85,6 +88,9 @@ def set_rule_status(rule: RegulatoryRule, status: str, note: str) -> RegulatoryR
         before=before,
         after={"status": status, "deactivated_obligations": deactivated},
     )
+    from pme360.ai.knowledge import index_regulatory
+
+    index_regulatory()
     return rule
 
 

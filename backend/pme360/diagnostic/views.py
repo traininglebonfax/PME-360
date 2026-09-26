@@ -202,6 +202,9 @@ class ReviewView(APIView):
             a.criterion.code: a
             for a in CriterionAssessment.objects.filter(diagnostic=diagnostic).select_related("criterion", "reviewer")
         }
+        from pme360.ai.models import CriterionSuggestion
+
+        suggestions = {s.criterion_code: s for s in CriterionSuggestion.objects.filter(diagnostic=diagnostic)}
         answers: dict[str, list[dict]] = {}
         for answer in Answer.objects.filter(diagnostic=diagnostic).select_related("question__criterion"):
             question = answer.question
@@ -226,6 +229,7 @@ class ReviewView(APIView):
                     "result": results[code],
                     "answers": answers.get(code, []),
                     "assessment": AssessmentSerializer(assessments[code]).data if code in assessments else None,
+                    "suggestion": suggestions.get(code),
                 }
                 for code, crit in criteria.items()
                 if crit.dimension.code == dimension["code"]

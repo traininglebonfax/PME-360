@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "pme360.compliance",
     "pme360.alerts",
     "pme360.notifications",
+    "pme360.ai",
     "pme360.dashboards",
 ]
 
@@ -173,6 +174,25 @@ PME360_CLAMD_PORT = int(env("PME360_CLAMD_PORT", "3310"))
 # Échéances (Document 8, § 4)
 PME360_DEADLINE_HORIZON_DAYS = 120
 
+# IA (Document 4 ; décision D-03). Sans clé ou sans autorisation du tenant : moteur de règles local uniquement.
+PME360_AI_ENABLED = env_bool("PME360_AI_ENABLED", True)
+PME360_AI_PROVIDER = env("PME360_AI_PROVIDER", "local")  # local | anthropic
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", "")
+PME360_AI_TIMEOUT_SECONDS = int(env("PME360_AI_TIMEOUT_SECONDS", "60"))
+# Routage par tâche (Document 4, § 3.3) : classification → rapide ; extraction → standard ; synthèses → raisonnement.
+PME360_AI_MODELS = {
+    "fast": env("PME360_AI_MODEL_FAST", "claude-haiku-4-5-20251001"),
+    "standard": env("PME360_AI_MODEL_STANDARD", "claude-sonnet-5"),
+    "reasoning": env("PME360_AI_MODEL_REASONING", "claude-opus-5-5"),
+}
+# Prix en USD par million de jetons (entrée, sortie) : estimation à confirmer sur la grille tarifaire en vigueur.
+PME360_AI_PRICING = {
+    PME360_AI_MODELS["fast"]: (1.0, 5.0),
+    PME360_AI_MODELS["standard"]: (3.0, 15.0),
+    PME360_AI_MODELS["reasoning"]: (5.0, 25.0),
+}
+PME360_AI_MAX_TOOL_CALLS = 8  # Ask AI : boucle agentique limitée, lecture seule (Document 4, § 9)
+
 LANGUAGE_CODE = "fr"
 TIME_ZONE = "Africa/Abidjan"
 USE_I18N = True
@@ -228,6 +248,12 @@ SPECTACULAR_SETTINGS = {
         "AssessmentStatusEnum": "pme360.diagnostic.models.CriterionAssessment.Status",
         "QuestionTypeEnum": "pme360.diagnostic.models.Question.Type",
         "SnapshotKindEnum": "pme360.scoring.models.ScoreSnapshot.Kind",
+        "RoleEnum": "pme360.pmes.models.PmePerson.Role",
+        "MessageRoleEnum": "pme360.ai.models.ConversationMessage.Role",
+        "AiAnalysisStatusEnum": "pme360.ai.models.AiAnalysis.Status",
+        "AiTaskEnum": "pme360.ai.models.AiAnalysis.Task",
+        "ExtractionStatusEnum": "pme360.ai.models.DocumentExtraction.Status",
+        "SuggestionStatusEnum": "pme360.ai.models.CriterionSuggestion.Status",
     },
 }
 

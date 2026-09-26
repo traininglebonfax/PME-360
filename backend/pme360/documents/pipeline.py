@@ -1,7 +1,7 @@
 """Traitement asynchrone d'une version déposée (Document 2, § 7 : file « documents »).
 
-Lecture du texte natif, contrôles déterministes, puis passage en vérification humaine. La classification,
-l'extraction structurée, l'OCR et les contrôles croisés par IA arrivent en phase 4 (Document 4).
+Lecture du texte natif, contrôles déterministes, analyse IA (classification, extraction, contrôles croisés,
+confiance : ``pme360.ai.documents``), puis passage en vérification humaine : aucune conformité automatique.
 """
 
 from __future__ import annotations
@@ -11,6 +11,8 @@ import re
 import zipfile
 
 import structlog
+from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 
 from pme360.audit import services as audit
@@ -38,8 +40,8 @@ def extract_text(content: bytes, extension: str) -> tuple[str, str, int | None]:
 
             reader = PdfReader(io.BytesIO(content), strict=False)
             pages = [page.extract_text() or "" for page in reader.pages]
-            text = "\n".join(pages).strip()
-            enough = len(text) >= MIN_TEXT_PER_PAGE * max(len(pages), 1)
+            text = "\f".join(pages).strip()  # saut de page : citations par page (Document 4, § 8.2)
+            enough = len(text.replace("\f", "").strip()) >= MIN_TEXT_PER_PAGE * max(len(pages), 1)
             return (DocumentVersion.Text.TEXTE_NATIF if enough else DocumentVersion.Text.OCR_REQUIS), text, len(pages)
         if extension in (".docx", ".xlsx"):
             archive = zipfile.ZipFile(io.BytesIO(content))
@@ -62,6 +64,28 @@ def _check(version: DocumentVersion, code: str, result: str, message: str, **det
     DocumentCheck.objects.update_or_create(
         version=version, check_code=code, defaults={"result": result, "message": message, "details": details}
     )
+
+
+def _analyze(version: DocumentVersion, content: bytes) -> None:
+    """Analyse IA dans un point de sauvegarde : un échec n'empêche jamais la vérification humaine."""
+    from pme360.ai.documents import analyze
+
+    try:
+        with transaction.atomic():
+            analyze(version, content)
+    except Exception:
+        logger.exception("document.ai_analysis_failed", version_id=str(version.pk))
+
+
+def _extraction_summary(version: DocumentVersion) -> dict | None:
+    extraction = getattr(version, "extraction", None)
+    if extraction is None:
+        return None
+    return {
+        "status": extraction.status,
+        "classified_type": extraction.classified_type,
+        "confidence": float(extraction.confidence) if extraction.confidence is not None else None,
+    }
 
 
 def process(version_id: str) -> None:
@@ -127,6 +151,8 @@ def process(version_id: str) -> None:
             )
         version.processed_at = timezone.now()
         version.save(update_fields=["text_status", "text_content", "page_count", "processed_at", "updated_at"])
+        if settings.PME360_AI_ENABLED:
+            _analyze(version, content)
 
         # Aucune conformité automatique par défaut (Document 4, § 7) : vérification humaine requise.
         # Une décision humaine déjà rendue (vérification plus rapide que le traitement) n'est jamais écrasée.
@@ -142,6 +168,10 @@ def process(version_id: str) -> None:
                 Deadline.objects.filter(
                     pk=document.deadline_id, status__in=[Deadline.Status.RECU, Deadline.Status.EN_ANALYSE]
                 ).update(status=Deadline.Status.VERIF_HUMAINE_REQUISE)
+        # Anomalies des contrôles → « Incohérence détectée. Vérification requise. » (document désormais en file).
+        from pme360.alerts import engine as alerts
+
+        alerts.evaluate_kind(document.pme, "INCOHERENCE", timezone.localdate())
         audit.record(
             "document.analyzed",
             instance=document,
@@ -152,6 +182,7 @@ def process(version_id: str) -> None:
                 "text": status,
                 "pages": pages,
                 "checks": {c.check_code: c.result for c in version.checks.all()},
+                "ai": _extraction_summary(version),
             },
         )
         events.emit("document.analyzed", pme_id=str(document.pme_id), document_id=str(document.pk))

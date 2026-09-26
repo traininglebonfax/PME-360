@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from django.db import IntegrityError
+from django.conf import settings
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
@@ -310,7 +311,7 @@ def submit(diagnostic: Diagnostic, access: AccessContext) -> Diagnostic:
             code="incomplete",
             completion=progress["completion"],
         )
-    # Phase 4 : ANALYSE_IA (pré-diagnostic). Sans IA active, passage direct en revue (Document 7, § 2.1).
+    # Passage direct en revue ; le pré-diagnostic IA (propositions par critère) arrive en arrière-plan.
     diagnostic.status = Diagnostic.Status.EN_REVUE
     diagnostic.submitted_at = timezone.now()
     diagnostic.save(update_fields=["status", "submitted_at", "updated_at"])
@@ -321,6 +322,11 @@ def submit(diagnostic: Diagnostic, access: AccessContext) -> Diagnostic:
         after={"completion": progress["completion"], "by_staff": staff_progress is not None},
     )
     events.emit("diagnostic.submitted", pme_id=str(diagnostic.pme_id), diagnostic_id=str(diagnostic.pk))
+    if settings.PME360_AI_ENABLED:
+        from pme360.ai.tasks import run_prediagnostic
+
+        diagnostic_id = str(diagnostic.pk)
+        transaction.on_commit(lambda: run_prediagnostic.delay(diagnostic_id))
     return diagnostic
 
 
@@ -404,6 +410,9 @@ def review_criterion(
             "corroborated": corroborated,
         },
     )
+    from pme360.ai.prediagnostic import record_review
+
+    record_review(diagnostic, criterion_code, status, level_final)
     return assessment
 
 
@@ -429,6 +438,10 @@ def accept_remaining(diagnostic: Diagnostic, access: AccessContext) -> int:
         if c["status"] == "EVALUE" and c["code"] not in reviewed
     ]
     CriterionAssessment.objects.bulk_create(created)
+    from pme360.ai.prediagnostic import record_review
+
+    for assessment in created:
+        record_review(diagnostic, assessment.criterion.code, assessment.status, assessment.level_final)
     if created:
         audit.record(
             "diagnostic.bulk_accepted",
@@ -469,6 +482,9 @@ def validate(diagnostic: Diagnostic, access: AccessContext):
         after={"snapshot": str(snapshot.pk), "global_score": snapshot.result["global_score"]},
     )
     events.emit("diagnostic.validated", pme_id=str(diagnostic.pme_id), diagnostic_id=str(diagnostic.pk))
+    from pme360.ai.knowledge import index_pme_history
+
+    index_pme_history(diagnostic.pme)
     pme_services.touch(diagnostic.pme)
     return snapshot
 

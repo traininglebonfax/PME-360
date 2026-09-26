@@ -6,6 +6,386 @@
         "description": "API de la plateforme PME360 (instance GUDE-PME 360). Erreurs au format RFC 9457."
     },
     "paths": {
+        "/api/v1/ai/analyses": {
+            "get": {
+                "operationId": "ai_analyses_list",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "diagnostic",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "document",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "pme",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "task",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AiAnalysisSummary"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/analyses/{analysis_id}": {
+            "get": {
+                "operationId": "ai_analyses_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "analysis_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiAnalysis"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/conversations": {
+            "get": {
+                "operationId": "ai_conversations_list",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "pme",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Conversation"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "ai_conversations_create",
+                "tags": [
+                    "ai"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConversationCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Conversation"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/conversations/{conversation_id}": {
+            "get": {
+                "operationId": "ai_conversations_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "conversation_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConversationDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/conversations/{conversation_id}/messages": {
+            "post": {
+                "operationId": "ai_conversations_messages_create",
+                "description": "Question au Copilot : réponse diffusée en Server-Sent Events (status, delta, done).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "conversation_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/QuestionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/evaluations": {
+            "get": {
+                "operationId": "ai_evaluations_list",
+                "tags": [
+                    "ai"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EvaluationRun"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "ai_evaluations_create",
+                "tags": [
+                    "ai"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EvaluationRun"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/reindex": {
+            "post": {
+                "operationId": "ai_reindex_create",
+                "tags": [
+                    "ai"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Reindex"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/settings": {
+            "get": {
+                "operationId": "ai_settings_retrieve",
+                "tags": [
+                    "ai"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiSettingsPayload"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "ai_settings_update",
+                "tags": [
+                    "ai"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AiSettingsRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AiSettingsPayload"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/alert-rules": {
             "get": {
                 "operationId": "alert_rules_list",
@@ -1236,6 +1616,82 @@
                 }
             }
         },
+        "/api/v1/diagnostics/{diagnostic_id}/suggestions": {
+            "get": {
+                "operationId": "diagnostics_suggestions_list",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "diagnostic_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "diagnostics"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Suggestion"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "diagnostics_suggestions_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "diagnostic_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "diagnostics"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Suggestion"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/diagnostics/{diagnostic_id}/validate": {
             "post": {
                 "operationId": "diagnostics_validate_create",
@@ -1332,6 +1788,131 @@
                             }
                         },
                         "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/documents/{document_id}/extraction": {
+            "get": {
+                "operationId": "documents_extraction_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "document_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Extraction"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/documents/{document_id}/extraction/review": {
+            "post": {
+                "operationId": "documents_extraction_review_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "document_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExtractionReviewRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Extraction"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/documents/{document_id}/reanalyze": {
+            "post": {
+                "operationId": "documents_reanalyze_create",
+                "description": "Relance l'analyse IA de la version courante (ex. après autorisation de l'IA externe).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "document_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "documents"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Extraction"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "204": {
+                        "description": "No response body"
                     }
                 }
             }
@@ -2694,6 +3275,79 @@
                 }
             }
         },
+        "/api/v1/pmes/{pme_id}/financial-analysis": {
+            "get": {
+                "operationId": "pmes_financial_analysis_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FinancialAnalysis"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/pmes/{pme_id}/financial-analysis/interpretation": {
+            "post": {
+                "operationId": "pmes_financial_analysis_interpretation_create",
+                "description": "Commentaire des ratios (brouillon à relire avant publication, Document 4, fonction D).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Interpretation"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/pmes/{pme_id}/health-check": {
             "get": {
                 "operationId": "pmes_health_check_retrieve",
@@ -3609,7 +4263,7 @@
         "/api/v1/verifications": {
             "get": {
                 "operationId": "verifications_list",
-                "description": "File de vérification du conseiller : documents du périmètre en attente, les plus anciens d'abord.",
+                "description": "File de vérification priorisée (Document 4, § 7) : anomalies graves, puis confiance faible, puis ancienneté.",
                 "tags": [
                     "verifications"
                 ],
@@ -3625,7 +4279,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/Document"
+                                        "$ref": "#/components/schemas/QueueItem"
                                     }
                                 }
                             }
@@ -3683,6 +4337,465 @@
                 "required": [
                     "full_name",
                     "id"
+                ]
+            },
+            "AiAnalysis": {
+                "type": "object",
+                "description": "« Voir l'analyse IA » (Document 4, § 11).",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "task": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AiTaskEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AiAnalysisStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "pme_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "document_version": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "diagnostic": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "provider": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "local (règles, sans envoi externe) | anthropic"
+                    },
+                    "model": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Identifiant exact du modèle (ou du moteur de règles)."
+                    },
+                    "prompt_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "prompt_version": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "input_refs": {
+                        "readOnly": true,
+                        "description": "Documents, versions, réponses et fragments utilisés."
+                    },
+                    "pseudonymized": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "output": {
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "confidence": {
+                        "type": "string",
+                        "format": "decimal",
+                        "pattern": "^-?\\d{0,1}(?:\\.\\d{0,3})?$",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "tokens_in": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "tokens_out": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "cost_usd": {
+                        "type": "string",
+                        "format": "decimal",
+                        "pattern": "^-?\\d{0,4}(?:\\.\\d{0,6})?$",
+                        "readOnly": true
+                    },
+                    "latency_ms": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "attempts": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "requested_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "attempts",
+                    "confidence",
+                    "cost_usd",
+                    "created_at",
+                    "diagnostic",
+                    "document_version",
+                    "error",
+                    "id",
+                    "input_refs",
+                    "latency_ms",
+                    "model",
+                    "output",
+                    "pme",
+                    "pme_name",
+                    "prompt_code",
+                    "prompt_version",
+                    "provider",
+                    "pseudonymized",
+                    "requested_by_name",
+                    "status",
+                    "task",
+                    "tokens_in",
+                    "tokens_out"
+                ]
+            },
+            "AiAnalysisStatusEnum": {
+                "enum": [
+                    "SUCCES",
+                    "SORTIE_INVALIDE",
+                    "REFUSE_POLITIQUE",
+                    "BUDGET_EPUISE",
+                    "DIFFERE",
+                    "ECHEC"
+                ],
+                "type": "string",
+                "description": "* `SUCCES` - Succès\n* `SORTIE_INVALIDE` - Sortie invalide (vérification humaine)\n* `REFUSE_POLITIQUE` - Refusé par la politique du tenant\n* `BUDGET_EPUISE` - Budget épuisé\n* `DIFFERE` - Fournisseur indisponible : analyse différée\n* `ECHEC` - Échec"
+            },
+            "AiAnalysisSummary": {
+                "type": "object",
+                "description": "« Voir l'analyse IA » (Document 4, § 11).",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "task": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AiTaskEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AiAnalysisStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "pme_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "document_version": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "diagnostic": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "provider": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "local (règles, sans envoi externe) | anthropic"
+                    },
+                    "model": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Identifiant exact du modèle (ou du moteur de règles)."
+                    },
+                    "prompt_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "prompt_version": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "pseudonymized": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "confidence": {
+                        "type": "string",
+                        "format": "decimal",
+                        "pattern": "^-?\\d{0,1}(?:\\.\\d{0,3})?$",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "tokens_in": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "tokens_out": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "cost_usd": {
+                        "type": "string",
+                        "format": "decimal",
+                        "pattern": "^-?\\d{0,4}(?:\\.\\d{0,6})?$",
+                        "readOnly": true
+                    },
+                    "latency_ms": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "attempts": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "requested_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "attempts",
+                    "confidence",
+                    "cost_usd",
+                    "created_at",
+                    "diagnostic",
+                    "document_version",
+                    "error",
+                    "id",
+                    "latency_ms",
+                    "model",
+                    "pme",
+                    "pme_name",
+                    "prompt_code",
+                    "prompt_version",
+                    "provider",
+                    "pseudonymized",
+                    "requested_by_name",
+                    "status",
+                    "task",
+                    "tokens_in",
+                    "tokens_out"
+                ]
+            },
+            "AiQueueSummary": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "classified_type": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "anomalies": {
+                        "type": "integer"
+                    },
+                    "max_severity": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "anomalies",
+                    "classified_type",
+                    "confidence",
+                    "max_severity",
+                    "reason",
+                    "status"
+                ]
+            },
+            "AiSettingsPayload": {
+                "type": "object",
+                "properties": {
+                    "external_allowed": {
+                        "type": "boolean"
+                    },
+                    "monthly_token_quota": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "auto_threshold": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1,
+                        "minimum": 0.5
+                    },
+                    "field_threshold": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1,
+                        "minimum": 0.5
+                    },
+                    "provider": {
+                        "type": "string"
+                    },
+                    "provider_configured": {
+                        "type": "boolean"
+                    },
+                    "models": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "prompts": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "local_engine": {
+                        "type": "string"
+                    },
+                    "usage": {
+                        "$ref": "#/components/schemas/AiUsage"
+                    }
+                },
+                "required": [
+                    "auto_threshold",
+                    "external_allowed",
+                    "field_threshold",
+                    "local_engine",
+                    "models",
+                    "monthly_token_quota",
+                    "prompts",
+                    "provider",
+                    "provider_configured",
+                    "usage"
+                ]
+            },
+            "AiSettingsRequest": {
+                "type": "object",
+                "properties": {
+                    "external_allowed": {
+                        "type": "boolean"
+                    },
+                    "monthly_token_quota": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "auto_threshold": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1,
+                        "minimum": 0.5
+                    },
+                    "field_threshold": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1,
+                        "minimum": 0.5
+                    }
+                },
+                "required": [
+                    "auto_threshold",
+                    "external_allowed",
+                    "field_threshold",
+                    "monthly_token_quota"
+                ]
+            },
+            "AiTaskEnum": {
+                "enum": [
+                    "CLASSIFICATION",
+                    "EXTRACTION",
+                    "CONTROLE",
+                    "ANALYSE_FINANCIERE",
+                    "PRE_DIAGNOSTIC",
+                    "ASK_AI"
+                ],
+                "type": "string",
+                "description": "* `CLASSIFICATION` - Classification documentaire\n* `EXTRACTION` - Extraction structurée\n* `CONTROLE` - Contrôles et anomalies\n* `ANALYSE_FINANCIERE` - Interprétation financière\n* `PRE_DIAGNOSTIC` - Pré-diagnostic\n* `ASK_AI` - Ask AI"
+            },
+            "AiUsage": {
+                "type": "object",
+                "properties": {
+                    "tokens": {
+                        "type": "integer"
+                    },
+                    "cost_usd": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "since": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "by_task": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        }
+                    }
+                },
+                "required": [
+                    "by_task",
+                    "cost_usd",
+                    "since",
+                    "tokens"
                 ]
             },
             "Alert": {
@@ -4282,6 +5395,113 @@
                 ],
                 "type": "string",
                 "description": "* `NON_EVALUE` - Non évalué\n* `CONFORME` - Conforme\n* `CONFORME_SOUS_RESERVE` - Conforme sous réserve\n* `NON_CONFORME` - Non conforme\n* `INCOHERENT` - Incohérent"
+            },
+            "Conversation": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "pme_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "id",
+                    "pme",
+                    "pme_name",
+                    "title",
+                    "updated_at"
+                ]
+            },
+            "ConversationCreateRequest": {
+                "type": "object",
+                "properties": {
+                    "pme_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 200
+                    }
+                }
+            },
+            "ConversationDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "pme_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "messages": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Message"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "id",
+                    "messages",
+                    "pme",
+                    "pme_name",
+                    "title",
+                    "updated_at"
+                ]
             },
             "Count": {
                 "type": "object",
@@ -5397,8 +6617,60 @@
                     "id"
                 ]
             },
+            "EvaluationRun": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "dataset": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "provider": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "models_used": {
+                        "readOnly": true
+                    },
+                    "prompt_versions": {
+                        "readOnly": true
+                    },
+                    "metrics": {
+                        "readOnly": true
+                    },
+                    "thresholds": {
+                        "readOnly": true
+                    },
+                    "passed": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "dataset",
+                    "id",
+                    "metrics",
+                    "models_used",
+                    "passed",
+                    "prompt_versions",
+                    "provider",
+                    "thresholds"
+                ]
+            },
             "EventCodeEnum": {
                 "enum": [
+                    "AI_BUDGET_WARNING",
+                    "PREDIAGNOSTIC_READY",
                     "DOCUMENT_TO_VERIFY",
                     "DOCUMENT_DECISION",
                     "DOCUMENT_REJECTED_SECURITY",
@@ -5409,7 +6681,7 @@
                     "ALERT_RAISED"
                 ],
                 "type": "string",
-                "description": "* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED"
+                "description": "* `AI_BUDGET_WARNING` - AI_BUDGET_WARNING\n* `PREDIAGNOSTIC_READY` - PREDIAGNOSTIC_READY\n* `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY\n* `DOCUMENT_DECISION` - DOCUMENT_DECISION\n* `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY\n* `DEADLINE_REMINDER` - DEADLINE_REMINDER\n* `DEADLINE_DUE_TODAY` - DEADLINE_DUE_TODAY\n* `DEADLINE_OVERDUE` - DEADLINE_OVERDUE\n* `DEADLINE_ESCALATION` - DEADLINE_ESCALATION\n* `ALERT_RAISED` - ALERT_RAISED"
             },
             "EvidencePolicyEnum": {
                 "enum": [
@@ -5428,6 +6700,347 @@
                 ],
                 "type": "string",
                 "description": "* `DIPLOMEE` - Diplômée\n* `ABANDON` - Abandon\n* `REORIENTATION` - Réorientation"
+            },
+            "Extraction": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "version_no": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ExtractionStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "reason": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Pourquoi une vérification humaine est requise."
+                    },
+                    "expected_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "classified_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "classification_confidence": {
+                        "type": "string",
+                        "format": "decimal",
+                        "pattern": "^-?\\d{0,1}(?:\\.\\d{0,3})?$",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "schema_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "schema_version": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "confidence": {
+                        "type": "string",
+                        "format": "decimal",
+                        "pattern": "^-?\\d{0,1}(?:\\.\\d{0,3})?$",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "fields_detail": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExtractionField"
+                        },
+                        "readOnly": true
+                    },
+                    "classification_analysis": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "extraction_analysis": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "corrections": {
+                        "readOnly": true,
+                        "description": "{champ: {before, after}} (human_review)."
+                    },
+                    "review_comment": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "reviewed_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "reviewed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "classification_analysis",
+                    "classification_confidence",
+                    "classified_type",
+                    "confidence",
+                    "corrections",
+                    "expected_type",
+                    "extraction_analysis",
+                    "fields_detail",
+                    "id",
+                    "reason",
+                    "review_comment",
+                    "reviewed_at",
+                    "reviewed_by_name",
+                    "schema_code",
+                    "schema_version",
+                    "status",
+                    "version_no"
+                ]
+            },
+            "ExtractionField": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "critical": {
+                        "type": "boolean"
+                    },
+                    "value": {
+                        "nullable": true
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "corrected": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "confidence",
+                    "corrected",
+                    "critical",
+                    "label",
+                    "name",
+                    "type",
+                    "value"
+                ]
+            },
+            "ExtractionReviewRequest": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/ExtractionReviewStatusEnum"
+                    },
+                    "corrections": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "nullable": true
+                        }
+                    },
+                    "comment": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "status"
+                ]
+            },
+            "ExtractionReviewStatusEnum": {
+                "enum": [
+                    "VALIDEE",
+                    "CORRIGEE",
+                    "REJETEE"
+                ],
+                "type": "string",
+                "description": "* `VALIDEE` - VALIDEE\n* `CORRIGEE` - CORRIGEE\n* `REJETEE` - REJETEE"
+            },
+            "ExtractionStatusEnum": {
+                "enum": [
+                    "PROVISOIRE",
+                    "A_VERIFIER",
+                    "VALIDEE",
+                    "CORRIGEE",
+                    "REJETEE",
+                    "NON_ANALYSEE"
+                ],
+                "type": "string",
+                "description": "* `PROVISOIRE` - Provisoire (confiance suffisante)\n* `A_VERIFIER` - À vérifier\n* `VALIDEE` - Validée\n* `CORRIGEE` - Corrigée\n* `REJETEE` - Rejetée\n* `NON_ANALYSEE` - Non analysée"
+            },
+            "FinancialAnalysis": {
+                "type": "object",
+                "properties": {
+                    "as_of": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "statements": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FinancialStatement"
+                        }
+                    },
+                    "metrics": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FinancialMetric"
+                        }
+                    }
+                },
+                "required": [
+                    "as_of",
+                    "metrics",
+                    "statements"
+                ]
+            },
+            "FinancialMetric": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "formula": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "display": {
+                        "type": "string"
+                    },
+                    "band": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "points": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "sources": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "inputs": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number",
+                            "format": "double",
+                            "nullable": true
+                        }
+                    },
+                    "missing": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "band",
+                    "code",
+                    "confidence",
+                    "display",
+                    "formula",
+                    "inputs",
+                    "name",
+                    "points",
+                    "sources",
+                    "unit",
+                    "value"
+                ]
+            },
+            "FinancialStatement": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "fiscal_year_end": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "system": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "values": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number",
+                            "format": "double"
+                        }
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "document_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "document_title": {
+                        "type": "string"
+                    },
+                    "verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "confidence",
+                    "document_id",
+                    "document_title",
+                    "fiscal_year_end",
+                    "id",
+                    "status",
+                    "system",
+                    "values",
+                    "verified_at"
+                ]
             },
             "FolderCategory": {
                 "type": "object",
@@ -5724,6 +7337,63 @@
                 "type": "string",
                 "description": "* `EN_SCAN` - Analyse de sécurité en cours\n* `SAIN` - Sain\n* `REJETE_SECURITE` - Rejeté (sécurité)"
             },
+            "Interpretation": {
+                "type": "object",
+                "properties": {
+                    "summary": {
+                        "type": "string"
+                    },
+                    "points": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InterpretationPoint"
+                        }
+                    },
+                    "limits": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "analysis_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "provider": {
+                        "type": "string"
+                    },
+                    "draft": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "analysis_id",
+                    "draft",
+                    "limits",
+                    "points",
+                    "provider",
+                    "summary"
+                ]
+            },
+            "InterpretationPoint": {
+                "type": "object",
+                "properties": {
+                    "metric": {
+                        "type": "string"
+                    },
+                    "comment": {
+                        "type": "string"
+                    },
+                    "tone": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "comment",
+                    "metric",
+                    "tone"
+                ]
+            },
             "InviteRequest": {
                 "type": "object",
                 "properties": {
@@ -6018,6 +7688,71 @@
                     "role_label",
                     "scope"
                 ]
+            },
+            "Message": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "role": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/MessageRoleEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "content": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "sources": {
+                        "readOnly": true
+                    },
+                    "confidence": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "limits": {
+                        "readOnly": true
+                    },
+                    "tool_calls": {
+                        "readOnly": true
+                    },
+                    "analysis": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "analysis",
+                    "confidence",
+                    "content",
+                    "created_at",
+                    "id",
+                    "limits",
+                    "role",
+                    "sources",
+                    "tool_calls"
+                ]
+            },
+            "MessageRoleEnum": {
+                "enum": [
+                    "USER",
+                    "ASSISTANT"
+                ],
+                "type": "string",
+                "description": "* `USER` - Utilisateur\n* `ASSISTANT` - Assistant"
             },
             "MetricDefinition": {
                 "type": "object",
@@ -7596,6 +9331,19 @@
                     "submit_threshold"
                 ]
             },
+            "QuestionRequest": {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "question"
+                ]
+            },
             "QuestionTypeEnum": {
                 "enum": [
                     "SINGLE",
@@ -7727,6 +9475,189 @@
                     "description",
                     "questions",
                     "title"
+                ]
+            },
+            "QueueItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "pme": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PmeRef"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "document_type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DocumentType"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "deadline": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DeadlineRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "period_start": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "period_end": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "issued_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "integrity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/IntegrityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "validity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ValidityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "currency_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CurrencyStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "verification_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VerificationStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "conformity_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ConformityStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "decision_reason": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Motif en langage simple, visible par la PME."
+                    },
+                    "verified_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "uploaded_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "uploaded_via": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UploadedViaEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "current_version_no": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "ai": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AiQueueSummary"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "ai",
+                    "conformity_status",
+                    "created_at",
+                    "currency_status",
+                    "current_version_no",
+                    "deadline",
+                    "decision_reason",
+                    "document_type",
+                    "expires_at",
+                    "id",
+                    "integrity_status",
+                    "issued_at",
+                    "period_end",
+                    "period_start",
+                    "pme",
+                    "status",
+                    "title",
+                    "updated_at",
+                    "uploaded_by_name",
+                    "uploaded_via",
+                    "validity_status",
+                    "verification_status",
+                    "verified_at",
+                    "verified_by_name"
                 ]
             },
             "Rate": {
@@ -7919,6 +9850,29 @@
                 "type": "string",
                 "description": "* `A_VERIFIER` - À vérifier\n* `PRE_VERIFIE` - Pré-vérifiée (source identifiée)\n* `VERIFIE` - Vérifiée\n* `OBSOLETE` - Obsolète\n* `HORS_PERIMETRE` - Hors périmètre"
             },
+            "Reindex": {
+                "type": "object",
+                "properties": {
+                    "referentiel": {
+                        "type": "integer"
+                    },
+                    "reglementation": {
+                        "type": "integer"
+                    },
+                    "documents": {
+                        "type": "integer"
+                    },
+                    "historique": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "documents",
+                    "historique",
+                    "referentiel",
+                    "reglementation"
+                ]
+            },
             "ResultEnum": {
                 "enum": [
                     "OK",
@@ -7965,6 +9919,14 @@
                             }
                         ],
                         "nullable": true
+                    },
+                    "suggestion": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ReviewSuggestion"
+                            }
+                        ],
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -7977,7 +9939,8 @@
                     "lens",
                     "name",
                     "result",
-                    "rubric"
+                    "rubric",
+                    "suggestion"
                 ]
             },
             "ReviewDimension": {
@@ -8054,6 +10017,50 @@
                     }
                 },
                 "required": [
+                    "status"
+                ]
+            },
+            "ReviewSuggestion": {
+                "type": "object",
+                "description": "Proposition du pré-diagnostic IA (Document 4, fonction F) : jamais une décision.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "proposed_level": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "justification": {
+                        "type": "string"
+                    },
+                    "sources": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "analysis": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "analysis",
+                    "confidence",
+                    "id",
+                    "justification",
+                    "proposed_level",
+                    "sources",
                     "status"
                 ]
             },
@@ -8465,6 +10472,72 @@
                 "required": [
                     "type"
                 ]
+            },
+            "Suggestion": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "criterion_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "proposed_level": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "justification": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "sources": {
+                        "readOnly": true
+                    },
+                    "confidence": {
+                        "type": "string",
+                        "format": "decimal",
+                        "pattern": "^-?\\d{0,1}(?:\\.\\d{0,3})?$",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/SuggestionStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "analysis": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "analysis",
+                    "confidence",
+                    "criterion_code",
+                    "id",
+                    "justification",
+                    "proposed_level",
+                    "sources",
+                    "status"
+                ]
+            },
+            "SuggestionStatusEnum": {
+                "enum": [
+                    "PROPOSEE",
+                    "ACCEPTEE",
+                    "MODIFIEE",
+                    "ECARTEE"
+                ],
+                "type": "string",
+                "description": "* `PROPOSEE` - Proposée\n* `ACCEPTEE` - Acceptée\n* `MODIFIEE` - Modifiée par le conseiller\n* `ECARTEE` - Écartée"
             },
             "SwitchOrganizationRequest": {
                 "type": "object",

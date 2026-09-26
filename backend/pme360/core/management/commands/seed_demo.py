@@ -55,24 +55,18 @@ class Command(BaseCommand):
         self._report()
 
     def _documents(self, slug: str, organization: Organization, users: dict, pmes: dict[str, Pme]) -> None:
-        """Obligations et échéances, documents fictifs déposés et vérifiés, alertes (phase 3)."""
-        import io
+        """Documents fictifs déposés, analysés par l'IA (moteur local), vérifiés ; échéances et alertes (phases 3-4)."""
         from datetime import timedelta
 
-        from pypdf import PdfWriter
-
+        from pme360.ai import documents as ai_documents
+        from pme360.ai.knowledge import reindex_organization
+        from pme360.ai.models import DocumentExtraction
         from pme360.compliance import services as compliance
+        from pme360.documents import pipeline
         from pme360.documents import services as documents
         from pme360.documents.models import Document, DocumentType
         from seeds import demo_documents
-
-        def fictitious_pdf() -> bytes:
-            writer = PdfWriter()
-            writer.add_blank_page(width=595, height=842)
-            writer.add_metadata({"/Title": "DOCUMENT DE DÉMONSTRATION — FICTIF"})
-            buffer = io.BytesIO()
-            writer.write(buffer)
-            return buffer.getvalue()
+        from seeds.pdfkit import text_pdf
 
         today = timezone.localdate()
         for spec in demo.PMES:
@@ -84,24 +78,42 @@ class Command(BaseCommand):
             if items and not Document.objects.filter(pme=pme).exists():
                 advisor = users[spec["advisor"]] if spec.get("advisor") else None
                 leader_email = next((u[0] for u in demo.USERS if u[3] == "DIRIGEANT_PME" and u[5] == spec["key"]), None)
+                pme_data = {"key": spec["key"], **spec["data"]}
                 for _, type_code, decision, reason, expires_in in items:
                     uploader = users[leader_email] if decision is None and leader_email else advisor
                     access = build_access(uploader, organization.id)
+                    document_type = DocumentType.objects.get(code=type_code)
+                    issued_at = today - timedelta(days=60)
+                    expires_at = today + timedelta(days=expires_in) if expires_in else None
                     result = documents.upload(
                         access,
                         pme,
                         filename=f"{type_code.lower()}-demo.pdf",
-                        content=fictitious_pdf(),
-                        document_type=DocumentType.objects.get(code=type_code),
-                        title=f"{DocumentType.objects.get(code=type_code).name} (démonstration)",
-                        issued_at=today - timedelta(days=60),
-                        expires_at=today + timedelta(days=expires_in) if expires_in else None,
+                        content=text_pdf(demo_documents.content(pme_data, type_code, today, expires_at, issued_at)),
+                        document_type=document_type,
+                        title=f"{document_type.name} (démonstration)",
+                        issued_at=issued_at,
+                        expires_at=expires_at,
                     )
+                    pipeline.process(str(result.version.pk))  # analyse immédiate (idempotente)
                     if decision:
-                        documents.verify(
-                            build_access(advisor, organization.id), result.document, decision=decision, reason=reason
-                        )
+                        reviewer = build_access(advisor, organization.id)
+                        documents.verify(reviewer, result.document, decision=decision, reason=reason)
+                        extraction = DocumentExtraction.objects.filter(version=result.version).first()
+                        if (
+                            extraction
+                            and extraction.schema_code
+                            and extraction.status not in DocumentExtraction.REVIEWED
+                        ):
+                            ai_documents.review(
+                                extraction,
+                                reviewer,
+                                status=DocumentExtraction.Status.VALIDEE,
+                                corrections={},
+                                comment="",
+                            )
             compliance.run_for_pme(pme, today)
+        reindex_organization()
 
     # --- Étapes -------------------------------------------------------------------------------------------------
 

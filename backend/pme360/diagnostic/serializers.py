@@ -239,6 +239,18 @@ class AssessmentSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class ReviewSuggestionSerializer(serializers.Serializer):
+    """Proposition du pré-diagnostic IA (Document 4, fonction F) : jamais une décision."""
+
+    id = serializers.UUIDField()
+    proposed_level = serializers.IntegerField(allow_null=True)
+    justification = serializers.CharField()
+    sources = serializers.ListField(child=serializers.CharField())
+    confidence = serializers.FloatField()
+    status = serializers.CharField()
+    analysis = serializers.UUIDField(allow_null=True, source="analysis_id")
+
+
 class ReviewCriterionSerializer(serializers.Serializer):
     code = serializers.CharField()
     name = serializers.CharField()
@@ -250,6 +262,7 @@ class ReviewCriterionSerializer(serializers.Serializer):
     result = serializers.JSONField()
     answers = serializers.JSONField()
     assessment = AssessmentSerializer(allow_null=True)
+    suggestion = ReviewSuggestionSerializer(allow_null=True)
 
 
 class ReviewDimensionSerializer(serializers.Serializer):

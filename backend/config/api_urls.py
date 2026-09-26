@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.routers import SimpleRouter
 
 from pme360.accounts import views as accounts
+from pme360.ai import views as ai
 from pme360.alerts import views as alerts
 from pme360.audit import views as audit
 from pme360.compliance import views as compliance
@@ -100,7 +101,22 @@ urlpatterns = [
     path("documents/<uuid:document_id>/verify", documents.DocumentVerifyView.as_view()),
     path("documents/<uuid:document_id>/versions/<int:version_no>/download-url", documents.DownloadUrlView.as_view()),
     path("files/<str:token>", documents.FileDownloadView.as_view()),
-    path("verifications", documents.VerificationQueueView.as_view()),
+    path("verifications", ai.VerificationQueueView.as_view()),
+    # IA (Document 4) : extraction, revue, traçabilité, pré-diagnostic, analyse financière, Copilot
+    path("documents/<uuid:document_id>/extraction", ai.DocumentExtractionView.as_view()),
+    path("documents/<uuid:document_id>/extraction/review", ai.ExtractionReviewView.as_view()),
+    path("documents/<uuid:document_id>/reanalyze", ai.DocumentReanalyzeView.as_view()),
+    path("ai/analyses", ai.AnalysisListView.as_view()),
+    path("ai/analyses/<uuid:analysis_id>", ai.AnalysisDetailView.as_view()),
+    path("ai/settings", ai.AiSettingsView.as_view()),
+    path("ai/evaluations", ai.EvaluationListView.as_view()),
+    path("ai/reindex", ai.ReindexView.as_view()),
+    path("ai/conversations", ai.ConversationListView.as_view()),
+    path("ai/conversations/<uuid:conversation_id>", ai.ConversationDetailView.as_view()),
+    path("ai/conversations/<uuid:conversation_id>/messages", ai.ConversationAskView.as_view()),
+    path("diagnostics/<uuid:diagnostic_id>/suggestions", ai.SuggestionListView.as_view()),
+    path("pmes/<uuid:pme_id>/financial-analysis", ai.FinancialAnalysisView.as_view()),
+    path("pmes/<uuid:pme_id>/financial-analysis/interpretation", ai.FinancialInterpretationView.as_view()),
     path("pmes/<uuid:pme_id>/compliance-folder", compliance.ComplianceFolderView.as_view()),
     path("pmes/<uuid:pme_id>/deadlines", compliance.PmeDeadlinesView.as_view()),
     path("deadlines/upcoming", compliance.UpcomingDeadlinesView.as_view()),

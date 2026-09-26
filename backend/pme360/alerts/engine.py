@@ -157,6 +157,39 @@ def _anomalie_doc(rule: AlertRule, pme: Pme, today: date) -> list[Finding]:
     ]
 
 
+def _incoherence(rule: AlertRule, pme: Pme, today: date) -> list[Finding]:
+    """Anomalies des contrôles (Document 4, § 5) sur les documents encore en attente de décision humaine."""
+    from pme360.documents.models import DocumentCheck
+
+    findings = []
+    pending = Document.objects.filter(
+        pme=pme, deleted_at__isnull=True, verification_status=Document.Verification.VERIF_HUMAINE_REQUISE
+    )
+    for document in pending:
+        checks = [
+            c
+            for c in DocumentCheck.objects.filter(
+                version__document=document, version__version_no=document.current_version_no
+            )
+            if c.details.get("anomaly")
+        ]
+        if not checks:
+            continue
+        severity = max((c.details.get("severity", "MOYENNE") for c in checks), key=SEVERITY_ORDER.index)
+        findings.append(
+            Finding(
+                f"document:{document.pk}",
+                f"Incohérence détectée : {document.title}",
+                "Incohérence détectée. Vérification requise. " + " ".join(c.message for c in checks),
+                severity=severity,
+                target_type="document",
+                target_id=str(document.pk),
+                details={"checks": [c.check_code for c in checks]},
+            )
+        )
+    return findings
+
+
 def _frozen(pme: Pme) -> list[ScoreSnapshot]:
     return list(ScoreSnapshot.objects.filter(pme=pme, is_frozen=True).order_by("reference_date", "computed_at"))
 
@@ -268,6 +301,7 @@ EVALUATORS = {
     "RISQUE_ELEVE": _risque_eleve,
     "STAGNATION": _stagnation,
     "CA_BAISSE": _ca_baisse,
+    "INCOHERENCE": _incoherence,
 }
 
 
@@ -329,6 +363,17 @@ def evaluate_pme(pme: Pme, today: date) -> dict:
     raised = resolved = 0
     for rule in AlertRule.objects.filter(is_active=True, kind__in=EVALUATORS):
         findings = EVALUATORS[rule.kind](rule, pme, today)
+        for finding in findings:
+            raised += _raise(rule, pme, finding) is not None
+        resolved += _auto_resolve(rule, pme, {f.key for f in findings})
+    return {"raised": raised, "resolved": resolved}
+
+
+def evaluate_kind(pme: Pme, kind: str, today: date) -> dict:
+    """Évaluation ciblée d'un type de règle (ex. après l'analyse d'un document)."""
+    raised = resolved = 0
+    for rule in AlertRule.objects.filter(is_active=True, kind=kind):
+        findings = EVALUATORS[kind](rule, pme, today)
         for finding in findings:
             raised += _raise(rule, pme, finding) is not None
         resolved += _auto_resolve(rule, pme, {f.key for f in findings})

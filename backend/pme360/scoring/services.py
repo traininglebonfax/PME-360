@@ -197,6 +197,11 @@ def build_input(
                 source=ANSWER_SOURCE_TO_CONFIDENCE[answer.source],
                 answered_on=timezone.localtime(answer.answered_at).date(),
             )
+    # États financiers extraits (phase 4) : la source documentaire remplace le montant déclaré.
+    from pme360.ai.financials import statement_inputs
+
+    document_inputs, _ = statement_inputs(diagnostic.pme, diagnostic.reference_date, evidence_as_of)
+    inputs.update(document_inputs)
     declared = {}
     for criterion, items in levels.items():
         sources = {ANSWER_SOURCE_TO_CONFIDENCE[a.source] for _, a in items}

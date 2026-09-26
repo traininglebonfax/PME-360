@@ -137,21 +137,6 @@ class DocumentVerifyView(APIView):
         return Response(DocumentSerializer(scoped_documents(request).get(pk=document_id)).data)
 
 
-class VerificationQueueView(APIView):
-    """File de vérification du conseiller : documents du périmètre en attente, les plus anciens d'abord."""
-
-    required_permissions = "document.verify"
-
-    @extend_schema(responses=DocumentSerializer(many=True))
-    def get(self, request):
-        documents = (
-            scoped_documents(request)
-            .filter(verification_status=Document.Verification.VERIF_HUMAINE_REQUISE)
-            .order_by("updated_at")
-        )
-        return Response(DocumentSerializer(documents, many=True).data)
-
-
 class DownloadUrlView(APIView):
     """URL signée de 5 minutes, délivrée après contrôle d'accès (Document 2, § 8.2)."""
 
