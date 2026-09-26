@@ -46,6 +46,10 @@ class Organization(TimeStampedModel):
 DEFAULT_SETTINGS = {
     "inactivity_days": 60,  # Document 1, § 7
     "duplicate_name_similarity": 0.55,  # seuil de similarité trigramme pour la détection de doublons
+    # IA (Document 4, § 3 et § 7) : quotas et seuils de vérification humaine.
+    "ai_monthly_token_quota": 2_000_000,
+    "ai_auto_threshold": 0.85,  # confiance du document et de la classification
+    "ai_field_threshold": 0.90,  # confiance des champs critiques
 }
 
 

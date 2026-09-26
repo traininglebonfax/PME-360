@@ -4,6 +4,135 @@
  */
 
 export interface paths {
+    "/api/v1/ai/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ai_analyses_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/analyses/{analysis_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ai_analyses_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ai_conversations_list"];
+        put?: never;
+        post: operations["ai_conversations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ai_conversations_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/conversations/{conversation_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Question au Copilot : réponse diffusée en Server-Sent Events (status, delta, done). */
+        post: operations["ai_conversations_messages_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ai_evaluations_list"];
+        put?: never;
+        post: operations["ai_evaluations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/reindex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ai_reindex_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ai_settings_retrieve"];
+        put: operations["ai_settings_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/alert-rules": {
         parameters: {
             query?: never;
@@ -550,6 +679,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/diagnostics/{diagnostic_id}/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["diagnostics_suggestions_list"];
+        put?: never;
+        post: operations["diagnostics_suggestions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/diagnostics/{diagnostic_id}/validate": {
         parameters: {
             query?: never;
@@ -592,6 +737,55 @@ export interface paths {
         get: operations["documents_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{document_id}/extraction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents_extraction_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{document_id}/extraction/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["documents_extraction_review_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{document_id}/reanalyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Relance l'analyse IA de la version courante (ex. après autorisation de l'IA externe). */
+        post: operations["documents_reanalyze_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1047,6 +1241,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pmes/{pme_id}/financial-analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pmes_financial_analysis_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pmes/{pme_id}/financial-analysis/interpretation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Commentaire des ratios (brouillon à relire avant publication, Document 4, fonction D). */
+        post: operations["pmes_financial_analysis_interpretation_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pmes/{pme_id}/health-check": {
         parameters: {
             query?: never;
@@ -1338,7 +1565,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description File de vérification du conseiller : documents du périmètre en attente, les plus anciens d'abord. */
+        /** @description File de vérification priorisée (Document 4, § 7) : anomalies graves, puis confiance faible, puis ancienneté. */
         get: operations["verifications_list"];
         put?: never;
         post?: never;
@@ -1369,6 +1596,140 @@ export interface components {
             /** Format: uuid */
             id: string;
             full_name: string;
+        };
+        /** @description « Voir l'analyse IA » (Document 4, § 11). */
+        AiAnalysis: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly task: components["schemas"]["AiTaskEnum"];
+            readonly status: components["schemas"]["AiAnalysisStatusEnum"];
+            /** Format: uuid */
+            readonly pme: string | null;
+            readonly pme_name: string;
+            /** Format: uuid */
+            readonly document_version: string | null;
+            /** Format: uuid */
+            readonly diagnostic: string | null;
+            /** @description local (règles, sans envoi externe) | anthropic */
+            readonly provider: string;
+            /** @description Identifiant exact du modèle (ou du moteur de règles). */
+            readonly model: string;
+            readonly prompt_code: string;
+            readonly prompt_version: string;
+            /** @description Documents, versions, réponses et fragments utilisés. */
+            readonly input_refs: unknown;
+            readonly pseudonymized: boolean;
+            readonly output: unknown;
+            /** Format: decimal */
+            readonly confidence: string | null;
+            readonly tokens_in: number;
+            readonly tokens_out: number;
+            /** Format: decimal */
+            readonly cost_usd: string;
+            readonly latency_ms: number;
+            readonly attempts: number;
+            readonly error: string;
+            readonly requested_by_name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `SUCCES` - Succès
+         *     * `SORTIE_INVALIDE` - Sortie invalide (vérification humaine)
+         *     * `REFUSE_POLITIQUE` - Refusé par la politique du tenant
+         *     * `BUDGET_EPUISE` - Budget épuisé
+         *     * `DIFFERE` - Fournisseur indisponible : analyse différée
+         *     * `ECHEC` - Échec
+         * @enum {string}
+         */
+        AiAnalysisStatusEnum: "SUCCES" | "SORTIE_INVALIDE" | "REFUSE_POLITIQUE" | "BUDGET_EPUISE" | "DIFFERE" | "ECHEC";
+        /** @description « Voir l'analyse IA » (Document 4, § 11). */
+        AiAnalysisSummary: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly task: components["schemas"]["AiTaskEnum"];
+            readonly status: components["schemas"]["AiAnalysisStatusEnum"];
+            /** Format: uuid */
+            readonly pme: string | null;
+            readonly pme_name: string;
+            /** Format: uuid */
+            readonly document_version: string | null;
+            /** Format: uuid */
+            readonly diagnostic: string | null;
+            /** @description local (règles, sans envoi externe) | anthropic */
+            readonly provider: string;
+            /** @description Identifiant exact du modèle (ou du moteur de règles). */
+            readonly model: string;
+            readonly prompt_code: string;
+            readonly prompt_version: string;
+            readonly pseudonymized: boolean;
+            /** Format: decimal */
+            readonly confidence: string | null;
+            readonly tokens_in: number;
+            readonly tokens_out: number;
+            /** Format: decimal */
+            readonly cost_usd: string;
+            readonly latency_ms: number;
+            readonly attempts: number;
+            readonly error: string;
+            readonly requested_by_name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        AiQueueSummary: {
+            status: string;
+            /** Format: double */
+            confidence: number | null;
+            classified_type: string;
+            reason: string;
+            anomalies: number;
+            max_severity: string | null;
+        };
+        AiSettingsPayload: {
+            external_allowed: boolean;
+            monthly_token_quota: number;
+            /** Format: double */
+            auto_threshold: number;
+            /** Format: double */
+            field_threshold: number;
+            provider: string;
+            provider_configured: boolean;
+            models: {
+                [key: string]: string;
+            };
+            prompts: {
+                [key: string]: string;
+            };
+            local_engine: string;
+            usage: components["schemas"]["AiUsage"];
+        };
+        AiSettingsRequest: {
+            external_allowed: boolean;
+            monthly_token_quota: number;
+            /** Format: double */
+            auto_threshold: number;
+            /** Format: double */
+            field_threshold: number;
+        };
+        /**
+         * @description * `CLASSIFICATION` - Classification documentaire
+         *     * `EXTRACTION` - Extraction structurée
+         *     * `CONTROLE` - Contrôles et anomalies
+         *     * `ANALYSE_FINANCIERE` - Interprétation financière
+         *     * `PRE_DIAGNOSTIC` - Pré-diagnostic
+         *     * `ASK_AI` - Ask AI
+         * @enum {string}
+         */
+        AiTaskEnum: "CLASSIFICATION" | "EXTRACTION" | "CONTROLE" | "ANALYSE_FINANCIERE" | "PRE_DIAGNOSTIC" | "ASK_AI";
+        AiUsage: {
+            tokens: number;
+            /** Format: double */
+            cost_usd: number;
+            /** Format: date */
+            since: string;
+            by_task: {
+                [key: string]: unknown;
+            }[];
         };
         Alert: {
             /** Format: uuid */
@@ -1545,6 +1906,37 @@ export interface components {
          * @enum {string}
          */
         ConformityStatusEnum: "NON_EVALUE" | "CONFORME" | "CONFORME_SOUS_RESERVE" | "NON_CONFORME" | "INCOHERENT";
+        Conversation: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly title: string;
+            /** Format: uuid */
+            readonly pme: string | null;
+            readonly pme_name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        ConversationCreateRequest: {
+            /** Format: uuid */
+            pme_id?: string | null;
+            /** @default  */
+            title: string;
+        };
+        ConversationDetail: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly title: string;
+            /** Format: uuid */
+            readonly pme: string | null;
+            readonly pme_name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly messages: components["schemas"]["Message"][];
+        };
         Count: {
             unread: number;
         };
@@ -1827,8 +2219,23 @@ export interface components {
             readonly exited_at: string | null;
             readonly exit_reason: string;
         };
+        EvaluationRun: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly dataset: string;
+            readonly provider: string;
+            readonly models_used: unknown;
+            readonly prompt_versions: unknown;
+            readonly metrics: unknown;
+            readonly thresholds: unknown;
+            readonly passed: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         /**
-         * @description * `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY
+         * @description * `AI_BUDGET_WARNING` - AI_BUDGET_WARNING
+         *     * `PREDIAGNOSTIC_READY` - PREDIAGNOSTIC_READY
+         *     * `DOCUMENT_TO_VERIFY` - DOCUMENT_TO_VERIFY
          *     * `DOCUMENT_DECISION` - DOCUMENT_DECISION
          *     * `DOCUMENT_REJECTED_SECURITY` - DOCUMENT_REJECTED_SECURITY
          *     * `DEADLINE_REMINDER` - DEADLINE_REMINDER
@@ -1838,7 +2245,7 @@ export interface components {
          *     * `ALERT_RAISED` - ALERT_RAISED
          * @enum {string}
          */
-        EventCodeEnum: "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED";
+        EventCodeEnum: "AI_BUDGET_WARNING" | "PREDIAGNOSTIC_READY" | "DOCUMENT_TO_VERIFY" | "DOCUMENT_DECISION" | "DOCUMENT_REJECTED_SECURITY" | "DEADLINE_REMINDER" | "DEADLINE_DUE_TODAY" | "DEADLINE_OVERDUE" | "DEADLINE_ESCALATION" | "ALERT_RAISED";
         /**
          * @description * `NONE` - Aucune
          *     * `RECOMMENDED` - Recommandée
@@ -1853,6 +2260,111 @@ export interface components {
          * @enum {string}
          */
         ExitReasonEnum: "DIPLOMEE" | "ABANDON" | "REORIENTATION";
+        Extraction: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly version_no: number;
+            readonly status: components["schemas"]["ExtractionStatusEnum"];
+            /** @description Pourquoi une vérification humaine est requise. */
+            readonly reason: string;
+            readonly expected_type: string;
+            readonly classified_type: string;
+            /** Format: decimal */
+            readonly classification_confidence: string | null;
+            readonly schema_code: string;
+            readonly schema_version: string;
+            /** Format: decimal */
+            readonly confidence: string | null;
+            readonly fields_detail: components["schemas"]["ExtractionField"][];
+            /** Format: uuid */
+            readonly classification_analysis: string | null;
+            /** Format: uuid */
+            readonly extraction_analysis: string | null;
+            /** @description {champ: {before, after}} (human_review). */
+            readonly corrections: unknown;
+            readonly review_comment: string;
+            readonly reviewed_by_name: string;
+            /** Format: date-time */
+            readonly reviewed_at: string | null;
+        };
+        ExtractionField: {
+            name: string;
+            label: string;
+            type: string;
+            critical: boolean;
+            value: unknown;
+            /** Format: double */
+            confidence: number | null;
+            corrected: boolean;
+        };
+        ExtractionReviewRequest: {
+            status: components["schemas"]["ExtractionReviewStatusEnum"];
+            corrections?: {
+                [key: string]: unknown;
+            };
+            /** @default  */
+            comment: string;
+        };
+        /**
+         * @description * `VALIDEE` - VALIDEE
+         *     * `CORRIGEE` - CORRIGEE
+         *     * `REJETEE` - REJETEE
+         * @enum {string}
+         */
+        ExtractionReviewStatusEnum: "VALIDEE" | "CORRIGEE" | "REJETEE";
+        /**
+         * @description * `PROVISOIRE` - Provisoire (confiance suffisante)
+         *     * `A_VERIFIER` - À vérifier
+         *     * `VALIDEE` - Validée
+         *     * `CORRIGEE` - Corrigée
+         *     * `REJETEE` - Rejetée
+         *     * `NON_ANALYSEE` - Non analysée
+         * @enum {string}
+         */
+        ExtractionStatusEnum: "PROVISOIRE" | "A_VERIFIER" | "VALIDEE" | "CORRIGEE" | "REJETEE" | "NON_ANALYSEE";
+        FinancialAnalysis: {
+            /** Format: date */
+            as_of: string;
+            statements: components["schemas"]["FinancialStatement"][];
+            metrics: components["schemas"]["FinancialMetric"][];
+        };
+        FinancialMetric: {
+            code: string;
+            name: string;
+            formula: string;
+            unit: string;
+            /** Format: double */
+            value: number | null;
+            display: string;
+            band: string | null;
+            /** Format: double */
+            points: number | null;
+            /** Format: double */
+            confidence: number;
+            sources: string[];
+            inputs: {
+                [key: string]: number | null;
+            };
+            missing?: string;
+        };
+        FinancialStatement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            fiscal_year_end: string;
+            system: string;
+            status: string;
+            values: {
+                [key: string]: number;
+            };
+            /** Format: double */
+            confidence: number | null;
+            /** Format: uuid */
+            document_id: string;
+            document_title: string;
+            /** Format: date-time */
+            verified_at: string | null;
+        };
         FolderCategory: {
             code: string;
             name: string;
@@ -1939,6 +2451,20 @@ export interface components {
          * @enum {string}
          */
         IntegrityStatusEnum: "EN_SCAN" | "SAIN" | "REJETE_SECURITE";
+        Interpretation: {
+            summary: string;
+            points: components["schemas"]["InterpretationPoint"][];
+            limits: string[];
+            /** Format: uuid */
+            analysis_id: string;
+            provider: string;
+            draft: boolean;
+        };
+        InterpretationPoint: {
+            metric: string;
+            comment: string;
+            tone: string;
+        };
         InviteRequest: {
             /** Format: email */
             email: string;
@@ -2040,6 +2566,26 @@ export interface components {
             valid_to?: string | null;
             is_active?: boolean;
         };
+        Message: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly role: components["schemas"]["MessageRoleEnum"];
+            readonly content: string;
+            readonly sources: unknown;
+            readonly confidence: string;
+            readonly limits: unknown;
+            readonly tool_calls: unknown;
+            /** Format: uuid */
+            readonly analysis: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `USER` - Utilisateur
+         *     * `ASSISTANT` - Assistant
+         * @enum {string}
+         */
+        MessageRoleEnum: "USER" | "ASSISTANT";
         MetricDefinition: {
             readonly code: string;
             readonly name: string;
@@ -2494,6 +3040,9 @@ export interface components {
             /** Format: double */
             submit_threshold: number;
         };
+        QuestionRequest: {
+            question: string;
+        };
         /**
          * @description * `SINGLE` - Choix unique
          *     * `BOOLEAN` - Oui / non
@@ -2532,6 +3081,41 @@ export interface components {
             title: string;
             description: string;
             questions: components["schemas"]["QuestionnaireQuestion"][];
+        };
+        QueueItem: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly pme: components["schemas"]["PmeRef"];
+            readonly document_type: components["schemas"]["DocumentType"];
+            readonly title: string;
+            readonly status: string;
+            readonly deadline: components["schemas"]["DeadlineRef"] | null;
+            /** Format: date */
+            readonly period_start: string | null;
+            /** Format: date */
+            readonly period_end: string | null;
+            /** Format: date */
+            readonly issued_at: string | null;
+            /** Format: date */
+            readonly expires_at: string | null;
+            readonly integrity_status: components["schemas"]["IntegrityStatusEnum"];
+            readonly validity_status: components["schemas"]["ValidityStatusEnum"];
+            readonly currency_status: components["schemas"]["CurrencyStatusEnum"];
+            readonly verification_status: components["schemas"]["VerificationStatusEnum"];
+            readonly conformity_status: components["schemas"]["ConformityStatusEnum"];
+            /** @description Motif en langage simple, visible par la PME. */
+            readonly decision_reason: string;
+            readonly verified_by_name: string;
+            /** Format: date-time */
+            readonly verified_at: string | null;
+            readonly uploaded_by_name: string;
+            readonly uploaded_via: components["schemas"]["UploadedViaEnum"];
+            readonly current_version_no: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly ai: components["schemas"]["AiQueueSummary"] | null;
         };
         Rate: {
             /** Format: double */
@@ -2595,6 +3179,12 @@ export interface components {
          * @enum {string}
          */
         RegulatoryRuleStatusEnum: "A_VERIFIER" | "PRE_VERIFIE" | "VERIFIE" | "OBSOLETE" | "HORS_PERIMETRE";
+        Reindex: {
+            referentiel: number;
+            reglementation: number;
+            documents: number;
+            historique: number;
+        };
         /**
          * @description * `OK` - OK
          *     * `ALERTE` - Alerte
@@ -2614,6 +3204,7 @@ export interface components {
             result: unknown;
             answers: unknown;
             assessment: components["schemas"]["Assessment"] | null;
+            suggestion: components["schemas"]["ReviewSuggestion"] | null;
         };
         ReviewDimension: {
             code: string;
@@ -2634,6 +3225,19 @@ export interface components {
             comment: string;
             /** @default false */
             corroborated: boolean;
+        };
+        /** @description Proposition du pré-diagnostic IA (Document 4, fonction F) : jamais une décision. */
+        ReviewSuggestion: {
+            /** Format: uuid */
+            id: string;
+            proposed_level: number | null;
+            justification: string;
+            sources: string[];
+            /** Format: double */
+            confidence: number;
+            status: string;
+            /** Format: uuid */
+            analysis: string | null;
         };
         Role: {
             /** Format: uuid */
@@ -2788,6 +3392,27 @@ export interface components {
             /** Format: date */
             reference_date?: string;
         };
+        Suggestion: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly criterion_code: string;
+            readonly proposed_level: number | null;
+            readonly justification: string;
+            readonly sources: unknown;
+            /** Format: decimal */
+            readonly confidence: string;
+            readonly status: components["schemas"]["SuggestionStatusEnum"];
+            /** Format: uuid */
+            readonly analysis: string | null;
+        };
+        /**
+         * @description * `PROPOSEE` - Proposée
+         *     * `ACCEPTEE` - Acceptée
+         *     * `MODIFIEE` - Modifiée par le conseiller
+         *     * `ECARTEE` - Écartée
+         * @enum {string}
+         */
+        SuggestionStatusEnum: "PROPOSEE" | "ACCEPTEE" | "MODIFIEE" | "ECARTEE";
         SwitchOrganizationRequest: {
             /** Format: uuid */
             organization_id: string;
@@ -2906,6 +3531,240 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    ai_analyses_list: {
+        parameters: {
+            query?: {
+                diagnostic?: string;
+                document?: string;
+                pme?: string;
+                task?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiAnalysisSummary"][];
+                };
+            };
+        };
+    };
+    ai_analyses_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiAnalysis"];
+                };
+            };
+        };
+    };
+    ai_conversations_list: {
+        parameters: {
+            query?: {
+                pme?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"][];
+                };
+            };
+        };
+    };
+    ai_conversations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConversationCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+        };
+    };
+    ai_conversations_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDetail"];
+                };
+            };
+        };
+    };
+    ai_conversations_messages_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+        };
+    };
+    ai_evaluations_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationRun"][];
+                };
+            };
+        };
+    };
+    ai_evaluations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationRun"];
+                };
+            };
+        };
+    };
+    ai_reindex_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reindex"];
+                };
+            };
+        };
+    };
+    ai_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsPayload"];
+                };
+            };
+        };
+    };
+    ai_settings_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiSettingsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsPayload"];
+                };
+            };
+        };
+    };
     alert_rules_list: {
         parameters: {
             query?: never;
@@ -3638,6 +4497,48 @@ export interface operations {
             };
         };
     };
+    diagnostics_suggestions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Suggestion"][];
+                };
+            };
+        };
+    };
+    diagnostics_suggestions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                diagnostic_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Suggestion"][];
+                };
+            };
+        };
+    };
     diagnostics_validate_create: {
         parameters: {
             query?: never;
@@ -3696,6 +4597,87 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DocumentDetail"];
                 };
+            };
+        };
+    };
+    documents_extraction_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Extraction"];
+                };
+            };
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    documents_extraction_review_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtractionReviewRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Extraction"];
+                };
+            };
+        };
+    };
+    documents_reanalyze_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Extraction"];
+                };
+            };
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4464,6 +5446,48 @@ export interface operations {
             };
         };
     };
+    pmes_financial_analysis_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialAnalysis"];
+                };
+            };
+        };
+    };
+    pmes_financial_analysis_interpretation_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Interpretation"];
+                };
+            };
+        };
+    };
     pmes_health_check_retrieve: {
         parameters: {
             query?: never;
@@ -4988,7 +6012,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Document"][];
+                    "application/json": components["schemas"]["QueueItem"][];
                 };
             };
         };

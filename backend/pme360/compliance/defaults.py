@@ -499,7 +499,6 @@ ALERT_RULES = [
         name="Incohérence détectée",
         severity="MOYENNE",
         recipients=["CONSEILLER", "EXPERT"],
-        available_in_phase=4,
     ),
     dict(
         code="ALR-ANOMALIE-DOC",
@@ -560,6 +559,16 @@ ALERT_RULES = [
 
 # --- Modèles de notifications (Document 7, § 8.3) : variables entre accolades --------------------------------
 NOTIFICATION_TEMPLATES = {
+    "AI_BUDGET_WARNING": (
+        "IA : 80 % du budget mensuel de jetons atteint",
+        "La consommation d'IA externe atteint {usage} jetons sur {quota} ce mois-ci. Au-delà du quota, "
+        "les analyses passent automatiquement par le moteur local.",
+    ),
+    "PREDIAGNOSTIC_READY": (
+        "Pré-diagnostic prêt : {pme}",
+        "Les propositions de l'IA pour le diagnostic de {pme} sont prêtes ({count} critères). "
+        "Elles restent à valider, modifier ou écarter lors de la revue.",
+    ),
     "DOCUMENT_TO_VERIFY": (
         "Document à vérifier : {pme}",
         "{document} a été déposé pour {pme} et attend votre vérification.",

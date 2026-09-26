@@ -330,6 +330,9 @@ def verify(
         pme=document.pme,
     )
     after_evidence_change(document.pme)
+    from pme360.ai.knowledge import on_document_decision
+
+    on_document_decision(document)
     return document
 
 

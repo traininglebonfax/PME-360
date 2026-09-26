@@ -23,3 +23,4 @@ ignore = ["S101"]
 "pme360/core/management/commands/seed_demo.py" = ["S105", "S106"]
 "pme360/diagnostic/gude360_v1.py" = ["E501"]  # contenu du référentiel : textes des questions et ancres
 "pme360/compliance/defaults.py" = ["E501"]  # données : textes, sources et messages
+"seeds/ai_eval_dataset.py" = ["E501", "S311"]  # documents fictifs générés (hasard non cryptographique voulu)

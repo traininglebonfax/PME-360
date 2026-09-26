@@ -133,4 +133,6 @@ EVENT_LABELS = {
     "DEADLINE_OVERDUE": "Échéance dépassée",
     "DEADLINE_ESCALATION": "Obligation critique en retard (escalade)",
     "ALERT_RAISED": "Nouvelle alerte",
+    "AI_BUDGET_WARNING": "Budget IA (80 %)",
+    "PREDIAGNOSTIC_READY": "Pré-diagnostic IA prêt",
 }

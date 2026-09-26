@@ -221,6 +221,9 @@ def publish_version(version: FrameworkVersion, user, record: bool = True) -> Fra
     version.save(update_fields=["status", "published_at", "published_by", "updated_at"])
     if record:
         audit.record("framework.published", instance=version, after={"version": version.version})
+    from pme360.ai.knowledge import index_framework
+
+    index_framework(version)
     return version
 
 
