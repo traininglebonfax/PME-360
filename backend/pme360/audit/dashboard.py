@@ -59,6 +59,7 @@ SENSITIVE_PREFIXES = (
     "document.infected",
     "audit.exported",
     "pme.lifecycle_changed",
+    "organization.key_rotated",
 )
 
 

@@ -90,3 +90,10 @@ registre d'exploitation (date, résultat, durée, personne) et ouvrir un inciden
 
 Recopier `/backups/objects` vers le compartiment (`mc mirror /backups/objects local/pme360-documents`). Les rapports
 PDF sont contrôlés à chaque téléchargement par leur empreinte SHA-256 : un fichier altéré est refusé.
+
+## Clé maîtresse du chiffrement des fichiers (V1)
+
+Les objets sauvegardés (miroir MinIO) sont chiffrés avec la clé de chaque organisation, elle-même enveloppée par
+`PME360_STORAGE_MASTER_KEYS`. Une restauration exige donc : la base (clés enveloppées), les objets **et** la clé
+maîtresse. Conservez celle-ci dans un coffre distinct des sauvegardes (jamais dans le dépôt ni à côté des dumps), et
+vérifiez lors du test de restauration mensuel qu'un document restauré se télécharge correctement.

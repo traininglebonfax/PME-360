@@ -71,6 +71,7 @@ urlpatterns = [
     path("config/roles/<uuid:role_id>", accounts.RoleAdminDetailView.as_view()),
     # Organisation
     path("organization", organizations.CurrentOrganizationView.as_view()),
+    path("organization/encryption", organizations.EncryptionStatusView.as_view()),
     # Nomenclatures
     path("ref/<str:kind>", pmes.ReferenceListView.as_view()),
     # Tableaux de bord

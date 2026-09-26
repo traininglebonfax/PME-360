@@ -82,3 +82,35 @@ class Cohort(TenantModel):
 
     def __str__(self) -> str:
         return f"{self.programme.name} — {self.name}"
+
+
+class OrganizationKey(TenantModel):
+    """Clé de données propre à l'organisation (chiffrement enveloppe des fichiers, Document 2, § 8.2 ; V1).
+
+    La clé AES-256 n'est jamais stockée en clair : elle est « enveloppée » (chiffrée) par la clé maîtresse de la
+    plateforme, conservée hors base (variable d'environnement / coffre). Les anciennes versions restent pour
+    relire les fichiers chiffrés avant une rotation ; une seule version est active.
+    """
+
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "Active"
+        RETIRED = "RETIRED", "Retirée (lecture seule)"
+
+    version = models.PositiveIntegerField()
+    wrapped_key = models.TextField(help_text="Clé de données chiffrée par la clé maîtresse (Fernet).")
+    master_key_id = models.CharField(max_length=16, help_text="Empreinte de la clé maîtresse ayant enveloppé.")
+    status = models.CharField(max_length=8, choices=Status.choices, default=Status.ACTIVE)
+    retired_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "organization_key"
+        ordering = ["-version"]
+        constraints = [
+            models.UniqueConstraint(fields=["organization", "version"], name="organization_key_unique_version"),
+            models.UniqueConstraint(
+                fields=["organization"], condition=models.Q(status="ACTIVE"), name="organization_key_one_active"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.organization_id} v{self.version}"

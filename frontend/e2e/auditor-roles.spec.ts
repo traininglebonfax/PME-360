@@ -30,6 +30,11 @@ test("l'auditeur contrôle le journal, vérifie la chaîne et tire un échantill
   await page.getByRole("link", { name: "Exporter le journal (CSV)" }).click();
   expect((await download).suggestedFilename()).toBe("journal-audit.csv");
 
+  // Chiffrement des fichiers : état visible, aucune clé exposée, pas de rotation pour l'auditeur.
+  const encryption = page.getByTestId("encryption-card");
+  await expect(encryption).toContainText("Clé en vigueur : version");
+  await expect(encryption.getByRole("button", { name: /Renouveler/ })).toHaveCount(0);
+
   // Lecture seule : ni configuration ni gestion des utilisateurs.
   await expect(page.getByRole("link", { name: "Utilisateurs" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Workflows" })).toHaveCount(0);

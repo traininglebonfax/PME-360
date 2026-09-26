@@ -4381,6 +4381,56 @@
                 }
             }
         },
+        "/api/v1/organization/encryption": {
+            "get": {
+                "operationId": "organization_encryption_retrieve",
+                "description": "État du chiffrement des fichiers de l'organisation (sans jamais exposer de clé) ; rotation par l'admin.",
+                "tags": [
+                    "organization"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EncryptionStatus"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "organization_encryption_create",
+                "description": "État du chiffrement des fichiers de l'organisation (sans jamais exposer de clé) ; rotation par l'admin.",
+                "tags": [
+                    "organization"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EncryptionStatus"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/plans/{plan_id}": {
             "get": {
                 "operationId": "plans_retrieve",
@@ -10931,6 +10981,37 @@
                     "why_text"
                 ]
             },
+            "EncryptionStatus": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "algorithm": {
+                        "type": "string"
+                    },
+                    "active_version": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "versions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KeyVersion"
+                        }
+                    },
+                    "can_rotate": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "active_version",
+                    "algorithm",
+                    "can_rotate",
+                    "enabled",
+                    "versions"
+                ]
+            },
             "EnrolledCohort": {
                 "type": "object",
                 "properties": {
@@ -12080,6 +12161,32 @@
                     "balance",
                     "errors",
                     "warnings"
+                ]
+            },
+            "KeyVersion": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "retired_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "retired_at",
+                    "status",
+                    "version"
                 ]
             },
             "LensEnum": {

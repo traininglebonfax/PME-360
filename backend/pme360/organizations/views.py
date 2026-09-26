@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -119,3 +119,71 @@ class PlatformOrganizationViewSet(mixins.ListModelMixin, mixins.CreateModelMixin
         with system_context():
             body = PlatformOrganizationSerializer(organization).data
         return Response(body, status=status.HTTP_201_CREATED)
+
+
+# --- Chiffrement des fichiers par organisation (V1) ------------------------------------------------------------
+
+
+class KeyVersionSerializer(serializers.Serializer):
+    version = serializers.IntegerField()
+    status = serializers.CharField()
+    created_at = serializers.DateTimeField()
+    retired_at = serializers.DateTimeField(allow_null=True)
+
+
+class EncryptionStatusSerializer(serializers.Serializer):
+    enabled = serializers.BooleanField()
+    algorithm = serializers.CharField()
+    active_version = serializers.IntegerField(allow_null=True)
+    versions = KeyVersionSerializer(many=True)
+    can_rotate = serializers.BooleanField()
+
+
+def _encryption_payload(request) -> dict:
+    from django.conf import settings
+
+    from .models import OrganizationKey
+
+    access = get_access(request)
+    versions = list(OrganizationKey.objects.order_by("-version"))
+    active = next((k for k in versions if k.status == OrganizationKey.Status.ACTIVE), None)
+    return {
+        "enabled": settings.PME360_STORAGE_ENCRYPTION,
+        "algorithm": "AES-256-GCM, clé propre à l'organisation enveloppée par la clé maîtresse de la plateforme",
+        "active_version": active.version if active else None,
+        "versions": [
+            {"version": k.version, "status": k.status, "created_at": k.created_at, "retired_at": k.retired_at}
+            for k in versions
+        ],
+        "can_rotate": access.has("org.configure") and not access.is_pme_user,
+    }
+
+
+class EncryptionStatusView(APIView):
+    """État du chiffrement des fichiers de l'organisation (sans jamais exposer de clé) ; rotation par l'admin."""
+
+    required_permissions = {"GET": None, "POST": "org.configure"}
+
+    @extend_schema(responses=EncryptionStatusSerializer)
+    def get(self, request):
+        from rest_framework.exceptions import PermissionDenied
+
+        access = get_access(request)
+        if not (access.has("audit.view") or access.has("org.configure")) or access.is_pme_user:
+            raise PermissionDenied()
+        return Response(EncryptionStatusSerializer(_encryption_payload(request)).data)
+
+    @extend_schema(request=None, responses=EncryptionStatusSerializer)
+    def post(self, request):
+        from rest_framework.exceptions import PermissionDenied
+
+        from . import keys
+
+        access = get_access(request)
+        if access.is_pme_user:
+            raise PermissionDenied()
+        key = keys.create_key(request.organization_id)
+        audit.record(
+            "organization.key_rotated", entity_type="organization_key", entity_id=key.pk, after={"version": key.version}
+        )
+        return Response(EncryptionStatusSerializer(_encryption_payload(request)).data)
