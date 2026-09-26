@@ -35,15 +35,27 @@ class Command(SeedCommand):
         parser.add_argument("--produit", default="PME360", help="Nom du produit affiché (défaut : PME360).")
         parser.add_argument("--couleur", default="#2E4A6B", help="Couleur principale #RRGGBB (texte blanc lisible).")
         parser.add_argument("--logo", help="Fichier PNG, JPEG ou WebP (150 Ko au plus).")
+        parser.add_argument("--slogan", help="Slogan affiché sous le nom du produit.")
         parser.add_argument(
             "--type", default="BANQUE", choices=[c for c, _ in Organization.Type.choices], help="Type d'organisation."
         )
 
-    def handle(self, *args, nom, court=None, slug=None, produit="PME360", couleur="#2E4A6B", logo=None, **options):
+    def handle(
+        self, *args, nom, court=None, slug=None, produit="PME360", couleur="#2E4A6B", logo=None, slogan=None, **options
+    ):
         ensure_not_production()
         slug = slugify(slug or nom)[:60]
         if not slug or slug in RESERVED:
             raise CommandError("Identifiant réservé ou vide : précisez --slug.")
+        from pme360.core.tenancy import system_context
+
+        with system_context():
+            closed = Organization.objects.filter(slug=slug, status=Organization.Status.SUSPENDUE).exists()
+        if closed:
+            raise CommandError(
+                f"La démo « {slug} » a été close (fichiers et clés détruits) : "
+                "choisissez un autre identifiant (--slug)."
+            )
         logo_uri = None
         if logo:
             path = Path(logo)
@@ -53,7 +65,13 @@ class Command(SeedCommand):
             logo_uri = f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode()}"
         # Contrôles d'identité identiques à l'écran d'administration (contraste, format du logo).
         branding = validate(
-            {"product_name": produit, "short_name": court or nom, "primary_color": couleur, "logo": logo_uri}
+            {
+                "product_name": produit,
+                "short_name": court or nom,
+                "primary_color": couleur,
+                "logo": logo_uri,
+                **({"tagline": slogan} if slogan else {}),
+            }
         )
         self.data = tenant_demo.build(
             slug,
@@ -62,6 +80,7 @@ class Command(SeedCommand):
             product_name=branding["product_name"],
             color=branding["primary_color"],
             logo=branding.get("logo"),
+            tagline=branding.get("tagline"),
             org_type=options["type"],
         )
         self.primary = slug

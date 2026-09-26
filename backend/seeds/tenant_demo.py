@@ -28,11 +28,14 @@ def build(
     product_name: str = "PME360",
     color: str = "#2E4A6B",
     logo: str | None = None,
+    tagline: str | None = None,
     org_type: str = "BANQUE",
 ) -> SimpleNamespace:
     branding = {"product_name": product_name, "short_name": short_name, "primary_color": color}
     if logo:
         branding["logo"] = logo
+    if tagline:
+        branding["tagline"] = tagline
     users = [
         (account(email, slug), full_name, slug, role, scope, ref)
         for email, full_name, org, role, scope, ref in demo.USERS

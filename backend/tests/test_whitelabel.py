@@ -135,3 +135,7 @@ def test_demo_commands_refuse_reserved_or_real_organizations(org, make_user):
     make_user(org, "ADMIN_ORG", email="vraie.personne@exemple.ci")
     with pytest.raises(CommandError):
         call_command("close_demo_org", org.slug, stdout=StringIO())
+    with system_context():
+        Organization.objects.create(slug="demo-close", name="Démo close", type="BANQUE", status="SUSPENDUE")
+    with pytest.raises(CommandError, match="close"):
+        call_command("create_demo_org", "--nom", "Démo close", stdout=StringIO())
