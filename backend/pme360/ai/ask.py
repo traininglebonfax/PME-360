@@ -400,11 +400,13 @@ def _local(question: str, ctx: tools.ToolContext):
                 )
         if "echeances" in intents:
             yield _event("status", text="Lecture des échéances…")
-            out = _call(ctx, calls, "list_deadlines", days=60)
+            asked = re.search(r"(\d{1,3})\s*(?:prochains?\s+)?jours?", fold(question))
+            days = min(max(int(asked.group(1)), 1), 365) if asked else 60
+            out = _call(ctx, calls, "list_deadlines", days=days)
             if out:
                 items = out["data"]["echeances"]
                 parts.append(
-                    "Échéances des 60 prochains jours : "
+                    f"Échéances des {days} prochains jours : "
                     + (
                         "; ".join(
                             f"{e['obligation']} ({e['periode']}) pour le {e['echeance']}"

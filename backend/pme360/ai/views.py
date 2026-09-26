@@ -6,6 +6,7 @@ from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
+from rest_framework.renderers import BaseRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -419,12 +420,29 @@ class ConversationDetailView(APIView):
         return Response(ConversationDetailSerializer(_conversation(request, conversation_id)).data)
 
 
+class EventStreamRenderer(BaseRenderer):
+    """Accepte ``Accept: text/event-stream`` (client SSE) ; le flux lui-même est écrit par la vue."""
+
+    media_type = "text/event-stream"
+    format = "sse"
+    charset = "utf-8"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        # Seules les erreurs (validation, droits) passent par ici : corps JSON lisible par le client.
+        return json.dumps(data, ensure_ascii=False, default=str).encode()
+
+
 class ConversationAskView(APIView):
     """Question au Copilot : réponse diffusée en Server-Sent Events (status, delta, done)."""
 
     required_permissions = "ai.ask"
+    renderer_classes = [JSONRenderer, EventStreamRenderer]
 
-    @extend_schema(request=QuestionSerializer, responses={(200, "text/event-stream"): str})
+    @extend_schema(
+        request=QuestionSerializer,
+        responses={(200, "text/event-stream"): str},
+        parameters=[OpenApiParameter("format", exclude=True)],
+    )
     def post(self, request, conversation_id):
         conversation = _conversation(request, conversation_id)
         serializer = QuestionSerializer(data=request.data)

@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { LifecycleBadge } from "@/components/LifecycleBadge";
+import { FinancialTab } from "@/components/ai/FinancialTab";
 import { AlertList } from "@/components/alerts/AlertList";
 import { DocumentsTab } from "@/components/documents/DocumentsTab";
 import { DiagnosticTab } from "@/components/scoring/DiagnosticTab";
@@ -27,6 +28,7 @@ const TABS = [
   { key: "historique", label: "Historique" },
   { key: "diagnostic", label: "Diagnostic & scores" },
   { key: "documents", label: "Documents" },
+  { key: "finances", label: "Finances" },
   { key: "alertes", label: "Alertes" },
   { key: "plan", label: "Plan & actions", phase: 5 },
 ] as const;
@@ -68,7 +70,10 @@ export default function PmeDetailPage() {
             {[data.trade_name, data.legal_form?.name, data.sector?.name, data.region?.name].filter(Boolean).join(" · ") || "Fiche à compléter"}
           </p>
         </div>
-        <LifecycleBadge status={data.lifecycle_status} />
+        <div className="flex items-center gap-3">
+          <AskLink pmeId={data.id} />
+          <LifecycleBadge status={data.lifecycle_status} />
+        </div>
       </div>
 
       <div className="mb-6 overflow-x-auto border-b border-line" role="tablist" aria-label="Fiche PME 360°">
@@ -98,6 +103,7 @@ export default function PmeDetailPage() {
       {tab === "historique" && <Timeline pmeId={data.id} />}
       {tab === "diagnostic" && <DiagnosticTab pmeId={data.id} />}
       {tab === "documents" && <DocumentsTab pmeId={data.id} />}
+      {tab === "finances" && <FinancialTab pmeId={data.id} />}
       {tab === "alertes" && <AlertList pmeId={data.id} scope="all" />}
       {tab === "plan" && (
         <EmptyState title="Module en cours de construction">
@@ -579,4 +585,14 @@ function ChangeList({ before, after }: { before: Record<string, unknown> | null;
 
 function isNonEmptyObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && Object.keys(value).length > 0;
+}
+
+function AskLink({ pmeId }: { pmeId: string }) {
+  const { data: me } = useMe();
+  if (!hasPermission(me, "ai.ask")) return null;
+  return (
+    <Link href={`/assistant?pme=${pmeId}`} className="rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50">
+      Poser une question
+    </Link>
+  );
 }

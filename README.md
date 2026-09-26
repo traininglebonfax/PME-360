@@ -21,8 +21,20 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 0 — Analyse & architecture | ✅ Livrée ; recommandations D-01 à D-08 acceptées à titre provisoire le 25/09/2026 ([décisions](docs/00-decisions-ouvertes.md)) |
 | 1 — Socle | ✅ Livrée (voir ci-dessous) |
 | 2 — Diagnostic | ✅ Livrée (voir ci-dessous) ; référentiel GUDE-360 v1 **à valider en atelier** (D-04) |
-| 3 — Documents & conformité | ✅ Livrée sur la branche `phase-3-documents` (voir ci-dessous) ; règles réglementaires CNPS / fiscales / états financiers **à vérifier** avant activation (RM-08) |
-| 4 — IA | À venir |
+| 3 — Documents & conformité | ✅ Livrée (voir ci-dessous) ; règles réglementaires CNPS / fiscales / états financiers **à vérifier** avant activation (RM-08) |
+| 4 — IA | ✅ Livrée sur la branche `phase-4-ia` (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
+| 5 — Accompagnement | À venir |
+
+### Contenu de la phase 4
+
+- **Passerelle IA** unique : moteur local à règles (aucune donnée envoyée) par défaut ; Claude (Anthropic) si une clé est configurée **et** que l'organisation autorise l'IA externe ; routage par tâche (rapide / standard / raisonnement), prompts versionnés, sorties validées par schéma JSON, quota mensuel de jetons, reprise et mode différé si le fournisseur est indisponible. Données personnelles **pseudonymisées** avant tout envoi.
+- **Lecture des documents** (6 types : RCCM, DFE, états financiers SYSCOHADA, attestation CNPS, attestation fiscale, attestation d'assurance) : classification, extraction champ par champ avec confiance, **contrôles déterministes** (bon type, bonne entreprise, dates, équilibre du bilan, cohérence CA / déclaratif, effectif / CNPS, régime fiscal / CA). Sous le seuil (85 % par document, 90 % par champ critique, réglables) ou en cas d'anomalie : vérification humaine.
+- **Revue humaine** dans l'écran de vérification : valider, corriger (justification obligatoire, RM-06) ou rejeter la lecture ; la lecture IA ne décide **jamais** de la conformité. File « Documents à vérifier » priorisée (anomalies graves, puis confiance faible).
+- **Analyse financière** : états financiers extraits (provisoires tant qu'ils ne sont pas relus), ratios calculés de façon déterministe, commentaire rédigé par l'IA en **brouillon à relire** (onglet « Finances » de la fiche PME).
+- **Pré-diagnostic** : à la soumission d'un diagnostic, un niveau proposé par critère avec justification, sources et confiance, affiché dans la revue ; le conseiller décide.
+- **Copilot** : questions en langage naturel sur une PME ou le portefeuille, réponse diffusée en direct (SSE), limitée au périmètre de l'utilisateur, avec sources, niveau de confiance et limites ; outils en lecture seule ; index documentaire (référentiel, règles vérifiées, documents validés, historique).
+- **Traçabilité** : chaque analyse enregistre moteur, modèle, version du prompt, entrées, sortie, jetons, coût et durée (« Voir l'analyse IA ») ; page « Intelligence artificielle » : politique du tenant, consommation, versions, jeu d'évaluation (132 échantillons synthétiques ; seuils : classification ≥ 97 %, montants financiers clés ≥ 95 %) et reconstruction de l'index (`ai_eval`, `ai_reindex`).
+- **Qualité** : 252 tests backend, 17 tests unitaires frontend, 13 tests E2E.
 
 ### Contenu de la phase 3
 

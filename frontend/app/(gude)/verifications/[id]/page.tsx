@@ -1,14 +1,19 @@
 "use client";
 
-/** Écran de vérification : document à gauche, contrôles et décision à droite (Document 1, § 11). */
+/**
+ * Écran de vérification : document à gauche ; lecture IA, contrôles et décision à droite (Document 1, § 11 ;
+ * Document 4, § 7). La lecture IA prépare la décision, elle ne la prend jamais.
+ */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ExtractionCard } from "@/components/ai/ExtractionCard";
 import { Alert, Badge, Button, Card, cx, LoadingBlock, TextInput } from "@/components/ui";
+import { AI_CHECK_LABELS } from "@/lib/ai";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
-import { CHECK_LABELS, DECISIONS, DOCUMENT_STATUS, formatSize } from "@/lib/documents";
+import { CHECK_LABELS, DECISIONS, DOCUMENT_STATUS, formatSize, SEVERITY } from "@/lib/documents";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 const RESULT_TONES = { OK: "brand", ALERTE: "warning", ECHEC: "danger", NON_DETERMINE: "muted" } as const;
@@ -108,15 +113,32 @@ export default function VerificationPage() {
             )}
             {version && version.checks.length > 0 && (
               <ul className="mt-3 space-y-1.5 border-t border-line pt-3">
-                {version.checks.map((check) => (
-                  <li key={check.check_code} className="flex items-start gap-2 text-sm">
-                    <Badge tone={RESULT_TONES[check.result as keyof typeof RESULT_TONES]}>{CHECK_LABELS[check.check_code] ?? check.check_code}</Badge>
-                    <span className="text-muted">{check.message}</span>
-                  </li>
-                ))}
+                {version.checks.map((check) => {
+                  const details = (check.details ?? {}) as { anomaly?: boolean; severity?: string };
+                  return (
+                    <li key={check.check_code} className="flex items-start gap-2 text-sm">
+                      <Badge tone={RESULT_TONES[check.result as keyof typeof RESULT_TONES]}>
+                        {CHECK_LABELS[check.check_code] ?? AI_CHECK_LABELS[check.check_code] ?? check.check_code}
+                      </Badge>
+                      <span className="text-muted">
+                        {check.message}
+                        {details.anomaly && details.severity && (
+                          <span className="ml-1 text-xs font-medium text-red-700">(anomalie {SEVERITY[details.severity]?.label.toLowerCase()})</span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </Card>
+          {data.integrity_status === "SAIN" && (
+            <ExtractionCard
+              documentId={data.id}
+              typeName={data.document_type.name}
+              onReviewed={() => queryClient.invalidateQueries({ queryKey: ["document", id] })}
+            />
+          )}
           <DecisionCard
             key={`${data.id}-${data.current_version_no}-${data.status}`}
             document={data}

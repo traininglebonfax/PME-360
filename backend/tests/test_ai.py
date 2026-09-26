@@ -472,9 +472,13 @@ def test_only_verified_regulatory_rules_are_indexed(org, admin):
 # --- Ask AI ------------------------------------------------------------------------------------------------------
 
 
-def _ask(client, conversation_id, question):
+def _ask(client, conversation_id, question, accept="text/event-stream"):
+    # Un client SSE (navigateur) annonce « Accept: text/event-stream » : jamais de 406.
     response = client.post(
-        f"/api/v1/ai/conversations/{conversation_id}/messages", {"question": question}, format="json"
+        f"/api/v1/ai/conversations/{conversation_id}/messages",
+        {"question": question},
+        format="json",
+        HTTP_ACCEPT=accept,
     )
     assert response.status_code == 200 and response["Content-Type"].startswith("text/event-stream")
     events = []
@@ -500,8 +504,10 @@ def test_copilot_answers_with_sources_confidence_and_limits(api, pme, org, run_p
     with tenant_context(org.id):
         assert AiAnalysis.objects.filter(task="ASK_AI", provider="local").count() == 1
         assert AuditLog.objects.filter(action="ai.question_answered").exists()
-    unknown = _ask(api, conversation["id"], "Quelle est la couleur du logo ?")[-1]["message"]
+    unknown = _ask(api, conversation["id"], "Quelle est la couleur du logo ?", accept="*/*")[-1]["message"]
     assert unknown["confidence"] == "FAIBLE" and unknown["limits"]  # jamais de supposition
+    horizon = _ask(api, conversation["id"], "Quelles échéances arrivent dans les 30 prochains jours ?")[-1]["message"]
+    assert "30 prochains jours" in horizon["content"]  # l'horizon demandé est respecté
 
 
 def test_copilot_respects_scope_and_roles(org, pme, make_user, client_for):
