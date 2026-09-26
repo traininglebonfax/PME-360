@@ -23,7 +23,7 @@ Le code et les modèles de données utilisent le nom neutre `pme360` ; le brandi
 | 2 — Diagnostic | ✅ Livrée (voir ci-dessous) ; référentiel GUDE-360 v1 **à valider en atelier** (D-04) |
 | 3 — Documents & conformité | ✅ Livrée (voir ci-dessous) ; règles réglementaires CNPS / fiscales / états financiers **à vérifier** avant activation (RM-08) |
 | 4 — IA | ✅ Livrée (voir ci-dessous) ; moteur local par défaut, Claude activable par organisation ; jeu d'évaluation **synthétique** à compléter par des documents réels anonymisés |
-| 5 — Accompagnement | ✅ Livrée sur la branche `phase-5-accompagnement` (voir ci-dessous) ; catalogue d'offres, règles et modèles de livrables **à valider** par GUDE-PME |
+| 5 — Accompagnement | ✅ Livrée (voir ci-dessous) ; catalogue d'offres, règles et modèles de livrables **à valider** par GUDE-PME |
 | 6 — Reporting | À venir |
 
 ### Contenu de la phase 5
