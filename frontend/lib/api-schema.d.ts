@@ -2075,9 +2075,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Rapports d'une PME ; édition d'un rapport de suivi, annuel ou de conformité (Document 9, § 7). */
         get: operations["pmes_reports_list"];
         put?: never;
-        post?: never;
+        /** @description Rapports d'une PME ; édition d'un rapport de suivi, annuel ou de conformité (Document 9, § 7). */
+        post: operations["pmes_reports_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4778,6 +4780,16 @@ export interface components {
             id: string;
             name: string;
         };
+        PmeReportRequestRequest: {
+            type: components["schemas"]["PmeReportRequestTypeEnum"];
+        };
+        /**
+         * @description * `SUIVI` - Rapport de suivi
+         *     * `CONFORMITE` - Rapport de conformité
+         *     * `ANNUEL` - Rapport annuel
+         * @enum {string}
+         */
+        PmeReportRequestTypeEnum: "SUIVI" | "CONFORMITE" | "ANNUEL";
         /**
          * @description * `gude` - gude
          *     * `pme` - pme
@@ -5127,9 +5139,12 @@ export interface components {
         /**
          * @description * `DIAGNOSTIC` - Rapport de diagnostic
          *     * `PORTEFEUILLE` - Rapport de portefeuille
+         *     * `SUIVI` - Rapport de suivi
+         *     * `CONFORMITE` - Rapport de conformité
+         *     * `ANNUEL` - Rapport annuel
          * @enum {string}
          */
-        ReportTypeEnum: "DIAGNOSTIC" | "PORTEFEUILLE";
+        ReportTypeEnum: "DIAGNOSTIC" | "PORTEFEUILLE" | "SUIVI" | "CONFORMITE" | "ANNUEL";
         /**
          * @description * `OK` - OK
          *     * `ALERTE` - Alerte
@@ -9148,6 +9163,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Report"][];
+                };
+            };
+        };
+    };
+    pmes_reports_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pme_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PmeReportRequestRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Report"];
                 };
             };
         };

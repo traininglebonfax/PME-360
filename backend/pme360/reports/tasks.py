@@ -1,6 +1,10 @@
+import logging
+
 from celery import shared_task
 
 from pme360.core.tenancy import system_context, tenant_context
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -44,4 +48,30 @@ def generate_quarterly_portfolio_reports() -> int:
                 count += 1
             except BusinessError:
                 continue
+    return count
+
+
+@shared_task
+def generate_quarterly_follow_up_reports() -> int:
+    """Début de trimestre : rapport de suivi de chaque PME dont le plan d'accompagnement est validé ou en cours."""
+    from pme360.organizations.models import Organization
+    from pme360.plans.models import ActionPlan
+    from pme360.pmes.models import Pme
+
+    from . import services
+    from .models import Report
+
+    count = 0
+    with system_context():
+        organizations = list(Organization.objects.filter(status="ACTIVE").values_list("id", flat=True))
+    for organization_id in organizations:
+        with tenant_context(organization_id):
+            live = ActionPlan.objects.filter(status__in=[ActionPlan.Status.VALIDE, ActionPlan.Status.EN_COURS])
+            for pme in Pme.objects.filter(pk__in=live.values("pme_id")):
+                try:
+                    services.generate_pme_report(pme, Report.Type.SUIVI)
+                except Exception:  # une PME en échec ne prive pas les autres de leur rapport
+                    logger.exception("Rapport de suivi trimestriel impossible pour la PME %s", pme.pk)
+                    continue
+                count += 1
     return count

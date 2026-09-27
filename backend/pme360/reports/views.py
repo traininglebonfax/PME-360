@@ -42,7 +42,13 @@ class ReportSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class PmeReportRequestSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=[(t.value, t.label) for t in Report.PME_TYPES])
+
+
 class PmeReportsView(APIView):
+    """Rapports d'une PME ; édition d'un rapport de suivi, annuel ou de conformité (Document 9, § 7)."""
+
     required_permissions = "pme.view"
 
     @extend_schema(responses=ReportSerializer(many=True))
@@ -50,6 +56,17 @@ class PmeReportsView(APIView):
         pme = scoped_pme(request, pme_id)
         reports = Report.objects.filter(pme=pme).select_related("generated_by")
         return Response(ReportSerializer(reports, many=True).data)
+
+    @extend_schema(request=PmeReportRequestSerializer, responses={201: ReportSerializer})
+    def post(self, request, pme_id):
+        access = get_access(request)
+        if access.is_pme_user or not access.has("report.generate"):
+            raise PermissionDenied("Le rapport est édité par votre conseiller.")
+        pme = scoped_pme(request, pme_id)
+        serializer = PmeReportRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        report = services.generate_pme_report(pme, serializer.validated_data["type"], request.user)
+        return Response(ReportSerializer(report).data, status=status.HTTP_201_CREATED)
 
 
 class DiagnosticReportView(APIView):
@@ -83,7 +100,12 @@ class ReportPdfView(APIView):
         content = services.read_pdf(report)
         audit.record("report.downloaded", instance=report, pme_id=report.pme_id, after={"version": report.version})
         response = HttpResponse(content, content_type="application/pdf")
-        kind = "portefeuille" if report.type == Report.Type.PORTEFEUILLE else "diagnostic"
+        kind = {
+            Report.Type.PORTEFEUILLE: "portefeuille",
+            Report.Type.SUIVI: "suivi",
+            Report.Type.ANNUEL: "annuel",
+            Report.Type.CONFORMITE: "conformite",
+        }.get(report.type, "diagnostic")
         name = f"rapport-{kind}-v{report.version}-{report.period}.pdf"
         response["Content-Disposition"] = f'attachment; filename="{name}"'
         response["Cache-Control"] = "private, no-store"

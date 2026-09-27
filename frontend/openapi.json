@@ -5812,6 +5812,7 @@
         "/api/v1/pmes/{pme_id}/reports": {
             "get": {
                 "operationId": "pmes_reports_list",
+                "description": "Rapports d'une PME ; édition d'un rapport de suivi, annuel ou de conformité (Document 9, § 7).",
                 "parameters": [
                     {
                         "in": "path",
@@ -5840,6 +5841,51 @@
                                     "items": {
                                         "$ref": "#/components/schemas/Report"
                                     }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "pmes_reports_create",
+                "description": "Rapports d'une PME ; édition d'un rapport de suivi, annuel ou de conformité (Document 9, § 7).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pme_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PmeReportRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Report"
                                 }
                             }
                         },
@@ -15078,6 +15124,26 @@
                     "name"
                 ]
             },
+            "PmeReportRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/PmeReportRequestTypeEnum"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "PmeReportRequestTypeEnum": {
+                "enum": [
+                    "SUIVI",
+                    "CONFORMITE",
+                    "ANNUEL"
+                ],
+                "type": "string",
+                "description": "* `SUIVI` - Rapport de suivi\n* `CONFORMITE` - Rapport de conformité\n* `ANNUEL` - Rapport annuel"
+            },
             "PortalEnum": {
                 "enum": [
                     "gude",
@@ -16302,10 +16368,13 @@
             "ReportTypeEnum": {
                 "enum": [
                     "DIAGNOSTIC",
-                    "PORTEFEUILLE"
+                    "PORTEFEUILLE",
+                    "SUIVI",
+                    "CONFORMITE",
+                    "ANNUEL"
                 ],
                 "type": "string",
-                "description": "* `DIAGNOSTIC` - Rapport de diagnostic\n* `PORTEFEUILLE` - Rapport de portefeuille"
+                "description": "* `DIAGNOSTIC` - Rapport de diagnostic\n* `PORTEFEUILLE` - Rapport de portefeuille\n* `SUIVI` - Rapport de suivi\n* `CONFORMITE` - Rapport de conformité\n* `ANNUEL` - Rapport annuel"
             },
             "ResultEnum": {
                 "enum": [
