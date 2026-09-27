@@ -1,0 +1,138 @@
+{% load report_tags %}<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>{{ title }} — {{ d.pme.legal_name }}</title>
+{% include "reports/_pme_style.html" %}
+</head>
+<body>
+<div id="footer" class="small muted">{{ d.pme.legal_name }} · {{ title }} v{{ version }} · page <pdf:pagenumber/> / <pdf:pagecount/></div>
+
+  <p class="muted small">{{ brand.product_name }} · {{ title }} · version {{ version }} · édité le {{ d.generated_at|frdate }}</p>
+  <h1>{{ d.pme.legal_name }}</h1>
+  <p>{{ title }} du {{ d.period.start|frdate }} au {{ d.period.end|frdate }}{% if d.pme.advisor %} · conseiller : {{ d.pme.advisor }}{% endif %}</p>
+  <p class="small muted">{% if d.pme.sector %}{{ d.pme.sector }}{% endif %}{% if d.pme.region %} · {{ d.pme.region }}{% endif %}{% if d.pme.headcount %} · {{ d.pme.headcount }} salarié(s){% endif %}{% if d.pme.rccm %} · RCCM {{ d.pme.rccm }}{% endif %}</p>
+<table class="rule"><tr><td>&nbsp;</td></tr></table>
+
+<p class="small muted">Sommaire : {% for s in d.sections %}{{ forloop.counter }}. {{ s }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+
+<h2>1. Synthèse</h2>
+<table class="kpis">
+  <tr>
+    <td><div class="tag">Score global à date</div><div class="kpi">{% if d.score %}{{ d.score.current|score }}/100{% else %}—{% endif %}</div>{% if d.score.delta is not None %}<div class="small">{{ d.score.delta|signed }} pt depuis le {{ d.score.reference_date|frdate }}</div>{% endif %}</td>
+    <td><div class="tag">Actions terminées sur la période</div><div class="kpi">{{ d.actions.completed|length }}</div><div class="small">{% if d.plan.total %}{{ d.plan.done }} / {{ d.plan.total }} depuis le début du plan{% else %}aucun plan en cours{% endif %}</div></td>
+    <td><div class="tag">Actions en retard</div><div class="kpi">{{ d.actions.overdue|length }}</div><div class="small">à la date d'édition</div></td>
+    <td><div class="tag">Conformité documentaire</div><div class="kpi">{{ d.compliance.rate|pct }}</div>{% if d.compliance.previous_rate is not None %}<div class="small">{{ d.compliance.previous_rate|pct }} au rapport précédent</div>{% endif %}</td>
+  </tr>
+</table>
+<ul>{% for line in d.summary %}<li>{{ line }}</li>{% endfor %}</ul>
+
+{% if annual %}
+<h2>2. Trajectoire sur 12 mois</h2>
+{% if d.trajectory %}
+<table>
+  <tr><th style="width:18%">Date</th><th style="width:22%">Évaluation</th><th style="width:40%">Score global</th><th class="num" style="width:10%">/100</th><th class="num" style="width:10%">Niveau</th></tr>
+  {% for t in d.trajectory %}
+  <tr>
+    <td>{{ t.date|frdate }}</td><td>{{ t.kind }}</td>
+    <td>{% if t.score is not None %}<table class="bar"><tr><td style="width:{{ t.score|bar }}%; background-color:{{ t.score|tone }}">&nbsp;</td><td style="width:{{ t.score|rest }}%; background-color:#eef0f3">&nbsp;</td></tr></table>{% endif %}</td>
+    <td class="num">{{ t.score|score }}</td><td class="num">{% if t.maturity %}N{{ t.maturity }}{% else %}—{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="small muted">Les diagnostics validés sont figés ; le « score courant » intègre en plus les preuves vérifiées et les actions terminées depuis le dernier diagnostic.</p>
+{% else %}<p class="muted">Aucune évaluation sur la période.</p>{% endif %}
+{% endif %}
+
+<h2>{% if annual %}3{% else %}2{% endif %}. Évolution du score</h2>
+{% if d.score %}
+<p>Score {% if d.score.current_is_live %}courant{% else %}du dernier diagnostic{% endif %} au {{ d.score.current_date|frdate }} : <b>{{ d.score.current|score }}/100</b>{% if d.score.maturity_level %}, niveau de maturité N{{ d.score.maturity_level }}{% if d.score.maturity_label %} ({{ d.score.maturity_label }}){% endif %}{% endif %}{% if d.score.priority %} · priorité {{ d.score.priority }} ({{ d.score.priority_label|lower }}){% endif %}.</p>
+<table>
+  <tr><th style="width:34%">Dimension</th><th class="num" style="width:16%">Diagnostic initial</th><th class="num" style="width:16%">Début de période</th><th class="num" style="width:16%">À date</th><th class="num" style="width:18%">Écart sur la période</th></tr>
+  {% for dim in d.score.dimensions %}
+  <tr><td>{{ dim.name }}</td><td class="num">{{ dim.baseline|score }}</td><td class="num">{{ dim.reference|score }}</td><td class="num">{{ dim.current|score }}</td><td class="num">{% if dim.delta is not None %}<span class="{% if dim.delta > 0 %}up{% elif dim.delta < 0 %}down{% endif %}">{{ dim.delta|signed }}</span>{% else %}—{% endif %}</td></tr>
+  {% endfor %}
+  <tr><td><b>Score global</b></td><td class="num"><b>{{ d.score.baseline|score }}</b></td><td class="num"><b>{{ d.score.reference|score }}</b></td><td class="num"><b>{{ d.score.current|score }}</b></td><td class="num"><b>{{ d.score.delta|signed }}</b></td></tr>
+</table>
+<p class="small muted">« Début de période » : dernier diagnostic validé avant le {{ d.period.start|frdate }}{% if d.score.reference_date %} (le {{ d.score.reference_date|frdate }}){% endif %}. Confiance du score à date : {{ d.score.confidence|pct }}.</p>
+{% else %}<p class="muted">Aucun diagnostic validé : le score sera disponible après la validation du premier diagnostic.</p>{% endif %}
+
+<h2>{% if annual %}4{% else %}3{% endif %}. Explication des écarts</h2>
+{% if d.explanation and d.explanation.dimensions %}
+<p>Écart du score global : <b>{{ d.explanation.delta|signed }} point(s)</b>{% if d.explanation.proof_gain %}, dont {{ d.explanation.proof_gain|signed }} point(s) de <b>gain de preuve</b> (pratique déjà en place, désormais justifiée par un document vérifié){% endif %}.</p>
+<table>
+  <tr><th style="width:26%">Dimension</th><th class="num" style="width:10%">Avant</th><th class="num" style="width:10%">Après</th><th class="num" style="width:12%">Contribution</th><th style="width:42%">Critères en cause</th></tr>
+  {% for c in d.explanation.dimensions %}
+  <tr><td>{{ c.name }}</td><td class="num">{{ c.before|score }}</td><td class="num">{{ c.after|score }}</td><td class="num">{{ c.contribution|signed }}</td><td class="small">{% for k in c.criteria %}{{ k.code }} · {{ k.name }} ({{ k.nature|lower }}, {{ k.contribution|signed }}){% if not forloop.last %}<br>{% endif %}{% endfor %}</td></tr>
+  {% endfor %}
+</table>
+{% if d.explanation.reprojected %}<p class="small muted">Le référentiel a changé entre les deux évaluations : le score de départ a été recalculé avec le référentiel actuel pour rester comparable.</p>{% endif %}
+<p class="small muted">Contribution : part de l'écart du score global due à chaque dimension, selon son poids. Une évolution observée n'est pas attribuée à une cause unique (RM-09).</p>
+{% else %}<p class="muted">Aucun écart de score à expliquer sur la période.</p>{% endif %}
+
+<h2>{% if annual %}5{% else %}4{% endif %}. Actions du plan</h2>
+{% if d.plan.title %}<p>{{ d.plan.title }} (version {{ d.plan.version }}, {{ d.plan.status|lower }}){% if d.plan.completion is not None %} : {{ d.plan.completion|pct }} des actions terminées{% endif %}.</p>{% endif %}
+<h3>Terminées sur la période ({{ d.actions.completed|length }})</h3>
+{% if d.actions.completed %}
+<table>
+  <tr><th style="width:16%">Référence</th><th style="width:48%">Action</th><th style="width:20%">Dimension</th><th style="width:16%">Terminée le</th></tr>
+  {% for a in d.actions.completed %}<tr><td>{{ a.ref }}</td><td>{{ a.title }}</td><td>{{ a.dimension }}</td><td>{{ a.completed_at|frdate }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune action terminée sur la période.</p>{% endif %}
+<h3>En retard ({{ d.actions.overdue|length }})</h3>
+{% if d.actions.overdue %}
+<table>
+  <tr><th style="width:16%">Référence</th><th style="width:40%">Action</th><th style="width:14%">Échéance</th><th class="num" style="width:10%">Retard</th><th style="width:20%">En attente de</th></tr>
+  {% for a in d.actions.overdue %}<tr><td>{{ a.ref }}</td><td>{{ a.title }}</td><td>{{ a.due|frdate }}</td><td class="num">{{ a.days_late }} j</td><td>{{ a.waiting_on|default:"—" }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune action en retard.</p>{% endif %}
+<h3>En cours ({{ d.actions.in_progress|length }})</h3>
+{% if d.actions.in_progress %}
+<table>
+  <tr><th style="width:16%">Référence</th><th style="width:44%">Action</th><th style="width:24%">Statut</th><th style="width:16%">Échéance</th></tr>
+  {% for a in d.actions.in_progress %}<tr><td>{{ a.ref }}</td><td>{{ a.title }}</td><td>{{ a.status }}</td><td>{{ a.due|frdate }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune action en cours.</p>{% endif %}
+{% if d.actions.abandoned %}<p class="small">Abandonnées sur la période : {% for a in d.actions.abandoned %}{{ a.ref }} ({{ a.reason|default:"sans motif" }}){% if not forloop.last %} ; {% endif %}{% endfor %}.</p>{% endif %}
+
+<h2>{% if annual %}6{% else %}5{% endif %}. Progrès vérifiés</h2>
+{% if d.progress %}
+<p>Critères relevés parce qu'une action a été terminée avec des livrables vérifiés conformes :</p>
+<table>
+  <tr><th style="width:56%">Critère</th><th class="num" style="width:14%">Niveau atteint</th><th style="width:16%">Action</th><th style="width:14%">Le</th></tr>
+  {% for p in d.progress %}<tr><td>{{ p.criterion }} · {{ p.name }}</td><td class="num">{{ p.level }}/4</td><td>{{ p.action }}</td><td>{{ p.at|frdate }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucun critère relevé par une preuve sur la période.</p>{% endif %}
+
+<h2>{% if annual %}7{% else %}6{% endif %}. Conformité et échéances</h2>
+<p>Taux de conformité documentaire à date : <b>{{ d.compliance.rate|pct }}</b> ({{ d.compliance.eligible }} élément(s) exigible(s)). Sur la période : {{ d.compliance.deadlines_due }} échéance(s) tombée(s), {{ d.compliance.deadlines_honored }} honorée(s), {{ d.compliance.deadlines_reviewing }} en vérification, {{ d.compliance.deadlines_missed }} non honorée(s) ; {{ d.compliance.documents_verified }} document(s) vérifié(s), dont {{ d.compliance.documents_conform }} conforme(s).</p>
+{% if d.compliance.overdue %}
+<h3>Échéances en retard</h3>
+<table>
+  <tr><th style="width:50%">Obligation</th><th style="width:20%">Période</th><th style="width:15%">Attendue le</th><th style="width:15%">Statut</th></tr>
+  {% for x in d.compliance.overdue %}<tr><td>{{ x.label }}</td><td>{{ x.period }}</td><td>{{ x.due|frdate }}</td><td>{{ x.status }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+{% if d.compliance.upcoming %}
+<h3>Échéances des 90 prochains jours</h3>
+<table>
+  <tr><th style="width:50%">Obligation</th><th style="width:20%">Période</th><th style="width:15%">Attendue le</th><th style="width:15%">Statut</th></tr>
+  {% for x in d.compliance.upcoming %}<tr><td>{{ x.label }}</td><td>{{ x.period }}</td><td>{{ x.due|frdate }}</td><td>{{ x.status }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+<h2>{% if annual %}8{% else %}7{% endif %}. Points d'attention</h2>
+<p>{{ d.attention.raised }} alerte(s) levée(s) et {{ d.attention.resolved }} résolue(s) sur la période ; {{ d.attention.open_count }} ouverte(s) à date.</p>
+{% if d.attention.open %}
+<table>
+  <tr><th style="width:30%">Alerte</th><th style="width:14%">Gravité</th><th style="width:56%">Détail</th></tr>
+  {% for a in d.attention.open %}<tr><td>{{ a.title }}</td><td>{{ a.severity }}</td><td>{{ a.message }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune alerte de gravité élevée ou critique ouverte.</p>{% endif %}
+
+<h2>{% if annual %}9{% else %}8{% endif %}. Prochaines étapes</h2>
+{% if d.next_steps %}<ul>{% for s in d.next_steps %}<li>{{ s }}</li>{% endfor %}</ul>{% else %}<p class="muted">Aucune action ni échéance à venir dans les 90 jours.</p>{% endif %}
+
+<p class="note">Document généré par {{ brand.product_name }} à partir de données figées le {{ d.generated_at|frdate }}{% if d.generated_by %} à la demande de {{ d.generated_by }}{% endif %}. Modèle de rapport v{{ d.template_version }}. Les évolutions décrites sont observées ; elles ne constituent ni une certification ni une évaluation de solvabilité. Toute correction donne lieu à une nouvelle version du rapport.</p>
+</body>
+</html>

@@ -112,7 +112,7 @@ EVENTS: dict[str, dict] = {
     "REPORT_READY": {
         "label": "Rapport disponible",
         "audience": "PME et conseiller principal",
-        "variables": [PME, ("version", "Version du rapport", "2")],
+        "variables": [PME, ("report", "Nature du rapport", "rapport de suivi"), ("version", "Version du rapport", "2")],
     },
 }
 assert set(EVENTS) == set(NOTIFICATION_TEMPLATES), "chaque événement doit être décrit"

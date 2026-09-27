@@ -58,7 +58,80 @@ def generate_diagnostic_report(diagnostic, user=None) -> Report:
     notifications.notify(
         notifications.pme_users(pme) + notifications.recipients(pme, ["CONSEILLER"]),
         "REPORT_READY",
-        {"pme": pme.legal_name, "version": version},
+        {"pme": pme.legal_name, "report": "rapport de diagnostic", "version": version},
+        link=f"/pme/{pme.pk}?onglet=rapports",
+        pme=pme,
+    )
+    return report
+
+
+PME_REPORTS = {
+    Report.Type.SUIVI: ("reports/follow_up.html", "Rapport de suivi", "rapport de suivi", "suivi"),
+    Report.Type.ANNUEL: ("reports/follow_up.html", "Rapport annuel", "rapport annuel", "annuel"),
+    Report.Type.CONFORMITE: ("reports/compliance.html", "Rapport de conformité", "rapport de conformité", "conformite"),
+}
+
+
+def generate_pme_report(pme, report_type: str, user=None, *, today=None) -> Report:
+    """Rapport de suivi, annuel ou de conformité (Document 9, § 7) : données figées, PDF archivé, versionné.
+
+    Une nouvelle édition sur la même période (même jour pour la conformité) devient une nouvelle version.
+    """
+    from pme360.documents.storage import get_storage
+    from pme360.notifications import services as notifications
+
+    from . import pme_builder
+
+    if report_type not in PME_REPORTS:
+        raise BusinessError("Type de rapport inconnu.", code="invalid_type")
+    template, title, label, slug = PME_REPORTS[report_type]
+    today = today or timezone.localdate()
+    if report_type == Report.Type.CONFORMITE:
+        data = pme_builder.compliance_report_data(pme, today=today, generated_by=user)
+        period = today.isoformat()
+    else:
+        annual = report_type == Report.Type.ANNUEL
+        start, end = pme_builder.follow_up_period(pme, annual, today)
+        data = pme_builder.follow_up_report_data(pme, annual=annual, start=start, end=end, generated_by=user)
+        period = pme_builder.period_label(start, end)
+    version = (
+        Report.objects.filter(pme=pme, type=report_type, period=period).aggregate(m=Max("version"))["m"] or 0
+    ) + 1
+    content, engine = pdf.render_pdf(
+        template, {"d": data, "version": version, "title": title, "annual": report_type == Report.Type.ANNUEL}
+    )
+    key = f"reports/{pme.organization_id}/{pme.pk}/{slug}-{period}-v{version}.pdf"
+    get_storage().put(key, content, "application/pdf")
+    confidence = (data.get("score") or {}).get("confidence")
+    report = Report.objects.create(
+        type=report_type,
+        pme=pme,
+        version=version,
+        title=f"{title} — {pme.legal_name}",
+        period=period,
+        template_version=pme_builder.TEMPLATE_VERSION,
+        data_snapshot=data,
+        storage_key=key,
+        sha256=hashlib.sha256(content).hexdigest(),
+        size_bytes=len(content),
+        engine=engine,
+        confidence=Decimal(str(round(confidence, 3))) if confidence is not None else None,
+        generated_by=user,
+        generated_at=timezone.now(),
+        created_by=user,
+    )
+    audit.record(
+        "report.generated",
+        instance=report,
+        pme_id=pme.pk,
+        actor=user,
+        actor_type="USER" if user else "SYSTEM",
+        after={"type": report.type, "period": period, "version": version, "sha256": report.sha256, "engine": engine},
+    )
+    notifications.notify(
+        notifications.pme_users(pme) + notifications.recipients(pme, ["CONSEILLER"]),
+        "REPORT_READY",
+        {"pme": pme.legal_name, "report": label, "version": version},
         link=f"/pme/{pme.pk}?onglet=rapports",
         pme=pme,
     )

@@ -287,6 +287,11 @@ CELERY_BEAT_SCHEDULE = {
         "task": "pme360.reports.tasks.generate_quarterly_portfolio_reports",
         "schedule": crontab(day_of_month=1, month_of_year="1,4,7,10", hour=3, minute=0),
     },
+    # Rapport de suivi de chaque PME accompagnée, le même jour (Document 9, § 7 : « trimestriel ou manuel »).
+    "pme-follow-up-quarterly-report": {
+        "task": "pme360.reports.tasks.generate_quarterly_follow_up_reports",
+        "schedule": crontab(day_of_month=1, month_of_year="1,4,7,10", hour=3, minute=30),
+    },
 }
 
 LOGGING = {

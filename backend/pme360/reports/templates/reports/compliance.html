@@ -1,0 +1,105 @@
+{% load report_tags %}<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>{{ title }} — {{ d.pme.legal_name }}</title>
+{% include "reports/_pme_style.html" %}
+</head>
+<body>
+<div id="footer" class="small muted">{{ d.pme.legal_name }} · {{ title }} v{{ version }} · page <pdf:pagenumber/> / <pdf:pagecount/></div>
+
+  <p class="muted small">{{ brand.product_name }} · {{ title }} · version {{ version }} · édité le {{ d.generated_at|frdate }}</p>
+  <h1>{{ d.pme.legal_name }}</h1>
+  <p>État du dossier de conformité au {{ d.date|frdate }}{% if d.pme.advisor %} · conseiller : {{ d.pme.advisor }}{% endif %}</p>
+  <p class="small muted">{% if d.pme.sector %}{{ d.pme.sector }}{% endif %}{% if d.pme.region %} · {{ d.pme.region }}{% endif %}{% if d.pme.headcount %} · {{ d.pme.headcount }} salarié(s){% endif %}{% if d.pme.rccm %} · RCCM {{ d.pme.rccm }}{% endif %}</p>
+<table class="rule"><tr><td>&nbsp;</td></tr></table>
+
+<p class="small muted">Sommaire : {% for s in d.sections %}{{ forloop.counter }}. {{ s }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+
+<h2>1. Synthèse</h2>
+<table class="kpis">
+  <tr>
+    <td><div class="tag">Conformité documentaire</div><div class="kpi">{{ d.rate.rate|pct }}</div><div class="small">{{ d.rate.eligible }} élément(s) exigible(s)</div></td>
+    <td><div class="tag">À fournir ou remplacer</div><div class="kpi">{{ d.todo|length }}</div><div class="small">document(s) exigé(s)</div></td>
+    <td><div class="tag">Échéances en retard</div><div class="kpi">{{ d.deadlines.overdue|length }}</div><div class="small">à la date d'édition</div></td>
+    <td><div class="tag">Expirent sous 60 jours</div><div class="kpi">{{ d.expiring|length }}</div><div class="small">document(s) conforme(s)</div></td>
+  </tr>
+</table>
+<ul>{% for line in d.summary %}<li>{{ line }}</li>{% endfor %}</ul>
+<table>
+  <tr>{% for label, count in d.rate.counts.items %}<th class="num">{{ label }}</th>{% endfor %}</tr>
+  <tr>{% for label, count in d.rate.counts.items %}<td class="num">{{ count }}</td>{% endfor %}</tr>
+</table>
+<p class="small muted">Calcul : un élément conforme vaut 1 point, conforme sous réserve 0,5 point, les autres 0 ; éléments exigibles = documents exigés par le profil de l'entreprise et échéances tombées dans les 12 derniers mois.</p>
+
+<h2>2. Ce qu'il reste à faire</h2>
+{% if d.todo %}
+<table>
+  <tr><th style="width:30%">Document</th><th style="width:18%">Catégorie</th><th style="width:14%">État</th><th style="width:38%">Consigne</th></tr>
+  {% for t in d.todo %}<tr><td>{{ t.name }}{% if t.obligation %}<br><span class="small muted">{{ t.obligation }}</span>{% endif %}</td><td>{{ t.category }}</td><td>{{ t.state_label }}</td><td class="small">{% if t.reason %}{{ t.reason }}{% else %}{{ t.guidance|default:"—" }}{% endif %}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Tous les documents exigés sont fournis.</p>{% endif %}
+
+<h2>3. Dossier par catégorie</h2>
+{% for category in d.categories %}
+<h3>{{ category.name }}</h3>
+<table>
+  <tr><th style="width:30%">Document</th><th style="width:10%">Exigé</th><th style="width:18%">État</th><th style="width:24%">Dernier document déposé</th><th style="width:18%">Validité</th></tr>
+  {% for item in category.items %}
+  <tr>
+    <td>{{ item.name }}</td>
+    <td>{% if item.required %}Oui{% else %}Non{% endif %}</td>
+    <td>{% if item.state == "MANQUANT" or item.state == "EXPIRE" or item.state == "NON_CONFORME" %}<span class="critical">{{ item.state_label }}</span>{% else %}{{ item.state_label }}{% endif %}</td>
+    <td class="small">{{ item.document|default:"—" }}{% if item.issued_at %}<br>émis le {{ item.issued_at|frdate }}{% endif %}</td>
+    <td class="small">{% if item.expires_at %}jusqu'au {{ item.expires_at|frdate }}{% else %}—{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% empty %}<p class="muted">Aucun document exigé ni déposé.</p>
+{% endfor %}
+
+<h2>4. Échéances</h2>
+<p>Sur les 12 derniers mois : {{ d.deadlines.history.due }} échéance(s) tombée(s), {{ d.deadlines.history.honored }} honorée(s), {{ d.deadlines.history.reviewing }} en vérification, {{ d.deadlines.history.missed }} non honorée(s){% if d.deadlines.history.exempted %}, {{ d.deadlines.history.exempted }} dispensée(s){% endif %}.</p>
+<h3>En retard ({{ d.deadlines.overdue|length }})</h3>
+{% if d.deadlines.overdue %}
+<table>
+  <tr><th style="width:44%">Obligation</th><th style="width:18%">Période</th><th style="width:14%">Attendue le</th><th class="num" style="width:10%">Retard</th><th style="width:14%">Statut</th></tr>
+  {% for x in d.deadlines.overdue %}<tr><td>{{ x.label }}</td><td>{{ x.period }}</td><td>{{ x.due|frdate }}</td><td class="num">{{ x.late }} j</td><td>{{ x.status }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune échéance en retard.</p>{% endif %}
+<h3>Dans les 90 prochains jours ({{ d.deadlines.upcoming|length }})</h3>
+{% if d.deadlines.upcoming %}
+<table>
+  <tr><th style="width:44%">Obligation</th><th style="width:18%">Période</th><th style="width:14%">Attendue le</th><th class="num" style="width:10%">Dans</th><th style="width:14%">Statut</th></tr>
+  {% for x in d.deadlines.upcoming %}<tr><td>{{ x.label }}</td><td>{{ x.period }}</td><td>{{ x.due|frdate }}</td><td class="num">{{ x.days }} j</td><td>{{ x.status }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="muted">Aucune échéance dans les 90 prochains jours.</p>{% endif %}
+
+<h2>5. Documents arrivant à expiration</h2>
+{% if d.expiring %}
+<table>
+  <tr><th style="width:36%">Document</th><th style="width:36%">Fichier</th><th style="width:16%">Expire le</th><th class="num" style="width:12%">Dans</th></tr>
+  {% for x in d.expiring %}<tr><td>{{ x.name }}</td><td>{{ x.title }}</td><td>{{ x.expires_at|frdate }}</td><td class="num">{{ x.days }} j</td></tr>{% endfor %}
+</table>
+<p class="small muted">Pensez à demander le renouvellement avant l'expiration : un document expiré ne compte plus dans la conformité.</p>
+{% else %}<p class="muted">Aucun document conforme n'expire dans les 60 prochains jours.</p>{% endif %}
+
+<h2>6. Anomalies</h2>
+{% if d.anomalies %}
+<table>
+  <tr><th style="width:30%">Anomalie</th><th style="width:14%">Gravité</th><th style="width:56%">Détail</th></tr>
+  {% for a in d.anomalies %}<tr><td>{{ a.title }}</td><td>{{ a.severity }}</td><td>{{ a.message }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+{% if d.rejected %}
+<h3>Documents refusés</h3>
+<table>
+  <tr><th style="width:28%">Document</th><th style="width:14%">Décision</th><th style="width:14%">Le</th><th style="width:44%">Motif</th></tr>
+  {% for r in d.rejected %}<tr><td>{{ r.name }}<br><span class="small muted">{{ r.title }}</span></td><td>{{ r.status }}</td><td>{{ r.at|frdate }}</td><td>{{ r.reason|default:"—" }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+{% if not d.anomalies and not d.rejected %}<p class="muted">Aucune anomalie ouverte ni document refusé.</p>{% endif %}
+
+<p class="note">Document généré par {{ brand.product_name }} à partir de données figées le {{ d.generated_at|frdate }}{% if d.generated_by %} à la demande de {{ d.generated_by }}{% endif %}. Modèle de rapport v{{ d.template_version }}. Ce rapport décrit l'état du dossier tenu sur la plateforme ; il ne vaut pas attestation de régularité auprès des administrations. Toute correction donne lieu à une nouvelle version du rapport.</p>
+</body>
+</html>

@@ -611,8 +611,8 @@ NOTIFICATION_TEMPLATES = {
         "{author} a écrit au sujet de « {action} » : {excerpt}",
     ),
     "REPORT_READY": (
-        "Rapport de diagnostic disponible : {pme}",
-        "La version {version} du rapport de diagnostic de {pme} est disponible au téléchargement.",
+        "Rapport disponible : {pme}",
+        "La version {version} du {report} de {pme} est disponible au téléchargement.",
     ),
 }
 # Messages toujours envoyés, quelles que soient les préférences (Document 7, § 8.3).

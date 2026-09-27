@@ -88,3 +88,21 @@ KPI_LABELS = {
 @register.filter
 def kpi_label(key: str) -> str:
     return KPI_LABELS.get(key, key)
+
+
+@register.filter
+def signed(value) -> str:
+    """Écart signé à une décimale (« +3,5 », « −2,0 », « 0,0 »)."""
+    if value is None:
+        return "—"
+    value = float(value)
+    return f"{'+' if value > 0 else ''}{value:.1f}".replace(".", ",")
+
+
+@register.filter
+def period_fr(value) -> str:
+    """Période « AAAA-MM-JJ_AAAA-MM-JJ » → « du JJ/MM/AAAA au JJ/MM/AAAA »."""
+    if not value or "_" not in str(value):
+        return frdate(value)
+    start, end = str(value).split("_", 1)
+    return f"du {frdate(start)} au {frdate(end)}"

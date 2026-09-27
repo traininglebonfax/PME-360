@@ -45,13 +45,36 @@ test("le conseiller télécharge le rapport PDF et en édite une nouvelle versio
   await page.getByRole("link", { name: /Boutik Plus/ }).first().click();
   await page.getByRole("tab", { name: "Rapports" }).click();
   const list = page.getByRole("list", { name: "Rapports" });
-  await expect(list.getByRole("link", { name: "Télécharger le PDF" }).first()).toBeVisible();
-  const before = await list.getByRole("listitem").count();
+  const diagnostics = list.getByRole("listitem").filter({ hasText: "Rapport de diagnostic" });
+  await expect(diagnostics.first().getByRole("link", { name: "Télécharger le PDF" })).toBeVisible();
+  const before = await diagnostics.count();
   const download = page.waitForEvent("download");
-  await list.getByRole("link", { name: "Télécharger le PDF" }).first().click();
+  await diagnostics.first().getByRole("link", { name: "Télécharger le PDF" }).click();
   expect((await download).suggestedFilename()).toMatch(/^rapport-diagnostic-v\d+-.*\.pdf$/);
-  await page.getByRole("button", { name: "Éditer une nouvelle version" }).click();
-  await expect(list.getByRole("listitem")).toHaveCount(before + 1);
+  await page.getByRole("button", { name: "Nouvelle version du rapport de diagnostic" }).click();
+  await expect(diagnostics).toHaveCount(before + 1);
+});
+
+test("le conseiller édite les rapports de suivi et de conformité d'une PME", async ({ page }) => {
+  await loginStaff(page, "konan.conseiller@demo.test");
+  await page.getByRole("link", { name: "PME", exact: true }).click();
+  await page.getByRole("link", { name: /Boutik Plus/ }).first().click();
+  await page.getByRole("tab", { name: "Rapports" }).click();
+  const list = page.getByRole("list", { name: "Rapports" });
+  await expect(list).toBeVisible();
+  for (const [button, kind] of [
+    ["Rapport de suivi", "suivi"],
+    ["Rapport de conformité", "conformite"],
+  ]) {
+    const rows = list.getByRole("listitem").filter({ hasText: button });
+    const before = await rows.count();
+    await page.getByRole("button", { name: button, exact: true }).click();
+    await expect(rows).toHaveCount(before + 1, { timeout: 30_000 });
+    await expect(list.getByRole("listitem").first()).toContainText(button);
+    const download = page.waitForEvent("download");
+    await list.getByRole("listitem").first().getByRole("link", { name: "Télécharger le PDF" }).click();
+    expect((await download).suggestedFilename()).toMatch(new RegExp(`^rapport-${kind}-v\\d+-.*\\.pdf$`));
+  }
 });
 
 test("la dirigeante voit son évolution et récupère son rapport", async ({ page }) => {

@@ -13,6 +13,12 @@ class Report(TenantModel):
     class Type(models.TextChoices):
         DIAGNOSTIC = "DIAGNOSTIC", "Rapport de diagnostic"
         PORTEFEUILLE = "PORTEFEUILLE", "Rapport de portefeuille"
+        SUIVI = "SUIVI", "Rapport de suivi"
+        CONFORMITE = "CONFORMITE", "Rapport de conformité"
+        ANNUEL = "ANNUEL", "Rapport annuel"
+
+    # Rapports propres à une PME, édités à la demande (Document 9, § 7) ; le suivi l'est aussi chaque trimestre.
+    PME_TYPES = (Type.SUIVI, Type.CONFORMITE, Type.ANNUEL)
 
     type = models.CharField(max_length=14, choices=Type.choices)
     pme = models.ForeignKey("pmes.Pme", null=True, blank=True, on_delete=models.CASCADE, related_name="reports")
