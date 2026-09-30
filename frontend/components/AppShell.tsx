@@ -6,11 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { BrandMark } from "@/components/Brand";
+import { CurrentUser } from "@/components/CurrentUser";
 import { NotificationBell } from "@/components/NotificationBell";
 import { cx, LoadingBlock } from "@/components/ui";
 import { api, unwrap } from "@/lib/api";
 import { initials } from "@/lib/format";
-import { hasPermission, homeFor, type Me, useLogout, useMe } from "@/lib/session";
+import { hasPermission, homeFor, type Me, profileLabel, useLogout, useMe } from "@/lib/session";
 import { type Brand, DEFAULT_BRAND, useApplyBrand, useBrand } from "@/lib/brand";
 
 interface NavItem {
@@ -133,7 +134,7 @@ export function GudeShell({ children }: { children: ReactNode }) {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{me.user.full_name}</p>
-              <p className="truncate text-xs text-brand-100">{me.roles.join(", ")}</p>
+              <p className="truncate text-xs text-brand-100">{profileLabel(me)}</p>
             </div>
           </div>
           <button onClick={logout} className="mt-3 text-xs text-brand-100 hover:text-white hover:underline">
@@ -143,13 +144,14 @@ export function GudeShell({ children }: { children: ReactNode }) {
       </aside>
       {open && <div className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={() => setOpen(false)} aria-hidden="true" />}
       <div className="min-w-0 flex-1">
-        <header className="flex items-center gap-3 border-b border-line bg-white px-4 py-3 lg:hidden">
-          <button onClick={() => setOpen(true)} className="rounded-md p-2 text-ink hover:bg-gray-100" aria-label="Ouvrir le menu">
+        <header className="flex items-center gap-3 border-b border-line bg-white px-4 py-2.5 sm:px-6 lg:px-8">
+          <button onClick={() => setOpen(true)} className="rounded-md p-2 text-ink hover:bg-gray-100 lg:hidden" aria-label="Ouvrir le menu">
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
             </svg>
           </button>
-          <p className="font-semibold">{brand.product_name}</p>
+          <p className="font-semibold lg:hidden">{brand.product_name}</p>
+          <CurrentUser me={me} className="ml-auto" />
         </header>
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
       </div>

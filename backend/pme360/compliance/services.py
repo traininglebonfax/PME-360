@@ -319,14 +319,23 @@ def send_reminders(pme: Pme, today: date) -> int:
     return sent
 
 
+def provision_obligations(pme: Pme, today: date) -> tuple[int, int]:
+    """Obligations applicables et échéances ouvertes d'une PME suivie → (obligations, échéances créées).
+
+    Appelé par le planificateur quotidien et dès l'entrée de la PME dans un cycle suivi : la PME peut
+    déposer ses justificatifs sans attendre le passage nocturne.
+    """
+    if pme.lifecycle_status not in TRACKED_LIFECYCLES:
+        return 0, 0
+    obligations = sync_obligations(pme, today)
+    return len(obligations), sum(generate_deadlines(o, today) for o in obligations)
+
+
 def run_for_pme(pme: Pme, today: date) -> dict:
     from pme360.alerts import engine as alerts
 
     stats = {"obligations": 0, "deadlines_created": 0, "reminders": 0}
-    if pme.lifecycle_status in TRACKED_LIFECYCLES:
-        obligations = sync_obligations(pme, today)
-        stats["obligations"] = len(obligations)
-        stats["deadlines_created"] = sum(generate_deadlines(o, today) for o in obligations)
+    stats["obligations"], stats["deadlines_created"] = provision_obligations(pme, today)
     update_temporal_statuses(pme, today)
     stats["reminders"] = send_reminders(pme, today)
     alerts.evaluate_pme(pme, today)

@@ -274,6 +274,10 @@ def transition(pme: Pme, to_status: str, user, *, reason: str = "", exit_reason:
     events.emit(
         "pme.lifecycle_changed", pme_id=str(pme.pk), from_status=before["lifecycle_status"], to_status=to_status
     )
+    # Échéances documentaires ouvertes tout de suite : la PME peut déposer ses justificatifs dès le diagnostic.
+    from pme360.compliance import services as compliance
+
+    compliance.provision_obligations(pme, timezone.localdate())
     return pme
 
 

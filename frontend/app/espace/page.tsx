@@ -3,11 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useGuard } from "@/components/AppShell";
-import { BrandMark } from "@/components/Brand";
 import { LifecycleBadge } from "@/components/LifecycleBadge";
 import Link from "next/link";
 
-import { NotificationBell } from "@/components/NotificationBell";
+import { PmeHeader } from "@/components/PmeHeader";
 import { Dumbbell } from "@/components/charts/Charts";
 import { ReportsList } from "@/components/reports/ReportsList";
 import { Alert, ButtonLink, Card, LoadingBlock } from "@/components/ui";
@@ -17,9 +16,7 @@ import { formatDate } from "@/lib/format";
 import { formatPercent, formatScore } from "@/lib/scoring";
 import { api, errorMessage, unwrap } from "@/lib/api";
 import type { PmeDashboard } from "@/lib/dashboards";
-import { useLogout } from "@/lib/session";
 import { OrgName } from "@/components/OrgName";
-import { useBrand } from "@/lib/brand";
 
 /**
  * Portail PME, mobile d'abord (Document 1, § 10 ; Document 9, § 2).
@@ -27,8 +24,6 @@ import { useBrand } from "@/lib/brand";
  */
 export default function PmeSpacePage() {
   const { me, isLoading } = useGuard("pme");
-  const brand = useBrand();
-  const logout = useLogout();
   const pmeId = me?.pme_ids[0];
   const dashboard = useQuery({
     queryKey: ["dashboard", "pme", pmeId],
@@ -41,20 +36,7 @@ export default function PmeSpacePage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-line bg-white">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <BrandMark className="h-8 w-8" brand={brand} />
-            <span className="font-semibold">Mon espace</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell tone="light" preferencesHref="/espace/notifications" />
-            <button onClick={logout} className="text-sm text-muted hover:text-ink">
-              Se déconnecter
-            </button>
-          </div>
-        </div>
-      </header>
+      <PmeHeader me={me} width="max-w-2xl" />
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-6">
         {dashboard.isLoading ? (
           <LoadingBlock />
@@ -140,7 +122,7 @@ export default function PmeSpacePage() {
               )}
             </Card>
 
-            <Card title="Mes prochaines échéances" action={<Link href="/espace/documents" className="text-sm text-brand-700 hover:underline">Mes documents</Link>}>
+            <Card title="Mes prochaines échéances" action={<Link href="/espace/documents" className="text-sm text-brand-700 hover:underline">Tout voir</Link>}>
               {dashboard.data.deadlines.length === 0 ? (
                 <p className="text-sm text-muted">Aucune échéance pour le moment.</p>
               ) : (

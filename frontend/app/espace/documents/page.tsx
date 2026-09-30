@@ -5,11 +5,12 @@
  * (Document 1, § 10). Dépôt par fichier ou par photo depuis le téléphone.
  */
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 import { ComplianceSummary, DeadlineList } from "@/components/documents/DocumentsTab";
 import { UploadButton } from "@/components/documents/UploadButton";
 import { PmeShell } from "@/components/PmeShell";
-import { Alert, Badge, Card, LoadingBlock } from "@/components/ui";
+import { Alert, Badge, Card, LoadingBlock, SelectInput } from "@/components/ui";
 import { api, errorMessage, unwrap } from "@/lib/api";
 import { DOCUMENT_STATUS, FOLDER_STATE } from "@/lib/documents";
 import { formatDate } from "@/lib/format";
@@ -38,12 +39,28 @@ function Content({ pmeId }: { pmeId: string }) {
   return (
     <>
       <Card title="À transmettre">
-        {deadlines.data ? <DeadlineList pmeId={pmeId} deadlines={deadlines.data} canUpload /> : <LoadingBlock />}
+        {deadlines.data ? (
+          <DeadlineList
+            pmeId={pmeId}
+            deadlines={deadlines.data}
+            canUpload
+            emptyMessage="Aucune échéance pour le moment : elles s'ouvrent dès que votre conseiller démarre votre diagnostic. Vous pouvez déjà déposer vos documents ci-dessous."
+          />
+        ) : (
+          <LoadingBlock />
+        )}
       </Card>
+      <OtherDocument pmeId={pmeId} />
       <Card title="Mon dossier">
         <div className="mb-4">
           <ComplianceSummary rate={folder.data!.rate} />
         </div>
+        {items.length === 0 && (
+          <p className="text-sm text-muted">
+            La liste des pièces exigées pour votre entreprise sera établie après la validation de votre diagnostic. En attendant, utilisez
+            « Déposer un autre document ».
+          </p>
+        )}
         <ul className="divide-y divide-line">
           {items.map((item) => {
             const type = item.document_type as { code: string; name: string; guidance: string };
@@ -74,5 +91,54 @@ function Content({ pmeId }: { pmeId: string }) {
         </p>
       </Card>
     </>
+  );
+}
+
+/** Dépôt libre : un document que la PME a sous la main, même s'il n'est pas (encore) demandé. */
+function OtherDocument({ pmeId }: { pmeId: string }) {
+  const [type, setType] = useState("");
+  const [sent, setSent] = useState<string | null>(null);
+  const types = useQuery({
+    queryKey: ["document-types"],
+    queryFn: () => unwrap(api.GET("/api/v1/document-types")),
+  });
+  const options = (types.data ?? [])
+    .slice()
+    .sort((a, b) => a.category_name.localeCompare(b.category_name, "fr") || a.name.localeCompare(b.name, "fr"))
+    .map((t) => ({ value: t.code, label: `${t.category_name} · ${t.name}` }));
+  const guidance = types.data?.find((t) => t.code === type)?.guidance;
+  return (
+    <Card title="Déposer un autre document">
+      <p className="mb-3 text-sm text-muted">
+        Vous avez un justificatif sous la main (statuts, attestation, états financiers…) ? Choisissez son type et déposez-le : votre
+        conseiller le vérifiera.
+      </p>
+      <div className="space-y-3">
+        <SelectInput
+          label="Type de document"
+          value={type}
+          onChange={(event) => {
+            setType(event.target.value);
+            setSent(null);
+          }}
+          options={options}
+          placeholder={types.isLoading ? "Chargement…" : "— Choisir le type —"}
+          hint={guidance || undefined}
+        />
+        {type && (
+          <UploadButton
+            key={type}
+            pmeId={pmeId}
+            fields={{ document_type: type }}
+            label="Choisir le fichier"
+            onDone={() => {
+              setSent(options.find((o) => o.value === type)?.label ?? type);
+              setType("");
+            }}
+          />
+        )}
+        {sent && <p className="text-sm text-brand-700">✓ {sent} : document reçu, il apparaît dans « Mon dossier » et va être vérifié.</p>}
+      </div>
+    </Card>
   );
 }
