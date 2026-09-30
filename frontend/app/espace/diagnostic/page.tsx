@@ -1,21 +1,18 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useGuard } from "@/components/AppShell";
-import { BrandMark } from "@/components/Brand";
+import { PmeHeader } from "@/components/PmeHeader";
 import { Questionnaire } from "@/components/diagnostic/Questionnaire";
 import { Alert, LoadingBlock } from "@/components/ui";
 import { api, unwrap } from "@/lib/api";
 import type { PmeDashboard } from "@/lib/dashboards";
-import { useBrand } from "@/lib/brand";
 
 /** Questionnaire du diagnostic, côté PME (questions de la PME uniquement, sans niveaux affichés). */
 export default function PmeQuestionnairePage() {
   const { me, isLoading } = useGuard("pme");
-  const brand = useBrand();
   const router = useRouter();
   const pmeId = me?.pme_ids[0];
   const dashboard = useQuery({
@@ -30,17 +27,7 @@ export default function PmeQuestionnairePage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-line bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link href="/espace" className="flex items-center gap-2">
-            <BrandMark className="h-8 w-8" brand={brand} />
-            <span className="font-semibold">Mon espace</span>
-          </Link>
-          <Link href="/espace" className="text-sm text-muted hover:text-ink">
-            ← Retour à l'accueil
-          </Link>
-        </div>
-      </header>
+      <PmeHeader me={me} width="max-w-5xl" />
       <main className="mx-auto max-w-5xl px-4 py-6">
         <h1 className="mb-1 text-xl font-semibold">Diagnostic 360° de votre entreprise</h1>
         <p className="mb-6 text-sm text-muted">

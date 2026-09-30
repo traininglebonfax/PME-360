@@ -444,3 +444,42 @@ def test_missing_documents_analysis_by_obligation(org, pme, advisor, client_for,
     missing = [r for r in rows.values() if r["code"] != "RCCM"]
     assert missing and all(r["missing_rate"] == 1.0 for r in missing)
     assert result["documents"][0]["missing_rate"] >= result["documents"][-1]["missing_rate"]  # tri décroissant
+
+
+# --- Dépôts dès le début de l'accompagnement ------------------------------------------------------------------
+
+
+def test_deadlines_open_as_soon_as_the_pme_enters_a_tracked_cycle(org, make_pme, advisor, make_user, client_for):
+    """La PME n'attend pas le planificateur nocturne : ses échéances s'ouvrent dès le démarrage du diagnostic."""
+    from pme360.pmes import services as pme_services
+
+    fresh = make_pme(org, advisor=advisor, headcount=12)
+    leader = make_user(org, "DIRIGEANT_PME", scope_ref_id=fresh.id)
+    portal = client_for(leader, org)
+    assert portal.get(f"/api/v1/pmes/{fresh.id}/deadlines").json() == []  # prospect : pas encore suivie
+
+    with tenant_context(org.id):
+        pme_services.transition(fresh, Pme.LifecycleStatus.ONBOARDING, advisor, reason="Démarrage du diagnostic")
+        obligations = set(PmeObligation.objects.filter(pme=fresh).values_list("template__code", flat=True))
+        again = services.provision_obligations(fresh, TODAY)
+    assert "OBL-RCCM" in obligations
+    assert again[1] == 0  # idempotent : le planificateur ne recrée rien
+    assert len(portal.get(f"/api/v1/pmes/{fresh.id}/deadlines").json()) > 0
+
+
+def test_pme_leader_can_upload_a_document_that_is_not_yet_required(org, make_pme, advisor, make_user, client_for):
+    """« Déposer un autre document » : un type non encore exigé entre dans le dossier et part en vérification."""
+    fresh = make_pme(org, advisor=advisor, headcount=12)
+    leader = make_user(org, "DIRIGEANT_PME", scope_ref_id=fresh.id)
+    portal = client_for(leader, org)
+    assert portal.get("/api/v1/document-types").status_code == 200
+    response = portal.post(
+        f"/api/v1/pmes/{fresh.id}/documents",
+        {"file": SimpleUploadedFile("statuts.pdf", files.pdf()), "document_type": "STATUTS"},
+        format="multipart",
+    )
+    assert response.status_code == 201, response.content
+    folder = portal.get(f"/api/v1/pmes/{fresh.id}/compliance-folder").json()
+    items = [i for c in folder["categories"] for i in c["items"]]
+    statuts = next(i for i in items if i["document_type"]["code"] == "STATUTS")
+    assert statuts["required"] is False and statuts["state"] != "MANQUANT"

@@ -33,8 +33,18 @@ export function ComplianceSummary({ rate }: { rate: Schemas["Rate"] }) {
   );
 }
 
-export function DeadlineList({ pmeId, deadlines, canUpload }: { pmeId: string; deadlines: Deadline[]; canUpload: boolean }) {
-  if (deadlines.length === 0) return <p className="text-sm text-muted">Aucune échéance ouverte.</p>;
+export function DeadlineList({
+  pmeId,
+  deadlines,
+  canUpload,
+  emptyMessage = "Aucune échéance ouverte.",
+}: {
+  pmeId: string;
+  deadlines: Deadline[];
+  canUpload: boolean;
+  emptyMessage?: string;
+}) {
+  if (deadlines.length === 0) return <p className="text-sm text-muted">{emptyMessage}</p>;
   return (
     <ul className="divide-y divide-line">
       {deadlines.map((deadline) => {

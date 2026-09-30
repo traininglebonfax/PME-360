@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { useGuard } from "@/components/AppShell";
 import { BrandName } from "@/components/Brand";
+import { CurrentUser } from "@/components/CurrentUser";
 import { Alert, Badge, Button, Card, LoadingBlock, SelectInput, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
 import { formatDate } from "@/lib/format";
@@ -49,9 +50,12 @@ export default function PlatformPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
         <BrandName brand={{ ...DEFAULT_BRAND, product_name: "PME360 · Plateforme" }} />
-        <button onClick={logout} className="text-sm text-muted hover:text-ink">
-          Se déconnecter
-        </button>
+        <div className="flex min-w-0 items-center gap-4">
+          <CurrentUser me={me} />
+          <button onClick={logout} className="shrink-0 text-sm text-muted hover:text-ink">
+            Se déconnecter
+          </button>
+        </div>
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <Card title="Organisations" className="lg:col-span-2">
