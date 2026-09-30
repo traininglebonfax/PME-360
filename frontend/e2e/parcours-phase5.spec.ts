@@ -32,7 +32,7 @@ test("le conseiller revoit les recommandations et fait valider le plan de Délic
   await page.getByRole("button", { name: /Générer le plan|Régénérer le plan/ }).click();
   await expect(page.getByText("Jours 1–30")).toBeVisible();
   await page.getByRole("button", { name: "Soumettre à validation" }).click();
-  await page.getByRole("button", { name: "Valider (GUDE-PME)" }).click();
+  await page.getByRole("button", { name: "Valider (PME360)" }).click();
   await expect(page.getByText("En attente d'acceptation par la PME")).toBeVisible();
 });
 
@@ -126,7 +126,7 @@ test("conseiller et dirigeante échangent sur une action ; les notes internes re
   await page.getByRole("link").filter({ hasText: "Complétude du dossier juridique" }).click();
   const box = page.getByLabel("Votre message");
   await box.fill(`Note interne ${stamp}`);
-  await page.getByLabel("Interne GUDE-PME").check();
+  await page.getByLabel("Interne PME360").check();
   await page.getByRole("button", { name: "Envoyer" }).click();
   await expect(page.getByRole("list", { name: "Échanges" }).getByText(`Note interne ${stamp}`)).toBeVisible();
   await box.fill(`Merci de relire les statuts ${stamp}`);

@@ -131,7 +131,7 @@ def test_demo_commands_refuse_reserved_or_real_organizations(org, make_user):
     from django.core.management.base import CommandError
 
     with pytest.raises(CommandError):
-        call_command("create_demo_org", "--nom", "x", "--slug", "gude-pme-demo", stdout=StringIO())
+        call_command("create_demo_org", "--nom", "x", "--slug", "pme360-demo", stdout=StringIO())
     make_user(org, "ADMIN_ORG", email="vraie.personne@exemple.ci")
     with pytest.raises(CommandError):
         call_command("close_demo_org", org.slug, stdout=StringIO())

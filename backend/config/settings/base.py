@@ -241,7 +241,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "PME360 API",
-    "DESCRIPTION": "API de la plateforme PME360 (instance GUDE-PME 360). Erreurs au format RFC 9457.",
+    "DESCRIPTION": "API de la plateforme PME360 (multi-organisations). Erreurs au format RFC 9457.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": "/api/v1",

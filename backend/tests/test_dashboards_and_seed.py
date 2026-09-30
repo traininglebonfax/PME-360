@@ -59,8 +59,8 @@ def test_seed_demo_is_idempotent_and_fictitious():
     call_command("seed_demo")
     call_command("seed_demo")
     with system_context():
-        gude = Organization.objects.get(slug="gude-pme-demo")
-        assert Organization.objects.filter(slug__in=["gude-pme-demo", "banque-demo"]).count() == 2
+        gude = Organization.objects.get(slug="pme360-demo")
+        assert Organization.objects.filter(slug__in=["pme360-demo", "banque-demo"]).count() == 2
     with tenant_context(gude.id):
         pmes = Pme.objects.all()
         assert pmes.count() == 6

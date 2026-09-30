@@ -8,10 +8,10 @@ DEMO_PASSWORD = "Demo-PME360-2026!"  # noqa: S105 — compte de démonstration f
 
 ORGANIZATIONS = [
     {
-        "slug": "gude-pme-demo",
-        "name": "GUDE-PME Côte d'Ivoire (DÉMO)",
+        "slug": "pme360-demo",
+        "name": "PME360 (DÉMO)",
         "type": "AGENCE_PUBLIQUE",
-        "branding": {"product_name": "GUDE-PME 360", "short_name": "GUDE-PME", "primary_color": "#0F6B4F"},
+        "branding": {"product_name": "PME360", "short_name": "PME360", "primary_color": "#2E4A6B"},
     },
     {
         "slug": "banque-demo",
@@ -32,21 +32,21 @@ PROGRAMME = {
 # (e-mail, nom, organisation, rôle, périmètre, référence) — la référence désigne un programme ou une PME (clé DEMO).
 USERS = [
     ("superadmin@demo.test", "Admin Plateforme", None, None, None, None),
-    ("admin@demo.test", "Mariam Ouattara", "gude-pme-demo", "ADMIN_ORG", "ORG", None),
-    ("programme@demo.test", "Serge Kouadio", "gude-pme-demo", "RESPONSABLE_PROGRAMME", "PROGRAMME", "programme"),
-    ("konan.conseiller@demo.test", "Konan Brou", "gude-pme-demo", "CONSEILLER", "PORTEFEUILLE", None),
-    ("awa.conseillere@demo.test", "Awa Coulibaly", "gude-pme-demo", "CONSEILLER", "PORTEFEUILLE", None),
-    ("expert@demo.test", "Dr Awa Touré", "gude-pme-demo", "EXPERT", "PORTEFEUILLE", None),
-    ("auditeur@demo.test", "Paul Yao", "gude-pme-demo", "AUDITEUR", "ORG", None),
-    ("aya.dirigeante@demo.test", "Aya Kouassi", "gude-pme-demo", "DIRIGEANT_PME", "PME", "BOUTIK"),
-    ("moussa.collab@demo.test", "Moussa Diabaté", "gude-pme-demo", "COLLABORATEUR_PME", "PME", "BOUTIK"),
+    ("admin@demo.test", "Mariam Ouattara", "pme360-demo", "ADMIN_ORG", "ORG", None),
+    ("programme@demo.test", "Serge Kouadio", "pme360-demo", "RESPONSABLE_PROGRAMME", "PROGRAMME", "programme"),
+    ("konan.conseiller@demo.test", "Konan Brou", "pme360-demo", "CONSEILLER", "PORTEFEUILLE", None),
+    ("awa.conseillere@demo.test", "Awa Coulibaly", "pme360-demo", "CONSEILLER", "PORTEFEUILLE", None),
+    ("expert@demo.test", "Dr Awa Touré", "pme360-demo", "EXPERT", "PORTEFEUILLE", None),
+    ("auditeur@demo.test", "Paul Yao", "pme360-demo", "AUDITEUR", "ORG", None),
+    ("aya.dirigeante@demo.test", "Aya Kouassi", "pme360-demo", "DIRIGEANT_PME", "PME", "BOUTIK"),
+    ("moussa.collab@demo.test", "Moussa Diabaté", "pme360-demo", "COLLABORATEUR_PME", "PME", "BOUTIK"),
     ("banque.admin@demo.test", "Rachel N'Guessan", "banque-demo", "ADMIN_ORG", "ORG", None),
 ]
 
 PMES = [
     {
         "key": "BOUTIK",
-        "org": "gude-pme-demo",
+        "org": "pme360-demo",
         "data": {
             "legal_name": "Boutik Plus Distribution SARL",
             "trade_name": "Boutik Plus",
@@ -70,7 +70,7 @@ PMES = [
     },
     {
         "key": "IVOIRE_METAL",
-        "org": "gude-pme-demo",
+        "org": "pme360-demo",
         "data": {
             "legal_name": "Ivoire Métal Industrie SA",
             "legal_form": "SA",
@@ -92,7 +92,7 @@ PMES = [
     },
     {
         "key": "BATI_LAGUNE",
-        "org": "gude-pme-demo",
+        "org": "pme360-demo",
         "data": {
             "legal_name": "Bâti Lagune BTP SARL",
             "legal_form": "SARL",
@@ -112,7 +112,7 @@ PMES = [
     },
     {
         "key": "AKWABA",
-        "org": "gude-pme-demo",
+        "org": "pme360-demo",
         "data": {
             "legal_name": "Conseil & Formation Akwaba SARLU",
             "trade_name": "Akwaba Conseil",
@@ -133,7 +133,7 @@ PMES = [
     },
     {
         "key": "DELICES",
-        "org": "gude-pme-demo",
+        "org": "pme360-demo",
         "data": {
             "legal_name": "Délices du Bandama SAS",
             "legal_form": "SAS",
@@ -153,7 +153,7 @@ PMES = [
     },
     {
         "key": "NOVATECH",
-        "org": "gude-pme-demo",
+        "org": "pme360-demo",
         "data": {
             "legal_name": "NovaTech CI SAS",
             "legal_form": "SAS",

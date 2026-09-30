@@ -22,7 +22,7 @@ from seeds import tenant_demo
 from .seed_demo import Command as SeedCommand
 from .seed_demo import ensure_not_production
 
-RESERVED = {"gude-pme-demo", "banque-demo"}
+RESERVED = {"pme360-demo", "banque-demo"}
 
 
 class Command(SeedCommand):
