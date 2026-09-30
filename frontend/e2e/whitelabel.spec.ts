@@ -84,10 +84,10 @@ test("la démo du prospect côté PME est à son nom", async ({ page }) => {
   }
 });
 
-test("GUDE-PME garde son identité et la page de connexion neutre reste neutre", async ({ page }) => {
-  await page.goto("/connexion?org=gude-pme-demo");
-  await expect(page.getByRole("tab", { name: "Équipe GUDE-PME" })).toBeVisible();
-  await expect(page.getByText("GUDE-PME 360")).toBeVisible();
+test("La démo principale est neutre et la page de connexion neutre reste neutre", async ({ page }) => {
+  await page.goto("/connexion?org=pme360-demo");
+  await expect(page.getByRole("tab", { name: "Équipe PME360" })).toBeVisible();
+  await expectNoGude(page, "la connexion de la démo principale");
   await page.goto("/connexion");
   await expect(page.getByRole("tab", { name: "Équipe d'accompagnement" })).toBeVisible();
   await expectNoGude(page, "la page de connexion neutre");

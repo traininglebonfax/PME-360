@@ -312,7 +312,7 @@ GENERATORS = {
     "AUTRE": autre,
 }
 
-NAME = "gude360-docs-fictifs-v1"
+NAME = "pme360-docs-fictifs-v1"
 
 
 def build(per_type: int = 12, seed: int = 2026) -> list[Sample]:

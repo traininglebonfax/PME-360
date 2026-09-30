@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 from seeds import demo
 
-SOURCE = "gude-pme-demo"
+SOURCE = "pme360-demo"
 
 
 def account(email: str, slug: str) -> str:

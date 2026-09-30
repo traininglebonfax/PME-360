@@ -56,7 +56,7 @@ test("une dirigeante de PME se connecte par code e-mail et accède à son espace
   await expect(page).toHaveURL(/\/espace$/);
   await expect(page.getByRole("heading", { name: "Boutik Plus Distribution SARL" })).toBeVisible();
   await expect(page.getByText("Où j'en suis ?")).toBeVisible();
-  const advisor = page.locator("section").filter({ has: page.getByRole("heading", { name: "Mon conseiller GUDE-PME" }) });
+  const advisor = page.locator("section").filter({ has: page.getByRole("heading", { name: "Mon conseiller PME360" }) });
   await expect(advisor.getByText("Konan Brou")).toBeVisible();
 
   // Le portail GUDE lui est inaccessible : redirection vers son espace.

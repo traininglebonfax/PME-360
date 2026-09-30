@@ -41,7 +41,7 @@ class Command(BaseCommand):
     # Jeu de données (module ``seeds.demo`` ou démo « marque blanche » construite par ``seeds.tenant_demo``) et
     # organisation qui reçoit le scénario complet (programme, plan d'accompagnement mené).
     data = demo
-    primary = "gude-pme-demo"
+    primary = "pme360-demo"
 
     def handle(self, *args, **options):
         ensure_not_production()
@@ -54,10 +54,7 @@ class Command(BaseCommand):
         for slug, organization in organizations.items():
             with tenant_context(organization.id):
                 install_defaults(organization)
-                if slug == "gude-pme-demo":
-                    install_gude360(organization, code="GUDE-360", name="Diagnostic 360° GUDE-PME")
-                else:
-                    install_gude360(organization)
+                install_gude360(organization)
                 install_compliance(organization)
                 install_plans(organization)
                 programme = self._programme(organization) if slug == self.primary else None
