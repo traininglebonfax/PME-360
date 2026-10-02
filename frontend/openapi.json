@@ -7197,6 +7197,45 @@
                 }
             }
         },
+        "/api/v1/verifications/history": {
+            "get": {
+                "operationId": "verifications_history_list",
+                "description": "Documents déjà examinés, décision la plus récente d'abord (pendant de la file « à vérifier »).",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "mine",
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "description": "Seulement mes décisions."
+                    }
+                ],
+                "tags": [
+                    "verifications"
+                ],
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Document"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/workflows/{target}": {
             "get": {
                 "operationId": "workflows_retrieve",

@@ -2534,6 +2534,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/verifications/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Documents déjà examinés, décision la plus récente d'abord (pendant de la file « à vérifier »). */
+        get: operations["verifications_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workflows/{target}": {
         parameters: {
             query?: never;
@@ -9949,6 +9966,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QueueItem"][];
+                };
+            };
+        };
+    };
+    verifications_history_list: {
+        parameters: {
+            query?: {
+                /** @description Seulement mes décisions. */
+                mine?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Document"][];
                 };
             };
         };

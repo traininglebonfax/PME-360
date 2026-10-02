@@ -151,6 +151,24 @@ class DocumentVerifyView(APIView):
         return Response(DocumentSerializer(scoped_documents(request).get(pk=document_id)).data)
 
 
+class VerifiedHistoryView(APIView):
+    """Documents déjà examinés, décision la plus récente d'abord (pendant de la file « à vérifier »)."""
+
+    required_permissions = "document.verify"
+    LIMIT = 200
+
+    @extend_schema(
+        parameters=[OpenApiParameter("mine", bool, required=False, description="Seulement mes décisions.")],
+        responses=DocumentSerializer(many=True),
+    )
+    def get(self, request):
+        documents = scoped_documents(request).exclude(conformity_status=Document.Conformity.NON_EVALUE)
+        documents = documents.filter(verified_at__isnull=False)
+        if request.query_params.get("mine") in ("1", "true"):
+            documents = documents.filter(verified_by=request.user)
+        return Response(DocumentSerializer(documents.order_by("-verified_at")[: self.LIMIT], many=True).data)
+
+
 class DownloadUrlView(APIView):
     """URL signée de 5 minutes, délivrée après contrôle d'accès (Document 2, § 8.2)."""
 
