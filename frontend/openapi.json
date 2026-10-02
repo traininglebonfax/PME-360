@@ -5087,6 +5087,53 @@
                 }
             }
         },
+        "/api/v1/pmes/{id}/enrollments": {
+            "post": {
+                "operationId": "pmes_enrollments_create",
+                "description": "PME du périmètre de l'utilisateur (rôle + périmètre, Document 1, § 6).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "pmes"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EnrollmentCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Enrollment"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/pmes/{id}/timeline": {
             "get": {
                 "operationId": "pmes_timeline_list",
@@ -7095,6 +7142,52 @@
                                     "items": {
                                         "$ref": "#/components/schemas/OrganizationMember"
                                     }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{user_id}": {
+            "patch": {
+                "operationId": "users_partial_update",
+                "description": "Correction du nom / téléphone d'un utilisateur de l'organisation active.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "user_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "users"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedUserUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sessionAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrganizationMember"
                                 }
                             }
                         },
@@ -11334,6 +11427,18 @@
                     "id"
                 ]
             },
+            "EnrollmentCreateRequest": {
+                "type": "object",
+                "properties": {
+                    "cohort_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "required": [
+                    "cohort_id"
+                ]
+            },
             "EvaluationRun": {
                 "type": "object",
                 "properties": {
@@ -14078,6 +14183,20 @@
                             "type": "string",
                             "minLength": 1
                         }
+                    }
+                }
+            },
+            "PatchedUserUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "full_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "phone": {
+                        "type": "string",
+                        "maxLength": 30
                     }
                 }
             },

@@ -1835,6 +1835,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pmes/{id}/enrollments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description PME du périmètre de l'utilisateur (rôle + périmètre, Document 1, § 6). */
+        post: operations["pmes_enrollments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pmes/{id}/timeline": {
         parameters: {
             query?: never;
@@ -2481,6 +2498,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Correction du nom / téléphone d'un utilisateur de l'organisation active. */
+        patch: operations["users_partial_update"];
         trace?: never;
     };
     "/api/v1/users/advisors": {
@@ -3665,6 +3699,10 @@ export interface components {
             readonly exited_at: string | null;
             readonly exit_reason: string;
         };
+        EnrollmentCreateRequest: {
+            /** Format: uuid */
+            cohort_id: string;
+        };
         EvaluationRun: {
             /** Format: uuid */
             readonly id: string;
@@ -4504,6 +4542,10 @@ export interface components {
             label?: string;
             default_scope?: components["schemas"]["RoleWriteDefaultScopeEnum"];
             permissions?: string[];
+        };
+        PatchedUserUpdateRequest: {
+            full_name?: string;
+            phone?: string;
         };
         PatchedVersionNotesRequest: {
             notes?: string;
@@ -8773,6 +8815,31 @@ export interface operations {
             };
         };
     };
+    pmes_enrollments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrollmentCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Enrollment"];
+                };
+            };
+        };
+    };
     pmes_timeline_list: {
         parameters: {
             query?: {
@@ -9905,6 +9972,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrganizationMember"][];
+                };
+            };
+        };
+    };
+    users_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedUserUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationMember"];
                 };
             };
         };

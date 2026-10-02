@@ -39,6 +39,7 @@ from .serializers import (
     RoleWriteSerializer,
     SwitchOrganizationSerializer,
     UserSummarySerializer,
+    UserUpdateSerializer,
 )
 
 INVALID_CREDENTIALS = "Identifiants invalides ou compte temporairement verrouillé."
@@ -216,6 +217,15 @@ class SwitchOrganizationView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def _members(users):
+    memberships = UserMembership.objects.select_related("role").order_by("created_at")
+    return (
+        users.filter(memberships__in=memberships)
+        .distinct()
+        .prefetch_related(Prefetch("memberships", queryset=memberships, to_attr="org_memberships"))
+    )
+
+
 class OrganizationMembersView(APIView):
     """Utilisateurs de l'organisation active et leurs appartenances."""
 
@@ -223,14 +233,23 @@ class OrganizationMembersView(APIView):
 
     @extend_schema(responses=OrganizationMemberSerializer(many=True))
     def get(self, request):
-        memberships = UserMembership.objects.select_related("role").order_by("created_at")
-        users = (
-            User.objects.filter(memberships__in=memberships)
-            .distinct()
-            .prefetch_related(Prefetch("memberships", queryset=memberships, to_attr="org_memberships"))
-            .order_by("full_name")
-        )
+        users = _members(User.objects.all()).order_by("full_name")
         return Response(OrganizationMemberSerializer(users, many=True).data)
+
+
+class OrganizationMemberDetailView(APIView):
+    """Correction du nom / téléphone d'un utilisateur de l'organisation active."""
+
+    required_permissions = "org.manage_users"
+
+    @extend_schema(request=UserUpdateSerializer, responses=OrganizationMemberSerializer)
+    def patch(self, request, user_id):
+        # Seuls les utilisateurs ayant une appartenance dans l'organisation active sont visibles (RLS).
+        user = get_object_or_404(_members(User.objects.all()), pk=user_id)
+        serializer = UserUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        services.update_user_profile(user, **serializer.validated_data)
+        return Response(OrganizationMemberSerializer(_members(User.objects.all()).get(pk=user_id)).data)
 
 
 class InviteView(APIView):

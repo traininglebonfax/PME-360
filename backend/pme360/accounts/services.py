@@ -417,6 +417,21 @@ def invite_user(
     return membership
 
 
+def update_user_profile(user: User, *, full_name: str | None = None, phone: str | None = None) -> User:
+    """Correction du nom (ou du téléphone) d'un utilisateur par l'administrateur ; l'adresse e-mail reste fixe."""
+    before = {"full_name": user.full_name, "phone": user.phone}
+    if full_name is not None:
+        full_name = " ".join(full_name.split())
+        if not full_name:
+            raise ValidationError({"full_name": ["Le nom est obligatoire."]})
+        user.full_name = full_name
+    if phone is not None:
+        user.phone = phone.strip()
+    user.save(update_fields=["full_name", "phone", "updated_at"])
+    audit.record("user.updated", instance=user, before=before, after={"full_name": user.full_name, "phone": user.phone})
+    return user
+
+
 def revoke_membership(membership: UserMembership) -> None:
     membership.is_active = False
     membership.valid_to = timezone.localdate()

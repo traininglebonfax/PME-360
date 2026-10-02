@@ -359,6 +359,28 @@ def assign(pme: Pme, advisor: User, role_in_pme: str, user) -> PmeAssignment:
     return assignment
 
 
+def enroll(pme: Pme, cohort_id: uuid.UUID, user) -> PmeEnrollment:
+    """Inscrit une PME déjà créée dans une cohorte d'un programme existant."""
+    cohort = Cohort.objects.select_related("programme").filter(pk=cohort_id).first()
+    if cohort is None:
+        raise ValidationError({"cohort_id": ["Cohorte introuvable."]})
+    if pme.lifecycle_status == Pme.LifecycleStatus.SORTIE:
+        raise BusinessError(
+            "Cette PME est sortie de l'accompagnement : réactivez-la avant de l'inscrire.", code="pme_exited"
+        )
+    if PmeEnrollment.objects.filter(pme=pme, cohort=cohort, exited_at__isnull=True).exists():
+        raise Conflict("Cette PME est déjà inscrite dans cette cohorte.", code="already_enrolled")
+    try:
+        enrollment = PmeEnrollment.objects.create(
+            pme=pme, cohort=cohort, enrolled_at=timezone.localdate(), created_by=user
+        )
+    except IntegrityError as exc:  # double clic : la contrainte d'unicité tranche
+        raise Conflict("Cette PME est déjà inscrite dans cette cohorte.", code="already_enrolled") from exc
+    audit.record("pme.enrolled", instance=enrollment, pme_id=pme.pk, after={"cohort": str(cohort)})
+    touch(pme)
+    return enrollment
+
+
 def assign_by_id(pme: Pme, user_id: uuid.UUID, role_in_pme: str, user) -> PmeAssignment:
     return assign(pme, _check_advisor(user_id), role_in_pme, user)
 

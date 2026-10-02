@@ -67,6 +67,10 @@ class AssignmentCreateSerializer(serializers.Serializer):
     role_in_pme = serializers.ChoiceField(choices=PmeAssignment.RoleInPme.choices)
 
 
+class EnrollmentCreateSerializer(serializers.Serializer):
+    cohort_id = serializers.UUIDField()
+
+
 class EnrolledCohortSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     name = serializers.CharField()

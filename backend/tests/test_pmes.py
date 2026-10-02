@@ -169,6 +169,21 @@ def test_reassigning_principal_advisor_ends_previous(org, make_user, make_pme, c
     assert client_for(first, org).get(f"/api/v1/pmes/{pme.id}").status_code == 404
 
 
+def test_existing_pme_joins_existing_programme(org, make_user, make_pme, client_for, cohort):
+    advisor = make_user(org, "CONSEILLER")
+    pme = make_pme(org, advisor=advisor)
+    url = f"/api/v1/pmes/{pme.id}/enrollments"
+    client = client_for(advisor, org)
+    response = client.post(url, {"cohort_id": str(cohort.id)}, format="json")
+    assert response.status_code == 201, response.content
+    assert response.json()["cohort"]["programme"] == "Programme test"
+    assert client.get(f"/api/v1/pmes/{pme.id}").json()["enrollments"][0]["cohort"]["name"] == "Cohorte A"
+    again = client.post(url, {"cohort_id": str(cohort.id)}, format="json")
+    assert again.status_code == 409 and again.json()["code"] == "already_enrolled"
+    leader = make_user(org, "DIRIGEANT_PME", scope_ref_id=pme.id)
+    assert client_for(leader, org).post(url, {"cohort_id": str(cohort.id)}, format="json").status_code == 403
+
+
 def test_cannot_assign_pme_user_as_advisor(org, make_user, make_pme, client_for):
     pme = make_pme(org)
     leader = make_user(org, "DIRIGEANT_PME", scope_ref_id=pme.id)
