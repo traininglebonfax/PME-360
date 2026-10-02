@@ -131,6 +131,7 @@ urlpatterns = [
     path("documents/<uuid:document_id>/versions/<int:version_no>/download-url", documents.DownloadUrlView.as_view()),
     path("files/<str:token>", documents.FileDownloadView.as_view()),
     path("verifications", ai.VerificationQueueView.as_view()),
+    path("verifications/history", documents.VerifiedHistoryView.as_view()),
     # IA (Document 4) : extraction, revue, traçabilité, pré-diagnostic, analyse financière, Copilot
     path("documents/<uuid:document_id>/extraction", ai.DocumentExtractionView.as_view()),
     path("documents/<uuid:document_id>/extraction/review", ai.ExtractionReviewView.as_view()),

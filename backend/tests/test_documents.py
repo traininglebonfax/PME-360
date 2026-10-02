@@ -188,6 +188,19 @@ def test_verification_rules_and_feedback(org, pme, advisor, leader, client_for, 
     assert client.get("/api/v1/verifications").json() == []
 
 
+def test_verified_history_lists_decided_documents(org, pme, advisor, leader, client_for, run_pipeline):
+    client = client_for(advisor, org)
+    decided = run_pipeline(lambda: upload(client, pme, "rccm.pdf", files.pdf())).json()["id"]
+    pending = run_pipeline(lambda: upload(client, pme, "statuts.pdf", files.pdf(), document_type="STATUTS")).json()["id"]
+    client.post(f"/api/v1/documents/{decided}/verify", {"decision": "CONFORME"}, format="json")
+
+    history = client.get("/api/v1/verifications/history").json()
+    assert [d["id"] for d in history] == [decided] and history[0]["verified_by_name"] == advisor.full_name
+    assert [d["id"] for d in client.get("/api/v1/verifications/history?mine=1").json()] == [decided]
+    assert pending in [d["id"] for d in client.get("/api/v1/verifications").json()]
+    assert client_for(leader, org).get("/api/v1/verifications/history").status_code == 403
+
+
 def test_one_decision_per_version_unless_revised(org, pme, advisor, leader, client_for, run_pipeline):
     client = client_for(advisor, org)
     document_id = run_pipeline(lambda: upload(client, pme, "rccm.pdf", files.pdf())).json()["id"]

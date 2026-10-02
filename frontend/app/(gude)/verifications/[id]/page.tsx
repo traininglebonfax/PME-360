@@ -50,9 +50,15 @@ export default function VerificationPage() {
   return (
     <>
       <nav className="mb-2 text-sm text-muted">
-        <Link href="/verifications" className="hover:text-brand-700">
-          Documents à vérifier
-        </Link>{" "}
+        {data.conformity_status === "NON_EVALUE" ? (
+          <Link href="/verifications" className="hover:text-brand-700">
+            Documents à vérifier
+          </Link>
+        ) : (
+          <Link href="/verifications?onglet=verifies" className="hover:text-brand-700">
+            Documents déjà vérifiés
+          </Link>
+        )}{" "}
         /{" "}
         <Link href={`/pme/${data.pme.id}?onglet=documents`} className="hover:text-brand-700">
           {data.pme.name}
