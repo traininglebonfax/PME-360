@@ -188,6 +188,25 @@ def test_verification_rules_and_feedback(org, pme, advisor, leader, client_for, 
     assert client.get("/api/v1/verifications").json() == []
 
 
+def test_one_decision_per_version_unless_revised(org, pme, advisor, leader, client_for, run_pipeline):
+    client = client_for(advisor, org)
+    document_id = run_pipeline(lambda: upload(client, pme, "rccm.pdf", files.pdf())).json()["id"]
+    url = f"/api/v1/documents/{document_id}/verify"
+    assert client.post(url, {"decision": "CONFORME"}, format="json").status_code == 200
+
+    again = client.post(url, {"decision": "CONFORME"}, format="json")
+    assert again.status_code == 409 and again.json()["code"] == "already_decided"
+    no_reason = client.post(url, {"decision": "NON_CONFORME", "revise": True}, format="json")
+    assert no_reason.status_code == 400 and "reason" in no_reason.json()["errors"]
+    revised = client.post(
+        url, {"decision": "NON_CONFORME", "reason": "Extrait de plus de 3 mois.", "revise": True}, format="json"
+    )
+    assert revised.status_code == 200 and revised.json()["status"] == "NON_CONFORME"
+    with tenant_context(org.id):
+        assert Notification.objects.filter(user=leader, event_code="DOCUMENT_DECISION").count() == 2
+        assert AuditLog.objects.filter(entity_id=document_id, action="document.decision_revised").count() == 1
+
+
 def test_signed_download_is_personal_short_lived_and_audited(org, pme, advisor, make_user, client_for, run_pipeline):
     client = client_for(advisor, org)
     content = files.pdf()

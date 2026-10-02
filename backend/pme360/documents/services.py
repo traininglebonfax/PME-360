@@ -20,7 +20,7 @@ from pme360.accounts.access import AccessContext
 from pme360.audit import services as audit
 from pme360.compliance.models import Deadline
 from pme360.core import events
-from pme360.core.exceptions import BusinessError
+from pme360.core.exceptions import BusinessError, Conflict
 from pme360.notifications import services as notifications
 from pme360.pmes import services as pme_services
 from pme360.pmes.models import Pme
@@ -264,15 +264,29 @@ def verify(
     period_end: date | None = None,
     issued_at: date | None = None,
     expires_at: date | None = None,
+    revise: bool = False,
 ) -> Document:
-    """Décision humaine sur un document (RM-05) ; motif obligatoire hors conformité pleine."""
+    """Décision humaine sur un document (RM-05) ; motif obligatoire hors conformité pleine.
+
+    Une seule décision par version : revenir sur une décision déjà rendue exige ``revise`` et un motif.
+    """
     if not access.has("document.verify"):
         raise PermissionDenied()
+    # Verrou de ligne : deux clics (ou deux onglets) ne produisent pas deux décisions.
+    document = Document.objects.select_for_update().get(pk=document.pk)
     if document.integrity_status != Document.Integrity.SAIN:
         raise BusinessError("Ce document n'a pas passé les contrôles de sécurité.", code="not_verifiable")
     if decision not in DECISION_LABELS:
         raise ValidationError({"decision": ["Décision inconnue."]})
     reason = reason.strip()
+    already_decided = document.conformity_status != Document.Conformity.NON_EVALUE
+    if already_decided and not revise:
+        raise Conflict(
+            "Ce document a déjà été examiné. Pour changer la décision, utilisez « Revoir la décision ».",
+            code="already_decided",
+        )
+    if already_decided and not reason:
+        raise ValidationError({"reason": ["Expliquez pourquoi la décision est revue."]})
     if decision != Document.Conformity.CONFORME and not reason:
         raise ValidationError({"reason": ["Expliquez à la PME ce qui ne va pas, en langage simple."]})
     for field, value in (
@@ -309,7 +323,7 @@ def verify(
         deadline.closed_at = timezone.now() if decision != Document.Conformity.NON_CONFORME else None
         deadline.save(update_fields=["status", "closed_at", "updated_at"])
     audit.record(
-        "document.verified",
+        "document.decision_revised" if already_decided else "document.verified",
         instance=document,
         pme_id=document.pme_id,
         before=before,

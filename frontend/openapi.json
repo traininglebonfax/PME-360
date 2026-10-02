@@ -3,7 +3,7 @@
     "info": {
         "title": "PME360 API",
         "version": "1.0.0",
-        "description": "API de la plateforme PME360 (instance GUDE-PME 360). Erreurs au format RFC 9457."
+        "description": "API de la plateforme PME360 (multi-organisations). Erreurs au format RFC 9457."
     },
     "paths": {
         "/api/v1/actions": {
@@ -17954,6 +17954,10 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true
+                    },
+                    "revise": {
+                        "type": "boolean",
+                        "default": false
                     }
                 },
                 "required": [

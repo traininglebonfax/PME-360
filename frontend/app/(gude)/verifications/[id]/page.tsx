@@ -165,10 +165,13 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function DecisionCard({ document, onDone }: { document: Schemas["DocumentDetail"]; onDone: () => void }) {
-  const [decision, setDecision] = useState<string>("CONFORME");
+  const decided = document.conformity_status !== "NON_EVALUE";
+  // Une décision par version : revenir sur une décision rendue est un geste explicite et motivé.
+  const [revising, setRevising] = useState(false);
+  const [decision, setDecision] = useState<string>(decided ? document.conformity_status : "CONFORME");
   // Initialisé une fois depuis le document ; le parent remonte ce composant (key) quand le document change.
   const [form, setForm] = useState(() => ({
-    reason: document.decision_reason ?? "",
+    reason: decided ? "" : (document.decision_reason ?? ""),
     period_start: document.period_start ?? document.deadline?.period_start?.toString() ?? "",
     period_end: document.period_end ?? document.deadline?.period_end?.toString() ?? "",
     issued_at: document.issued_at ?? "",
@@ -187,6 +190,7 @@ function DecisionCard({ document, onDone }: { document: Schemas["DocumentDetail"
             period_end: form.period_end || null,
             issued_at: form.issued_at || null,
             expires_at: form.expires_at || null,
+            revise: decided,
           },
         }),
       ),
@@ -196,8 +200,28 @@ function DecisionCard({ document, onDone }: { document: Schemas["DocumentDetail"
   if (document.integrity_status !== "SAIN") return null;
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value });
 
+  if (decided && !revising) {
+    const label = DECISIONS.find((option) => option.value === document.conformity_status)?.label ?? document.conformity_status;
+    return (
+      <Card title="Décision">
+        <div className="space-y-3 text-sm">
+          <p>
+            Déjà examiné : <span className="font-medium">{label}</span>
+            {document.verified_by_name && <> par {document.verified_by_name}</>}
+            {document.verified_at && <>, le {formatDateTime(document.verified_at)}</>}.
+          </p>
+          {document.decision_reason && <p className="text-muted">Motif : {document.decision_reason}</p>}
+          <Button variant="secondary" className="w-full" onClick={() => setRevising(true)}>
+            Revoir la décision
+          </Button>
+          <p className="text-xs text-muted">Revoir une décision exige un motif ; la PME est prévenue du changement.</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
-    <Card title="Décision">
+    <Card title={decided ? "Revoir la décision" : "Décision"}>
       <form
         className="space-y-3"
         onSubmit={(e) => {
@@ -227,16 +251,27 @@ function DecisionCard({ document, onDone }: { document: Schemas["DocumentDetail"
           ))}
         </fieldset>
         <TextInput
-          label={decision === "CONFORME" ? "Commentaire (facultatif)" : "Motif pour la PME (obligatoire, langage simple)"}
+          label={
+            decided
+              ? "Motif du changement (obligatoire, visible par la PME)"
+              : decision === "CONFORME"
+                ? "Commentaire (facultatif)"
+                : "Motif pour la PME (obligatoire, langage simple)"
+          }
           value={form.reason}
           onChange={set("reason")}
           error={errors.reason}
-          required={decision !== "CONFORME"}
+          required={decided || decision !== "CONFORME"}
         />
         {verify.error && !(verify.error instanceof ApiError && verify.error.code === "validation_error") && <Alert>{errorMessage(verify.error)}</Alert>}
         <Button type="submit" className="w-full" loading={verify.isPending}>
           Enregistrer la décision
         </Button>
+        {decided && (
+          <Button type="button" variant="secondary" className="w-full" onClick={() => setRevising(false)}>
+            Annuler
+          </Button>
+        )}
         <p className="text-xs text-muted">La PME est prévenue ; un document conforme relève le score courant de la PME.</p>
       </form>
     </Card>
