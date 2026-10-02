@@ -170,6 +170,7 @@ class VerifySerializer(serializers.Serializer):
     period_end = serializers.DateField(required=False, allow_null=True)
     issued_at = serializers.DateField(required=False, allow_null=True)
     expires_at = serializers.DateField(required=False, allow_null=True)
+    revise = serializers.BooleanField(required=False, default=False)
 
 
 class DownloadUrlSerializer(serializers.Serializer):

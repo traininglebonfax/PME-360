@@ -5663,6 +5663,8 @@ export interface components {
             issued_at?: string | null;
             /** Format: date */
             expires_at?: string | null;
+            /** @default false */
+            revise: boolean;
         };
         VerifyRuleRequest: {
             source_reference: string;
