@@ -65,6 +65,7 @@ urlpatterns = [
     path("users", accounts.OrganizationMembersView.as_view()),
     path("users/invite", accounts.InviteView.as_view()),
     path("users/advisors", accounts.AdvisorListView.as_view()),
+    path("users/<uuid:user_id>", accounts.OrganizationMemberDetailView.as_view()),
     path("memberships/<uuid:membership_id>/revoke", accounts.RevokeMembershipView.as_view()),
     path("roles", accounts.RoleListView.as_view()),
     path("config/roles", accounts.RoleAdminListView.as_view()),

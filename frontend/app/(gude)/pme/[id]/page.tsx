@@ -22,18 +22,34 @@ import { hasPermission, useMe } from "@/lib/session";
 
 type Pme = Schemas["Pme"];
 
+// Une couleur par étape du parcours : teinte douce au repos, couleur vive pour l'onglet affiché.
+// Classes écrites en entier (Tailwind ne détecte pas les noms construits dynamiquement).
+const TAB_COLORS = {
+  sky: { idle: "bg-sky-50 text-sky-800 hover:bg-sky-100", active: "bg-sky-500 text-white shadow-md shadow-sky-500/40", bar: "bg-sky-500" },
+  indigo: { idle: "bg-indigo-50 text-indigo-800 hover:bg-indigo-100", active: "bg-indigo-500 text-white shadow-md shadow-indigo-500/40", bar: "bg-indigo-500" },
+  violet: { idle: "bg-violet-50 text-violet-800 hover:bg-violet-100", active: "bg-violet-500 text-white shadow-md shadow-violet-500/40", bar: "bg-violet-500" },
+  fuchsia: { idle: "bg-fuchsia-50 text-fuchsia-800 hover:bg-fuchsia-100", active: "bg-fuchsia-500 text-white shadow-md shadow-fuchsia-500/40", bar: "bg-fuchsia-500" },
+  rose: { idle: "bg-rose-50 text-rose-800 hover:bg-rose-100", active: "bg-rose-500 text-white shadow-md shadow-rose-500/40", bar: "bg-rose-500" },
+  orange: { idle: "bg-orange-50 text-orange-800 hover:bg-orange-100", active: "bg-orange-500 text-white shadow-md shadow-orange-500/40", bar: "bg-orange-500" },
+  amber: { idle: "bg-amber-50 text-amber-800 hover:bg-amber-100", active: "bg-amber-500 text-white shadow-md shadow-amber-500/40", bar: "bg-amber-500" },
+  lime: { idle: "bg-lime-50 text-lime-800 hover:bg-lime-100", active: "bg-lime-600 text-white shadow-md shadow-lime-600/40", bar: "bg-lime-600" },
+  emerald: { idle: "bg-emerald-50 text-emerald-800 hover:bg-emerald-100", active: "bg-emerald-500 text-white shadow-md shadow-emerald-500/40", bar: "bg-emerald-500" },
+  teal: { idle: "bg-teal-50 text-teal-800 hover:bg-teal-100", active: "bg-teal-500 text-white shadow-md shadow-teal-500/40", bar: "bg-teal-500" },
+  cyan: { idle: "bg-cyan-50 text-cyan-800 hover:bg-cyan-100", active: "bg-cyan-500 text-white shadow-md shadow-cyan-500/40", bar: "bg-cyan-500" },
+} as const;
+
 const TABS = [
-  { key: "synthese", label: "Synthèse" },
-  { key: "identite", label: "Identité" },
-  { key: "dirigeants", label: "Dirigeants" },
-  { key: "suivi", label: "Suivi" },
-  { key: "historique", label: "Historique" },
-  { key: "diagnostic", label: "Diagnostic & scores" },
-  { key: "documents", label: "Documents" },
-  { key: "finances", label: "Finances" },
-  { key: "alertes", label: "Alertes" },
-  { key: "plan", label: "Plan & actions" },
-  { key: "rapports", label: "Rapports" },
+  { key: "synthese", label: "Synthèse", color: "sky" },
+  { key: "identite", label: "Identité", color: "indigo" },
+  { key: "dirigeants", label: "Dirigeants", color: "violet" },
+  { key: "suivi", label: "Suivi", color: "fuchsia" },
+  { key: "historique", label: "Historique", color: "rose" },
+  { key: "diagnostic", label: "Diagnostic & scores", color: "orange" },
+  { key: "documents", label: "Documents", color: "amber" },
+  { key: "finances", label: "Finances", color: "lime" },
+  { key: "alertes", label: "Alertes", color: "emerald" },
+  { key: "plan", label: "Plan & actions", color: "teal" },
+  { key: "rapports", label: "Rapports", color: "cyan" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -79,23 +95,26 @@ export default function PmeDetailPage() {
         </div>
       </div>
 
-      <div className="mb-6 overflow-x-auto border-b border-line" role="tablist" aria-label="Fiche PME 360°">
-        <div className="flex gap-1">
-          {TABS.map((item) => (
-            <button
-              key={item.key}
-              role="tab"
-              aria-selected={tab === item.key}
-              onClick={() => setTab(item.key)}
-              className={cx(
-                "whitespace-nowrap border-b-2 px-3 py-2.5 text-sm",
-                tab === item.key ? "border-brand-600 font-medium text-brand-800" : "border-transparent text-muted hover:text-ink",
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
+      <div className="mb-6">
+        <div className="overflow-x-auto pb-2" role="tablist" aria-label="Fiche PME 360°">
+          <div className="flex gap-1.5">
+            {TABS.map((item) => (
+              <button
+                key={item.key}
+                role="tab"
+                aria-selected={tab === item.key}
+                onClick={() => setTab(item.key)}
+                className={cx(
+                  "whitespace-nowrap rounded-full px-3.5 py-2 text-sm transition-colors",
+                  tab === item.key ? cx("font-semibold", TAB_COLORS[item.color].active) : cx("font-medium", TAB_COLORS[item.color].idle),
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
+        <div className={cx("h-1 rounded-full", TAB_COLORS[TABS.find((t) => t.key === tab)!.color].bar)} aria-hidden="true" />
       </div>
 
       {tab === "synthese" && <Synthesis pme={data} />}
@@ -385,6 +404,71 @@ function Persons({ pme }: { pme: Pme }) {
   );
 }
 
+/** Programmes suivis par la PME ; une PME déjà créée peut rejoindre une cohorte d'un programme existant. */
+function Programmes({ pme, canEnroll, onEnrolled }: { pme: Pme; canEnroll: boolean; onEnrolled: () => void }) {
+  const programmes = useQuery({ queryKey: ["programmes"], queryFn: () => unwrap(api.GET("/api/v1/programmes")), enabled: canEnroll });
+  const [cohortId, setCohortId] = useState("");
+  const enroll = useMutation({
+    mutationFn: () => unwrap(api.POST("/api/v1/pmes/{id}/enrollments", { params: { path: { id: pme.id } }, body: { cohort_id: cohortId } })),
+    onSuccess: () => {
+      setCohortId("");
+      onEnrolled();
+    },
+  });
+  const activeCohorts = new Set(pme.enrollments.filter((e) => !e.exited_at).map((e) => e.cohort.id));
+  const cohorts = (programmes.data ?? []).flatMap((programme) =>
+    programme.cohorts
+      .filter((cohort) => !activeCohorts.has(cohort.id))
+      .map((cohort) => ({ value: cohort.id, label: `${programme.name} — ${cohort.name}` })),
+  );
+
+  return (
+    <div className="mt-6">
+      <p className="mb-2 text-sm font-medium">Programmes</p>
+      {pme.enrollments.length === 0 ? (
+        <p className="text-sm text-muted">Inscrite dans aucun programme.</p>
+      ) : (
+        <ul className="space-y-1 text-sm text-muted">
+          {pme.enrollments.map((enrollment) => (
+            <li key={enrollment.id}>
+              {enrollment.cohort.programme} — {enrollment.cohort.name} (depuis le {formatDate(enrollment.enrolled_at)}
+              {enrollment.exited_at ? `, sortie le ${formatDate(enrollment.exited_at)}` : ""})
+            </li>
+          ))}
+        </ul>
+      )}
+      {canEnroll && (
+        <form
+          className="mt-3 flex flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            enroll.mutate();
+          }}
+        >
+          {enroll.error && <Alert>{errorMessage(enroll.error)}</Alert>}
+          {programmes.data && cohorts.length === 0 ? (
+            <p className="text-xs text-muted">Aucune autre cohorte disponible : créez-en une depuis la page Programmes.</p>
+          ) : (
+            <>
+              <SelectInput
+                label="Inscrire à un programme"
+                placeholder="Choisir un programme et une cohorte"
+                value={cohortId}
+                onChange={(e) => setCohortId(e.target.value)}
+                options={cohorts}
+                required
+              />
+              <Button type="submit" variant="secondary" loading={enroll.isPending} disabled={!cohortId}>
+                Inscrire la PME
+              </Button>
+            </>
+          )}
+        </form>
+      )}
+    </div>
+  );
+}
+
 function FollowUp({ pme }: { pme: Pme }) {
   const { data: me } = useMe();
   const invalidate = useInvalidatePme(pme.id);
@@ -465,19 +549,7 @@ function FollowUp({ pme }: { pme: Pme }) {
         ) : (
           <p className="text-sm text-muted">Aucun changement de statut possible depuis votre profil.</p>
         )}
-        {pme.enrollments.length > 0 && (
-          <div className="mt-6">
-            <p className="mb-2 text-sm font-medium">Programmes</p>
-            <ul className="space-y-1 text-sm text-muted">
-              {pme.enrollments.map((enrollment) => (
-                <li key={enrollment.id}>
-                  {enrollment.cohort.programme} — {enrollment.cohort.name} (depuis le {formatDate(enrollment.enrolled_at)}
-                  {enrollment.exited_at ? `, sortie le ${formatDate(enrollment.exited_at)}` : ""})
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <Programmes pme={pme} canEnroll={hasPermission(me, "pme.update") && pme.lifecycle_status !== "SORTIE"} onEnrolled={invalidate} />
       </Card>
       <Card title="Équipe de suivi">
         {pme.assignments.length === 0 ? (

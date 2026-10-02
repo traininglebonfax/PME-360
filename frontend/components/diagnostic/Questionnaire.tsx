@@ -28,6 +28,8 @@ export function Questionnaire({ diagnosticId, onSubmitted }: { diagnosticId: str
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const pending = useRef<Record<string, Value>>({});
+  const stepTop = useRef<HTMLElement>(null);
+  const stepChanged = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flush = useCallback(async () => {
@@ -57,6 +59,18 @@ export function Questionnaire({ diagnosticId, onSubmitted }: { diagnosticId: str
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
+
+  // Changement d'étape : on se place sur la première question de la nouvelle étape (pas au bas de la page).
+  useEffect(() => {
+    if (!stepChanged.current) return;
+    stepChanged.current = false;
+    stepTop.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [stepIndex]);
+
+  const goToStep = (index: number) => {
+    stepChanged.current = true;
+    setStepIndex(index);
+  };
 
   const setValue = (code: string, value: Value, immediate = true) => {
     setDraft((current) => ({ ...current, [code]: value }));
@@ -112,7 +126,7 @@ export function Questionnaire({ diagnosticId, onSubmitted }: { diagnosticId: str
               return (
                 <li key={s.code}>
                   <button
-                    onClick={() => setStepIndex(index)}
+                    onClick={() => goToStep(index)}
                     aria-current={index === stepIndex ? "step" : undefined}
                     className={cx(
                       "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm",
@@ -142,7 +156,7 @@ export function Questionnaire({ diagnosticId, onSubmitted }: { diagnosticId: str
             <Alert tone="info">Le questionnaire est en lecture seule dans l'état actuel du diagnostic.</Alert>
           </div>
         )}
-        <header className="mb-4">
+        <header ref={stepTop} className="mb-4 scroll-mt-6">
           <h2 className="text-lg font-semibold">{step.title}</h2>
           {step.description && <p className="text-sm text-muted">{step.description}</p>}
         </header>
@@ -159,11 +173,11 @@ export function Questionnaire({ diagnosticId, onSubmitted }: { diagnosticId: str
           ))}
         </div>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <Button variant="secondary" disabled={stepIndex === 0} onClick={() => setStepIndex(stepIndex - 1)}>
+          <Button variant="secondary" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}>
             Étape précédente
           </Button>
           {stepIndex < steps.length - 1 ? (
-            <Button onClick={() => setStepIndex(stepIndex + 1)}>Étape suivante</Button>
+            <Button onClick={() => goToStep(stepIndex + 1)}>Étape suivante</Button>
           ) : (
             editable &&
             status === "EN_COLLECTE" && (

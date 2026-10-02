@@ -95,17 +95,7 @@ function Members() {
             <ul className="divide-y divide-line">
               {members.data!.map((member) => (
                 <li key={member.id} className="py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="font-medium">{member.full_name}</p>
-                      <p className="text-sm text-muted">
-                        {member.email} · dernière connexion {formatRelative(member.last_login)}
-                        {!member.mfa_enabled && member.memberships.some((m) => !m.role.endsWith("_PME")) && (
-                          <span className="ml-1 text-amber-700">· MFA non activée</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
+                  <MemberIdentity member={member} onSaved={() => queryClient.invalidateQueries({ queryKey: ["members"] })} />
                   <div className="mt-2 flex flex-wrap gap-2">
                     {member.memberships.map((membership) => (
                       <span key={membership.id} className="inline-flex items-center gap-1.5">
@@ -182,5 +172,69 @@ function Members() {
         </Card>
       </div>
     </>
+  );
+}
+
+/** Nom et téléphone d'un membre, corrigeables par l'administrateur (l'adresse e-mail, identifiant de connexion, reste fixe). */
+function MemberIdentity({ member, onSaved }: { member: Schemas["OrganizationMember"]; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ full_name: member.full_name, phone: member.phone ?? "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const save = useMutation({
+    mutationFn: () => unwrap(api.PATCH("/api/v1/users/{user_id}", { params: { path: { user_id: member.id } }, body: form })),
+    onSuccess: () => {
+      setEditing(false);
+      setErrors({});
+      onSaved();
+    },
+    onError: (err) => setErrors(err instanceof ApiError ? err.fieldErrors() : {}),
+  });
+
+  if (editing)
+    return (
+      <form
+        className="flex flex-wrap items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save.mutate();
+        }}
+      >
+        <TextInput label="Nom complet" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required error={errors.full_name} />
+        <TextInput label="Téléphone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} error={errors.phone} />
+        <Button type="submit" loading={save.isPending}>
+          Enregistrer
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            setEditing(false);
+            setForm({ full_name: member.full_name, phone: member.phone ?? "" });
+            setErrors({});
+          }}
+        >
+          Annuler
+        </Button>
+        {save.error && !(save.error instanceof ApiError && save.error.code === "validation_error") && (
+          <div className="w-full">
+            <Alert>{errorMessage(save.error)}</Alert>
+          </div>
+        )}
+      </form>
+    );
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <p className="font-medium">{member.full_name}</p>
+        <p className="text-sm text-muted">
+          {member.email} · dernière connexion {formatRelative(member.last_login)}
+          {!member.mfa_enabled && member.memberships.some((m) => !m.role.endsWith("_PME")) && <span className="ml-1 text-amber-700">· MFA non activée</span>}
+        </p>
+      </div>
+      <Button variant="ghost" onClick={() => setEditing(true)} aria-label={`Modifier le nom de ${member.full_name}`}>
+        Modifier
+      </Button>
+    </div>
   );
 }

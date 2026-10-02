@@ -6,7 +6,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Alert, Badge, Button, Card, cx, EmptyState, LoadingBlock, SelectInput, TextInput } from "@/components/ui";
 import { api, ApiError, errorMessage, type Schemas, unwrap } from "@/lib/api";
@@ -31,6 +31,12 @@ export function PlanTab({ pmeId }: { pmeId: string }) {
       return data as Plan;
     },
   });
+  // Après « Générer le plan », on remonte au plan pour voir « Soumettre à validation » (le bouton est en haut).
+  const planTop = useRef<HTMLDivElement>(null);
+  const [generatedAt, setGeneratedAt] = useState(0);
+  useEffect(() => {
+    if (generatedAt) planTop.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [generatedAt]);
   if (plan.isLoading) return <LoadingBlock />;
   if (plan.error) return <Alert>{errorMessage(plan.error)}</Alert>;
   const current = plan.data;
@@ -38,15 +44,36 @@ export function PlanTab({ pmeId }: { pmeId: string }) {
 
   return (
     <div className="space-y-6">
-      {current && <PlanPanel plan={current} pmeId={pmeId} canEdit={canEdit} />}
-      {reviewing && <RecommendationsPanel pmeId={pmeId} canEdit={canEdit} hasDraft={current?.status === "BROUILLON"} />}
+      {current && (
+        <div ref={planTop} className="scroll-mt-6">
+          <PlanPanel plan={current} pmeId={pmeId} canEdit={canEdit} />
+        </div>
+      )}
+      {reviewing && (
+        <RecommendationsPanel
+          pmeId={pmeId}
+          canEdit={canEdit}
+          hasDraft={current?.status === "BROUILLON"}
+          onGenerated={() => setGeneratedAt(Date.now())}
+        />
+      )}
     </div>
   );
 }
 
 // --- Recommandations ---------------------------------------------------------------------------------------------
 
-function RecommendationsPanel({ pmeId, canEdit, hasDraft }: { pmeId: string; canEdit: boolean; hasDraft: boolean }) {
+function RecommendationsPanel({
+  pmeId,
+  canEdit,
+  hasDraft,
+  onGenerated,
+}: {
+  pmeId: string;
+  canEdit: boolean;
+  hasDraft: boolean;
+  onGenerated: () => void;
+}) {
   const queryClient = useQueryClient();
   const key = ["recommendations", pmeId];
   const recommendations = useQuery({
@@ -63,6 +90,7 @@ function RecommendationsPanel({ pmeId, canEdit, hasDraft }: { pmeId: string; can
     onSuccess: (plan) => {
       queryClient.setQueryData(["plan", pmeId], plan);
       queryClient.invalidateQueries({ queryKey: key });
+      onGenerated();
     },
   });
 

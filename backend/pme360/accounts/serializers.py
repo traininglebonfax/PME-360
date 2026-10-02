@@ -81,6 +81,11 @@ class OrganizationMemberSerializer(serializers.ModelSerializer):
         return MembershipSerializer(getattr(user, "org_memberships", []), many=True).data
 
 
+class UserUpdateSerializer(serializers.Serializer):
+    full_name = serializers.CharField(max_length=200, required=False)
+    phone = serializers.CharField(max_length=30, required=False, allow_blank=True)
+
+
 class InviteSerializer(serializers.Serializer):
     email = serializers.EmailField()
     full_name = serializers.CharField(max_length=200)

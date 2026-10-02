@@ -126,6 +126,20 @@ def test_members_of_other_org_are_not_listed(org, other_org, make_user, client_f
     assert "etranger@test.test" not in {m["email"] for m in members}
 
 
+def test_admin_renames_user_of_own_org_only(org, other_org, make_user, client_for):
+    target = make_user(org, "CONSEILLER")
+    foreign = make_user(other_org, "CONSEILLER")
+    admin = client_for(make_user(org, "ADMIN_ORG"), org)
+    response = admin.patch(f"/api/v1/users/{target.id}", {"full_name": "  Konan   Brou Aya "}, format="json")
+    assert response.status_code == 200, response.content
+    assert response.json()["full_name"] == "Konan Brou Aya" and response.json()["memberships"]
+    blank = admin.patch(f"/api/v1/users/{target.id}", {"full_name": " "}, format="json")
+    assert blank.status_code == 400
+    assert admin.patch(f"/api/v1/users/{foreign.id}", {"full_name": "X"}, format="json").status_code == 404
+    advisor = client_for(target, org)
+    assert advisor.patch(f"/api/v1/users/{target.id}", {"full_name": "Moi"}, format="json").status_code == 403
+
+
 def test_revoke_membership(org, make_user, client_for):
     admin = make_user(org, "ADMIN_ORG")
     target = make_user(org, "CONSEILLER")

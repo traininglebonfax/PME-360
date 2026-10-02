@@ -19,6 +19,8 @@ from .serializers import (
     AssignmentSerializer,
     DuplicateQuerySerializer,
     DuplicateSerializer,
+    EnrollmentCreateSerializer,
+    EnrollmentSerializer,
     PersonSerializer,
     PmeCreateSerializer,
     PmeListSerializer,
@@ -53,6 +55,7 @@ class PmeViewSet(
         "transition": "pme.lifecycle",
         "assignments": "pme.assign",
         "end_assignment": "pme.assign",
+        "enrollments": "pme.update",
         "duplicates": "pme.create",
         "timeline": "pme.view",
     }
@@ -150,6 +153,15 @@ class PmeViewSet(
         serializer.is_valid(raise_exception=True)
         assignment = services.assign_by_id(pme, **serializer.validated_data, user=request.user)
         return Response(AssignmentSerializer(assignment).data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(request=EnrollmentCreateSerializer, responses={201: EnrollmentSerializer})
+    @action(detail=True, methods=["post"])
+    def enrollments(self, request, pk=None):
+        pme = self.get_object()
+        serializer = EnrollmentCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        enrollment = services.enroll(pme, serializer.validated_data["cohort_id"], request.user)
+        return Response(EnrollmentSerializer(enrollment).data, status=status.HTTP_201_CREATED)
 
     @extend_schema(request=None, responses=AssignmentSerializer)
     @action(detail=True, methods=["post"], url_path="assignments/<uuid:assignment_id>/end")

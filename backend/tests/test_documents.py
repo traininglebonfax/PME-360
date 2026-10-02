@@ -191,7 +191,9 @@ def test_verification_rules_and_feedback(org, pme, advisor, leader, client_for, 
 def test_verified_history_lists_decided_documents(org, pme, advisor, leader, client_for, run_pipeline):
     client = client_for(advisor, org)
     decided = run_pipeline(lambda: upload(client, pme, "rccm.pdf", files.pdf())).json()["id"]
-    pending = run_pipeline(lambda: upload(client, pme, "statuts.pdf", files.pdf(), document_type="STATUTS")).json()["id"]
+    pending = run_pipeline(lambda: upload(client, pme, "statuts.pdf", files.pdf(), document_type="STATUTS")).json()[
+        "id"
+    ]
     client.post(f"/api/v1/documents/{decided}/verify", {"decision": "CONFORME"}, format="json")
 
     history = client.get("/api/v1/verifications/history").json()
