@@ -231,16 +231,33 @@ export default function NewPmePage() {
           )}
           {step === 2 && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <p className="text-sm font-medium text-ink sm:col-span-2">Dirigeant principal (contact)</p>
+              <p className="text-sm font-medium text-ink sm:col-span-2">Dirigeant principal</p>
               <TextInput label="Nom complet" value={form.person_name} onChange={set("person_name")} error={errors["primary_person.full_name"]} />
               <SelectInput
                 label="Fonction"
                 value={form.person_role}
                 onChange={set("person_role")}
-                options={Object.entries(PERSON_ROLE_LABELS).map(([value, label]) => ({ value, label }))}
+                options={Object.entries(PERSON_ROLE_LABELS)
+                  .filter(([value]) => value !== "CONTACT")
+                  .map(([value, label]) => ({ value, label }))}
               />
-              <TextInput label="Téléphone" type="tel" value={form.person_phone} onChange={set("person_phone")} />
-              <TextInput label="E-mail" type="email" value={form.person_email} onChange={set("person_email")} error={errors["primary_person.email"]} />
+              <p className="mt-2 text-sm font-medium text-ink sm:col-span-2">Contact du dirigeant</p>
+              <TextInput
+                label="Contact téléphonique"
+                type="tel"
+                placeholder="+225 07 00 00 00 00"
+                value={form.person_phone}
+                onChange={set("person_phone")}
+                error={errors["primary_person.phone"]}
+              />
+              <TextInput
+                label="E-mail du dirigeant"
+                type="email"
+                placeholder="nom@entreprise.ci"
+                value={form.person_email}
+                onChange={set("person_email")}
+                error={errors["primary_person.email"]}
+              />
               <p className="mt-2 text-sm font-medium text-ink sm:col-span-2">Suivi</p>
               {canAssign ? (
                 <SelectInput
